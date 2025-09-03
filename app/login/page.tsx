@@ -1,4 +1,3 @@
-// app/login/page.tsx
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -30,7 +29,7 @@ export default function LoginPage() {
       } else {
         setError(data.error)
       }
-    } catch (err) {
+    } catch {
       setError('Error al iniciar sesión')
     } finally {
       setLoading(false)
@@ -41,7 +40,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
         <h1 className="text-2xl font-bold text-center mb-6">Iniciar Sesión</h1>
-        
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -55,7 +54,7 @@ export default function LoginPage() {
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Contraseña
@@ -68,11 +67,9 @@ export default function LoginPage() {
               required
             />
           </div>
-          
-          {error && (
-            <div className="text-red-600 text-sm">{error}</div>
-          )}
-          
+
+          {error && <div className="text-red-600 text-sm">{error}</div>}
+
           <button
             type="submit"
             disabled={loading}
@@ -81,7 +78,7 @@ export default function LoginPage() {
             {loading ? 'Iniciando...' : 'Iniciar Sesión'}
           </button>
         </form>
-        
+
         <p className="text-center text-sm text-gray-600 mt-4">
           ¿No tienes cuenta?{' '}
           <a href="/register" className="text-blue-600 hover:underline">
