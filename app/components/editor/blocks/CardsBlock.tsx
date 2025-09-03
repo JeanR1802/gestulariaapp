@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import { InputField, TextareaField } from './InputField';
 
 // --- Tipos de Datos Específicos ---
@@ -32,7 +32,8 @@ export function CardsBlock({ data }: { data: CardsData }) {
 }
 
 // --- Formulario de Edición ---
-export function CardsEditor({ data, updateData }: { data: CardsData, updateData: (key: string, value: any) => void }) {
+// CORRECCIÓN: Se han tipado estrictamente las props para eliminar el error de 'any'.
+export function CardsEditor({ data, updateData }: { data: CardsData, updateData: (key: keyof CardsData, value: string | Card[]) => void }) {
   
   const updateCardData = (cardIndex: number, key: keyof Card, value: string) => {
     const newCards = [...(data.cards || [])];
