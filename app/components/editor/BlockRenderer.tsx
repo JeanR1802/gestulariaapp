@@ -23,28 +23,28 @@ interface BlockRendererProps {
 export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: BlockRendererProps) {
   
   // Esta función interna determina qué componente renderizar.
-  // El 'switch' es la clave, porque le permite a TypeScript saber
-  // el tipo exacto de 'data' en cada caso.
+  // La clave es que dentro de cada 'case', renderizamos el componente específico
+  // directamente. Esto le permite a TypeScript saber el tipo exacto de 'data'.
   const renderBlockContent = () => {
-    const blockConfig = BLOCKS[block.type as BlockType];
-    if (!blockConfig) {
-      return <div className="p-4 bg-red-100 text-red-700 rounded">Error: Bloque de tipo &apos;{block.type}&apos; no está registrado.</div>;
-    }
-    
-    const Component = blockConfig.renderer;
-
-    // Dentro de cada 'case', TypeScript sabe que 'block.data' tiene la forma correcta.
     switch(block.type) {
-        case 'hero':
+        case 'hero': {
+            const Component = BLOCKS.hero.renderer;
             return <Component data={block.data as HeroData} />;
-        case 'text':
+        }
+        case 'text': {
+            const Component = BLOCKS.text.renderer;
             return <Component data={block.data as TextData} />;
-        case 'image':
+        }
+        case 'image': {
+            const Component = BLOCKS.image.renderer;
             return <Component data={block.data as ImageData} />;
-        case 'cards':
+        }
+        case 'cards': {
+            const Component = BLOCKS.cards.renderer;
             return <Component data={block.data as CardsData} />;
+        }
         default:
-            return <div className="p-4 bg-red-100 text-red-700 rounded">Error: Tipo de bloque no renderizable.</div>;
+            return <div className="p-4 bg-red-100 text-red-700 rounded">Error: Bloque de tipo &apos;{block.type}&apos; no está registrado.</div>;
     }
   };
 
