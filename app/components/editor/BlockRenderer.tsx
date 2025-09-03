@@ -1,12 +1,13 @@
 import React from 'react';
-import { BLOCKS, BlockType } from './blocks';
+// CORRECCIÓN: Se importa 'BlockData' para usar un tipo estricto.
+import { BLOCKS, BlockType, BlockData } from './blocks';
 import { BlockWrapper } from './blocks/BlockWrapper';
 
 // --- Definiciones de Tipos ---
 interface Block { 
   id: number; 
   type: string; 
-  data: any;
+  data: BlockData; // CORRECCIÓN: Se reemplaza 'any' por el tipo estricto 'BlockData'.
 }
 
 interface BlockRendererProps { 
@@ -36,7 +37,6 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
       onMoveUp={onMoveUp}
       onMoveDown={onMoveDown}
     >
-      {/* Aquí TypeScript ya no se queja, porque sabemos que BlockComponent espera los datos de este bloque */}
       <BlockComponent data={block.data} />
     </BlockWrapper>
   );
