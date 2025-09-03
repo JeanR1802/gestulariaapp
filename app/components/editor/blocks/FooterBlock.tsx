@@ -1,5 +1,6 @@
-import React, { ChangeEvent } from 'react';
-import { InputField } from './InputField'; // Reutilizamos nuestro componente de formulario
+// CORRECCIÓN: Se elimina 'ChangeEvent' porque no se utiliza.
+import React from 'react';
+import { InputField } from './InputField';
 
 // --- 1. Definimos la forma de los datos para este bloque ---
 interface SocialLink {
@@ -27,7 +28,8 @@ export function FooterBlock({ data }: { data: FooterData }) {
 }
 
 // --- 3. Creamos el formulario para editar el bloque ---
-export function FooterEditor({ data, updateData }: { data: FooterData, updateData: (key: string, value: any) => void }) {
+// CORRECCIÓN: Se tipa estrictamente 'updateData' para eliminar el error de 'any'.
+export function FooterEditor({ data, updateData }: { data: FooterData, updateData: (key: keyof FooterData, value: string | SocialLink[]) => void }) {
   
   const handleSocialLinkChange = (index: number, field: keyof SocialLink, value: string) => {
     const newLinks = [...(data.socialLinks || [])];
