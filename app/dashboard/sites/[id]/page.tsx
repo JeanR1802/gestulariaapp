@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect, useCallback, ChangeEvent, MouseEvent } from 'react';
-// CORRECCIÓN DEFINITIVA: Se usa 'next/navigation' que es la ruta correcta para tu entorno.
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
@@ -9,6 +8,7 @@ const MoveUpIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" heig
 const MoveDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 9 7 7 7-7"/></svg>;
 const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>;
 const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
+const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 
 // ================== DEFINICIONES DE TIPOS ==================
 interface Card { icon: string; title: string; description: string; }
@@ -16,9 +16,7 @@ interface HeroData { title: string; subtitle: string; buttonText: string; backgr
 interface TextData { content: string; }
 interface ImageData { imageUrl: string; alt: string; caption: string; }
 interface CardsData { title: string; cards: Card[]; }
-interface ContactData { title: string; phone: string; email: string; address: string; showPhone: boolean; showEmail: boolean; showAddress: boolean; }
-interface CtaData { title: string; subtitle: string; buttonText: string; backgroundColor: string; buttonLink?: string; }
-type BlockData = HeroData | TextData | ImageData | CardsData | ContactData | CtaData;
+type BlockData = HeroData | TextData | ImageData | CardsData;
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 interface BlockRendererProps { block: Block; isEditing: boolean; onEdit: () => void; onDelete: () => void; onMoveUp?: () => void; onMoveDown?: () => void; }
@@ -55,6 +53,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => { setIsMounted(true); }, []);
@@ -70,11 +69,11 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         setTenant(data.tenant);
         const content = data.tenant.pages[0]?.content || '[]';
         let initialBlocks: Block[] = [];
-        try { const parsed = JSON.parse(content); if (Array.isArray(parsed)) initialBlocks = parsed; }
+        try { const parsed = JSON.parse(content); if (Array.isArray(parsed)) initialBlocks = parsed; } 
         catch (e) { console.warn("Contenido inválido, iniciando lienzo en blanco."); }
         setBlocks(initialBlocks);
       } else { router.push('/dashboard'); }
-    } catch (error) { console.error('Error al cargar:', error); router.push('/dashboard'); }
+    } catch (error) { console.error('Error al cargar:', error); router.push('/dashboard'); } 
     finally { setLoading(false); }
   }, [params.id, router, isMounted]);
 
@@ -100,7 +99,10 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     }
   };
 
-  const addBlock = (blockType: string) => setBlocks([...blocks, createBlock(blockType)]);
+  const addBlock = (blockType: string) => {
+    setBlocks([...blocks, createBlock(blockType)]);
+    setIsAddPanelOpen(false);
+  };
   const updateBlock = (blockId: number, updates: Partial<Block>) => setBlocks(blocks.map(block => block.id === blockId ? { ...block, ...updates } : block));
   const deleteBlock = (blockId: number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlockId(null); };
   const moveBlock = (fromIndex: number, toIndex: number) => { const newBlocks = [...blocks]; const [movedBlock] = newBlocks.splice(fromIndex, 1); newBlocks.splice(toIndex, 0, movedBlock); setBlocks(newBlocks); };
@@ -111,7 +113,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
   };
-
+  
   const editingBlock = blocks.find(b => b.id === editingBlockId);
 
   if (!isMounted || loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
@@ -119,7 +121,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans">
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-40">
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-screen-xl mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
@@ -138,25 +140,20 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
-
+      
       <main className="flex">
-        {/* Sidebar */}
         <aside className="w-72 bg-white border-r border-slate-200 p-4 space-y-4 hidden md:block" style={{ height: 'calc(100vh - 61px)'}}>
           <h2 className="font-semibold text-slate-800">Agregar Bloques</h2>
           {BLOCK_TYPES.map(blockType => (
             <button key={blockType.id} onClick={() => addBlock(blockType.id)} className="w-full p-3 text-left border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{blockType.icon}</span>
-                <div>
-                  <p className="font-medium text-sm text-slate-800">{blockType.name}</p>
-                  <p className="text-xs text-slate-500">{blockType.description}</p>
-                </div>
+                <div><p className="font-medium text-sm text-slate-800">{blockType.name}</p><p className="text-xs text-slate-500">{blockType.description}</p></div>
               </div>
             </button>
           ))}
         </aside>
 
-        {/* Canvas */}
         <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 61px)'}}>
           <div className="max-w-3xl mx-auto my-6 p-2">
             <div className="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-[85vh] p-2 md:p-4 space-y-2">
@@ -177,10 +174,26 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Edit Panel (Slide-over) */}
-        <div className={`fixed top-0 right-0 h-full bg-white border-l border-slate-200 shadow-xl transition-transform duration-300 ease-in-out z-50 w-full md:w-96 ${editingBlockId ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className={`fixed top-0 right-0 h-full bg-white border-l border-slate-200 shadow-xl transition-transform duration-300 ease-in-out z-50 w-full max-w-sm ${editingBlockId ? 'translate-x-0' : 'translate-x-full'}`}>
           {editingBlock && <EditPanel block={editingBlock} onUpdate={(updates) => updateBlock(editingBlock.id, updates)} onClose={() => setEditingBlockId(null)} />}
         </div>
+        
+        <div className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${isAddPanelOpen ? 'bg-black bg-opacity-50' : 'bg-opacity-0 pointer-events-none'}`} onClick={() => setIsAddPanelOpen(false)}>
+            <div className={`absolute bottom-0 left-0 right-0 bg-white p-4 rounded-t-2xl shadow-2xl transition-transform duration-300 ease-in-out ${isAddPanelOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+                <h2 className="font-semibold text-slate-800 text-center mb-4">Agregar Bloque</h2>
+                <div className="space-y-2">
+                    {BLOCK_TYPES.map(blockType => (
+                        <button key={blockType.id} onClick={() => addBlock(blockType.id)} className="w-full p-3 text-left border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50">
+                            <div className="flex items-center gap-3"><span className="text-2xl">{blockType.icon}</span><div><p className="font-medium text-sm text-slate-800">{blockType.name}</p><p className="text-xs text-slate-500">{blockType.description}</p></div></div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+
+        <button onClick={() => setIsAddPanelOpen(true)} className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-blue-700 z-40">
+            <PlusIcon/>
+        </button>
       </main>
     </div>
   );
@@ -191,12 +204,12 @@ function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDow
   const showToolbar = isHovered || isEditing;
 
   return (
-    <div
-      className={`relative rounded-md cursor-pointer transition-all ${isEditing ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-slate-300'}`}
+    <div 
+      className={`relative rounded-md cursor-pointer transition-all ${isEditing ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-slate-300'}`} 
       onClick={() => !isEditing && onEdit()}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-    >
+    > 
       {showToolbar && (
         <div className="absolute top-[-14px] right-2 z-10 flex">
           {onMoveUp && <button onClick={(e) => { e.stopPropagation(); onMoveUp(); }} className="p-1.5 bg-white border border-slate-300 rounded-l-md text-slate-600 hover:text-slate-900 hover:bg-slate-100"><MoveUpIcon /></button>}
@@ -204,7 +217,7 @@ function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDow
           <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1.5 bg-white border-y border-r border-slate-300 rounded-r-md text-red-600 hover:text-red-800 hover:bg-red-50"><TrashIcon /></button>
         </div>
       )}
-
+      
       {renderBlockContent(block)}
     </div>
   );
@@ -230,7 +243,7 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
     newCards[cardIndex] = { ...newCards[cardIndex], [key]: value };
     onUpdate({ data: { ...currentData, cards: newCards } });
   };
-
+  
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-slate-200">
@@ -272,7 +285,6 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
   );
 }
 
-// Helper components for consistent form fields
 const InputField = ({ label, value, onChange }: { label: string, value: string, onChange: (e: ChangeEvent<HTMLInputElement>) => void }) => (
     <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
