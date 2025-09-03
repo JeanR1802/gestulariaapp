@@ -2,14 +2,20 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+// Definimos el tipo para las props del modal
+interface CreateSiteModalProps {
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
 // Componente Modal para crear sitio
-function CreateSiteModal({ onClose, onSuccess }) {
+function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) { // <-- Aplicamos la interfaz aquí
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [slugAvailable, setSlugAvailable] = useState(null)
-
+  
   const generateSlug = (text) => {
     return text
       .toLowerCase()
@@ -21,7 +27,7 @@ function CreateSiteModal({ onClose, onSuccess }) {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
   }
-
+  
   const checkSlugAvailability = async (slugToCheck) => {
     if (!slugToCheck || slugToCheck.length < 2) {
       setSlugAvailable(null)
