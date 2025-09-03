@@ -1,17 +1,26 @@
-// app/dashboard/sites/[id]/page.tsx - Editor de sitios
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import SitePreview from '@/components/SitePreview'
 
-export default function SiteEditor({ params }) {
+// Definimos el tipo para los parámetros de la URL
+interface SiteEditorParams {
+  params: {
+    id: string;
+  };
+}
+
+export default function SiteEditor({ params }: SiteEditorParams) { // <-- Aplicamos el tipo aquí
   const [tenant, setTenant] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('content')
   const router = useRouter()
-
+  
   useEffect(() => {
-    loadTenant()
+    if (params.id) {
+      loadTenant()
+    }
   }, [params.id])
 
   const loadTenant = async () => {
@@ -39,7 +48,7 @@ export default function SiteEditor({ params }) {
     setSaving(true)
     try {
       const token = localStorage.getItem('token')
-      await fetch(`/api/tenants/${params.id}`, {
+      const res = await fetch(`/api/tenants/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +56,11 @@ export default function SiteEditor({ params }) {
         },
         body: JSON.stringify(tenant)
       })
-      alert('Cambios guardados')
+      if (res.ok) {
+        alert('Cambios guardados')
+      } else {
+        alert('Error al guardar')
+      }
     } catch (error) {
       alert('Error al guardar')
     } finally {
@@ -93,7 +106,7 @@ export default function SiteEditor({ params }) {
       <div className="bg-white rounded-lg shadow-sm">
         <div className="border-b">
           <nav className="flex space-x-8 px-6">
-            {['content', 'design', 'settings'].map((tab) => (
+            {['content', 'design', 'settings', 'preview'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -104,7 +117,8 @@ export default function SiteEditor({ params }) {
                 }`}
               >
                 {tab === 'content' ? 'Contenido' : 
-                 tab === 'design' ? 'Diseño' : 'Configuración'}
+                 tab === 'design' ? 'Diseño' : 
+                 tab === 'settings' ? 'Configuración' : 'Vista Previa'}
               </button>
             ))}
           </nav>
@@ -192,6 +206,13 @@ export default function SiteEditor({ params }) {
                 </div>
               </div>
             </div>
+          )}
+
+          {activeTab === 'preview' && (
+            <SitePreview
+              content={tenant.pages[0]?.content}
+              customCSS={tenant.config?.customCSS}
+            />
           )}
         </div>
       </div>
