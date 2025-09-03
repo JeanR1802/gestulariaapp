@@ -2,12 +2,12 @@ import { HeroBlock, HeroEditor, HeroData } from './HeroBlock';
 import { TextBlock, TextEditor, TextData } from './TextBlock';
 import { ImageBlock, ImageEditor, ImageData } from './ImageBlock';
 import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
-
+import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 // Re-exportar los tipos de datos para que estén disponibles en un solo lugar
-export type { HeroData, TextData, ImageData, CardsData };
+export type { HeroData, TextData, ImageData, CardsData, CtaData };
 
 // Unir todos los tipos de datos en uno solo
-export type BlockData = HeroData | TextData | ImageData | CardsData;
+export type BlockData = HeroData | TextData | ImageData | CardsData | CtaData;
 
 // Define todos los bloques disponibles en tu aplicación
 export const BLOCKS = {
@@ -18,6 +18,20 @@ export const BLOCKS = {
     renderer: HeroBlock,
     editor: HeroEditor,
     defaultData: { title: 'Tu Título Principal Aquí', subtitle: 'Un subtítulo atractivo que describa tu negocio.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } as HeroData
+  },
+    // --- 2. Registra el nuevo bloque en la lista ---
+  cta: {
+    name: 'Llamada a la Acción',
+    icon: '📢',
+    description: 'Invita a los usuarios a actuar.',
+    renderer: CtaBlock,
+    editor: CtaEditor,
+    defaultData: { 
+      title: '¿Listo para empezar?', 
+      subtitle: 'Únete a miles de clientes satisfechos y lleva tu negocio al siguiente nivel.', 
+      buttonText: 'Contactar Ahora',
+      backgroundColor: 'bg-slate-800' 
+    } as CtaData
   },
   text: {
     name: 'Texto',
