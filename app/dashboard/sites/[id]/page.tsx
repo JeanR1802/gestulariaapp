@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect, useCallback, ChangeEvent, MouseEvent } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData } from '@/app/components/editor/blocks';
+// CORRECCIÓN: Se importan los tipos de datos de TODOS los bloques, incluyendo CtaData y FooterData
+import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 
 // --- Definiciones de Tipos ---
@@ -193,8 +194,6 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
         onUpdate({ data: { ...block.data, [key]: value } as BlockData });
     };
 
-    // CORRECCIÓN FINAL: Usamos un 'switch' para renderizar el editor correcto,
-    // igual que hicimos en el BlockRenderer. Esto elimina el error de 'any'.
     const renderEditorContent = () => {
       switch(block.type) {
           case 'hero': {
@@ -212,6 +211,15 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
           case 'cards': {
               const Editor = BLOCKS.cards.editor;
               return <Editor data={block.data as CardsData} updateData={updateData} />;
+          }
+          // --- ¡AQUÍ ESTÁ LA CORRECCIÓN QUE FALTABA! ---
+          case 'cta': {
+              const Editor = BLOCKS.cta.editor;
+              return <Editor data={block.data as CtaData} updateData={updateData} />;
+          }
+          case 'footer': {
+              const Editor = BLOCKS.footer.editor;
+              return <Editor data={block.data as FooterData} updateData={updateData} />;
           }
           default:
               return <div className="text-sm text-slate-500">Este bloque no tiene opciones de edición.</div>;
