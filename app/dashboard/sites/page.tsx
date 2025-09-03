@@ -1,11 +1,44 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
+// Componente Modal de confirmación para eliminar
+function DeleteSiteModal({ tenant, onClose, onDelete }) {
+  const router = useRouter() 
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-bold mb-4">Eliminar Sitio</h2>
+        <p className="text-gray-600 mb-6">
+          ¿Estás seguro de que quieres eliminar &quot;{tenant.name}&quot;? 
+          Esta acción no se puede deshacer.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onDelete(tenant.id)}
+            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function SitesPage() {
   const [tenants, setTenants] = useState([])
   const [loading, setLoading] = useState(true)
   const [showDeleteModal, setShowDeleteModal] = useState(null)
+  const router = useRouter()
 
   useEffect(() => {
     loadTenants()
@@ -127,31 +160,12 @@ export default function SitesPage() {
         </div>
       )}
 
-      {/* Modal de confirmación para eliminar */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Eliminar Sitio</h2>
-            <p className="text-gray-600 mb-6">
-              ¿Estás seguro de que quieres eliminar "{showDeleteModal.name}"? 
-              Esta acción no se puede deshacer.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteModal(null)}
-                className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => deleteTenant(showDeleteModal.id)}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteSiteModal 
+          tenant={showDeleteModal}
+          onClose={() => setShowDeleteModal(null)}
+          onDelete={deleteTenant}
+        />
       )}
     </div>
   )
