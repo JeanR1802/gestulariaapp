@@ -1,4 +1,3 @@
-// CORRECCIÓN FINAL: Se elimina la importación de React y ReactDOMServer.
 import { BLOCKS } from '@/app/components/editor/blocks';
 
 // Esta función ahora construye el HTML directamente, evitando la librería que causa el error.
@@ -8,14 +7,12 @@ export function renderBlocksToHTML(blocks) {
   return blocks.map(block => {
     const { data, type } = block;
     
-    // La configuración del bloque se usa para obtener datos, pero el HTML se define aquí.
     const blockConfig = BLOCKS[type];
     if (!blockConfig) {
       console.warn(`AVISO: El tipo de bloque "${type}" no está registrado y no será renderizado.`);
-      return ``;
+      return `<!-- Bloque de tipo '${type}' no reconocido -->`;
     }
 
-    // Usamos un switch simple para generar el HTML, lo que es 100% compatible.
     switch (type) {
       case 'hero':
         return `
@@ -63,6 +60,22 @@ export function renderBlocksToHTML(blocks) {
             </a>
           </div>
         `;
+      
+      // --- ¡AQUÍ ESTÁ LA CORRECCIÓN QUE FALTABA! ---
+      // Se añade la lógica para renderizar el nuevo bloque Footer en la página pública.
+      case 'footer':
+        return `
+          <footer class="bg-slate-800 text-slate-400 text-sm text-center p-8 rounded-md">
+            <p class="mb-4">${data.copyrightText || ''}</p>
+            <div class="flex justify-center space-x-4">
+              ${(data.socialLinks || []).map(link => 
+                link.url ? `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="hover:text-white">${link.platform}</a>` : ''
+              ).join('')}
+            </div>
+          </footer>
+        `;
+      // --- FIN DE LA CORRECCIÓN ---
+
       default:
         return '';
     }
