@@ -6,63 +6,71 @@ import SitePreview from '@/components/SitePreview'
 // Definimos los tipos para los parámetros de la URL
 interface SiteEditorParams {
   params: {
-    id: string;
-  };
+    id: string
+  }
 }
+
+// Definimos un tipo recursivo seguro para la configuración
+type ConfigValue = string | number | boolean | null | { [key: string]: ConfigValue }
 
 // Definimos el tipo para los objetos de sitio web (tenant)
 interface Tenant {
-  id: string;
-  userKey: string;
-  name: string;
-  slug: string;
-  domain: string | null;
-  pages: { id: string, title: string, slug: string, content: string, published: boolean }[];
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  userKey: string
+  name: string
+  slug: string
+  domain: string | null
+  pages: {
+    id: string
+    title: string
+    slug: string
+    content: string
+    published: boolean
+  }[]
+  createdAt: string
+  updatedAt: string
   config: {
-    customCSS: string;
-    [key: string]: any;
-  };
-  description?: string;
-  stats?: { views: number };
+    customCSS: string
+    [key: string]: ConfigValue
+  }
+  description?: string
+  stats?: { views: number }
 }
 
-export default function SiteEditor({ params }: SiteEditorParams) { // <-- Aplicamos el tipo aquí
-  const [tenant, setTenant] = useState<Tenant | null>(null) // <-- Le decimos a useState que 'tenant' es de tipo 'Tenant' o 'null'
+export default function SiteEditor({ params }: SiteEditorParams) {
+  const [tenant, setTenant] = useState<Tenant | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('content')
+  const [activeTab, setActiveTab] = useState<'content' | 'design' | 'settings' | 'preview'>('content')
   const router = useRouter()
-  
-  useEffect(() => {
-    if (params.id) {
-      loadTenant()
-    }
-  }, [params.id])
 
-  const loadTenant = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`/api/tenants/${params.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      
-      if (res.ok) {
-        const data = await res.json()
-        setTenant(data.tenant)
-      } else {
+  useEffect(() => {
+    const loadTenant = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const res = await fetch(`/api/tenants/${params.id}`, {
+          headers: { Authorization: `Bearer ${token ?? ''}` }
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setTenant(data.tenant)
+        } else {
+          router.push('/dashboard')
+        }
+      } catch (error) {
+        console.error('Error loading tenant:', error)
         router.push('/dashboard')
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Error loading tenant:', error)
-      router.push('/dashboard')
-    } finally {
-      setLoading(false)
     }
-  }
+
+    if (params.id) loadTenant()
+  }, [params.id, router])
 
   const saveTenant = async () => {
+    if (!tenant) return
     setSaving(true)
     try {
       const token = localStorage.getItem('token')
@@ -70,16 +78,18 @@ export default function SiteEditor({ params }: SiteEditorParams) { // <-- Aplica
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token ?? ''}`
         },
         body: JSON.stringify(tenant)
       })
+
       if (res.ok) {
         alert('Cambios guardados')
       } else {
         alert('Error al guardar')
       }
     } catch (error) {
+      console.error(error)
       alert('Error al guardar')
     } finally {
       setSaving(false)
@@ -102,7 +112,7 @@ export default function SiteEditor({ params }: SiteEditorParams) { // <-- Aplica
           <h1 className="text-xl font-bold">{tenant.name}</h1>
           <p className="text-gray-600">/{tenant.slug}</p>
         </div>
-        
+
         <div className="flex gap-3">
           <button
             onClick={() => window.open(`/site/${tenant.slug}`, '_blank')}
@@ -127,16 +137,20 @@ export default function SiteEditor({ params }: SiteEditorParams) { // <-- Aplica
             {['content', 'design', 'settings', 'preview'].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => setActiveTab(tab as 'content' | 'design' | 'settings' | 'preview')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm capitalize ${
                   activeTab === tab
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {tab === 'content' ? 'Contenido' : 
-                 tab === 'design' ? 'Diseño' : 
-                 tab === 'settings' ? 'Configuración' : 'Vista Previa'}
+                {tab === 'content'
+                  ? 'Contenido'
+                  : tab === 'design'
+                  ? 'Diseño'
+                  : tab === 'settings'
+                  ? 'Configuración'
+                  : 'Vista Previa'}
               </button>
             ))}
           </nav>
@@ -202,7 +216,7 @@ export default function SiteEditor({ params }: SiteEditorParams) { // <-- Aplica
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     URL del Sitio
@@ -218,9 +232,7 @@ export default function SiteEditor({ params }: SiteEditorParams) { // <-- Aplica
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Solo letras, números y guiones
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Solo letras, números y guiones</p>
                 </div>
               </div>
             </div>
