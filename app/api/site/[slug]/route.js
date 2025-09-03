@@ -1,6 +1,6 @@
 import { getTenantBySlug } from '@/lib/tenant';
 import { NextResponse } from 'next/server';
-// 1. Importamos nuestro nuevo renderizador central
+// 1. Importamos nuestro nuevo y único renderizador
 import { renderBlocksToHTML } from '@/lib/render-blocks-to-html';
 
 export async function GET(request, { params }) {
@@ -22,7 +22,7 @@ export async function GET(request, { params }) {
     try {
       const blocks = JSON.parse(page.content);
       if (Array.isArray(blocks)) {
-        // 2. Usamos la función centralizada para convertir los bloques a HTML
+        // 2. Usamos la función centralizada que lee la lista oficial
         finalContent = renderBlocksToHTML(blocks);
       } else {
         finalContent = page.content; // Mantenemos compatibilidad con contenido HTML antiguo
