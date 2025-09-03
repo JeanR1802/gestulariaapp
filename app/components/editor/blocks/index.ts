@@ -3,11 +3,12 @@ import { TextBlock, TextEditor, TextData } from './TextBlock';
 import { ImageBlock, ImageEditor, ImageData } from './ImageBlock';
 import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
+import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 // Re-exportar los tipos de datos para que estén disponibles en un solo lugar
-export type { HeroData, TextData, ImageData, CardsData, CtaData };
+export type { HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
 
 // Unir todos los tipos de datos en uno solo
-export type BlockData = HeroData | TextData | ImageData | CardsData | CtaData;
+export type BlockData = HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
 
 // Define todos los bloques disponibles en tu aplicación
 export const BLOCKS = {
@@ -56,6 +57,21 @@ export const BLOCKS = {
     renderer: CardsBlock,
     editor: CardsEditor,
     defaultData: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve del primer servicio.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve del segundo servicio.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve del tercer servicio.' } ] } as CardsData
+  },
+  footer: {
+    name: 'Pie de Página',
+    icon: '🦶',
+    description: 'Sección final con copyright y enlaces.',
+    renderer: FooterBlock,
+    editor: FooterEditor,
+    defaultData: { 
+      copyrightText: `© ${new Date().getFullYear()} Mi Negocio. Todos los derechos reservados.`,
+      socialLinks: [
+        { platform: 'Twitter', url: '' },
+        { platform: 'Instagram', url: '' },
+        { platform: 'LinkedIn', url: '' },
+      ]
+    } as FooterData
   },
 };
 
