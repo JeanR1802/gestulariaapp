@@ -3,16 +3,29 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+interface Tenant {
+  id: string
+  name: string
+  slug: string
+  createdAt: string
+}
+
+interface DeleteSiteModalProps {
+  tenant: Tenant
+  onClose: () => void
+  onDelete: (id: string) => void
+}
+
 // Componente Modal de confirmación para eliminar
-function DeleteSiteModal({ tenant, onClose, onDelete }) {
-  const router = useRouter() 
+function DeleteSiteModal({ tenant, onClose, onDelete }: DeleteSiteModalProps) {
+  const router = useRouter()
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-4">Eliminar Sitio</h2>
         <p className="text-gray-600 mb-6">
-          ¿Estás seguro de que quieres eliminar &quot;{tenant.name}&quot;? 
+          ¿Estás seguro de que quieres eliminar &quot;{tenant.name}&quot;?
           Esta acción no se puede deshacer.
         </p>
         <div className="flex gap-3">
@@ -35,9 +48,9 @@ function DeleteSiteModal({ tenant, onClose, onDelete }) {
 }
 
 export default function SitesPage() {
-  const [tenants, setTenants] = useState([])
+  const [tenants, setTenants] = useState<Tenant[]>([])
   const [loading, setLoading] = useState(true)
-  const [showDeleteModal, setShowDeleteModal] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState<Tenant | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -59,16 +72,16 @@ export default function SitesPage() {
     }
   }
 
-  const deleteTenant = async (tenantId) => {
+  const deleteTenant = async (tenantId: string) => {
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(`/api/tenants/${tenantId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       })
-      
+
       if (res.ok) {
-        setTenants(tenants.filter(t => t.id !== tenantId))
+        setTenants(tenants.filter((t) => t.id !== tenantId))
         setShowDeleteModal(null)
       } else {
         alert('Error al eliminar el sitio')
@@ -116,7 +129,10 @@ export default function SitesPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {tenants.map((tenant) => (
-            <div key={tenant.id} className="bg-white rounded-lg shadow-sm border p-6">
+            <div
+              key={tenant.id}
+              className="bg-white rounded-lg shadow-sm border p-6"
+            >
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -132,7 +148,8 @@ export default function SitesPage() {
               </div>
 
               <div className="text-sm text-gray-600 mb-4">
-                Creado: {new Date(tenant.createdAt).toLocaleDateString('es-ES')}
+                Creado:{' '}
+                {new Date(tenant.createdAt).toLocaleDateString('es-ES')}
               </div>
 
               <div className="flex gap-2">
@@ -143,7 +160,9 @@ export default function SitesPage() {
                   Editar
                 </Link>
                 <button
-                  onClick={() => window.open(`/site/${tenant.slug}`, '_blank')}
+                  onClick={() =>
+                    window.open(`/site/${tenant.slug}`, '_blank')
+                  }
                   className="flex-1 text-center bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 text-sm"
                 >
                   Ver Sitio
@@ -161,7 +180,7 @@ export default function SitesPage() {
       )}
 
       {showDeleteModal && (
-        <DeleteSiteModal 
+        <DeleteSiteModal
           tenant={showDeleteModal}
           onClose={() => setShowDeleteModal(null)}
           onDelete={deleteTenant}
