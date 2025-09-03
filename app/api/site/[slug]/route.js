@@ -1,75 +1,7 @@
 import { getTenantBySlug } from '@/lib/tenant';
 import { NextResponse } from 'next/server';
-
-// ================== CÓDIGO PEGADO DIRECTAMENTE ==================
-function blocksToHTML(blocks) {
-  if (!Array.isArray(blocks)) return '';
-  return blocks.map(block => {
-    const { data } = block;
-    switch (block.type) {
-      case 'hero':
-        return `
-          <div class="p-8 md:p-16 text-center ${data.backgroundColor || 'bg-gray-100'}">
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">${data.title}</h1>
-            <p class="text-xl text-gray-600 mb-8">${data.subtitle}</p>
-            <a href="${data.buttonLink || '#'}" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg text-lg hover:bg-blue-700">
-              ${data.buttonText}
-            </a>
-          </div>
-        `;
-      case 'text':
-        return `
-          <div class="max-w-4xl mx-auto py-8 px-4">
-            <p class="text-gray-700 leading-relaxed">${(data.content || '').replace(/\n/g, '<br>')}</p>
-          </div>
-        `;
-      case 'image':
-        return `
-          <div class="max-w-4xl mx-auto py-8 px-4 text-center">
-            <img src="${data.imageUrl}" alt="${data.alt}" class="rounded-lg mx-auto max-w-full h-auto shadow-md" />
-            ${data.caption ? `<p class="text-sm text-gray-600 mt-2">${data.caption}</p>` : ''}
-          </div>
-        `;
-      case 'cards':
-        return `
-          <div class="bg-slate-50 py-12 px-4 rounded-md">
-            <h2 class="text-3xl font-bold text-center text-slate-800 mb-12">${data.title}</h2>
-            <div class="grid md:grid-cols-3 gap-8">
-              ${(data.cards || []).map(card => `
-                <div class="text-center p-6 bg-white rounded-lg shadow-sm ring-1 ring-slate-100">
-                  <div class="text-4xl mb-4">${card.icon}</div>
-                  <h3 class="text-xl font-semibold mb-2 text-slate-800">${card.title}</h3>
-                  <p class="text-slate-600 text-sm">${card.description}</p>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-        
-      // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
-      // Se añade la lógica para renderizar el nuevo bloque CTA.
-      case 'cta':
-        return `
-          <div class="${data.backgroundColor || 'bg-slate-800'} text-white p-12 rounded-md text-center">
-            <h2 class="text-3xl font-bold mb-2">${data.title}</h2>
-            <p class="text-lg opacity-90 mb-6 max-w-xl mx-auto">${data.subtitle}</p>
-            <a 
-              href="${data.buttonLink || '#'}" 
-              class="inline-block bg-white text-slate-800 px-6 py-2.5 rounded-md text-base font-semibold hover:bg-slate-200"
-            >
-              ${data.buttonText}
-            </a>
-          </div>
-        `;
-      // --- FIN DE LA CORRECCIÓN ---
-
-      default:
-        // Mensaje de error mejorado para futuras depuraciones
-        return `<!-- Bloque de tipo '${block.type}' no reconocido -->`;
-    }
-  }).join('');
-}
-// ====================================================================
+// 1. Importamos nuestro nuevo renderizador central
+import { renderBlocksToHTML } from '@/lib/render-blocks-to-html';
 
 export async function GET(request, { params }) {
   try {
@@ -90,9 +22,10 @@ export async function GET(request, { params }) {
     try {
       const blocks = JSON.parse(page.content);
       if (Array.isArray(blocks)) {
-        finalContent = blocksToHTML(blocks);
+        // 2. Usamos la función centralizada para convertir los bloques a HTML
+        finalContent = renderBlocksToHTML(blocks);
       } else {
-        finalContent = page.content; // Compatibilidad con contenido antiguo en HTML
+        finalContent = page.content; // Mantenemos compatibilidad con contenido HTML antiguo
       }
     } catch (e) {
       finalContent = page.content;
