@@ -22,7 +22,7 @@ function DeleteSiteModal({ tenant, onClose, onDelete }: DeleteSiteModalProps) {
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-4">Eliminar Sitio</h2>
         <p className="text-gray-600 mb-6">
-          ¿Estás seguro de que quieres eliminar "{tenant.name}"? Esta acción no se puede deshacer.
+          ¿Estás seguro de que quieres eliminar &quot;{tenant.name}&quot;? Esta acción no se puede deshacer.
         </p>
         <div className="flex gap-3">
           <button
@@ -50,39 +50,40 @@ export default function SitesPage() {
   const router = useRouter()
 
   useEffect(() => {
+    const loadTenants = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const res = await fetch('/api/tenants', {
+          headers: { Authorization: `Bearer ${token ?? ''}` }
+        })
+        const data = (await res.json()) as { tenants: Tenant[] }
+        setTenants(data.tenants || [])
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     loadTenants()
   }, [])
-
-  const loadTenants = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/tenants', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const data = await res.json()
-      setTenants(data.tenants || [])
-    } catch (error) {
-      console.error('Error loading tenants:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const deleteTenant = async (tenantId: string) => {
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(`/api/tenants/${tenantId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token ?? ''}` }
       })
 
       if (res.ok) {
-        setTenants(tenants.filter((t) => t.id !== tenantId))
+        setTenants((prev) => prev.filter((t) => t.id !== tenantId))
         setShowDeleteModal(null)
       } else {
         alert('Error al eliminar el sitio')
       }
-    } catch (error) {
+    } catch (err) {
+      console.error(err)
       alert('Error al eliminar el sitio')
     }
   }
