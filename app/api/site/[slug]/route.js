@@ -1,7 +1,7 @@
 import { getTenantBySlug } from '@/lib/tenant';
 import { NextResponse } from 'next/server';
 // 1. Importamos nuestro nuevo renderizador central
-import { renderBlocksToHTML } from '@/lib/render-blocks-to-html';
+import { renderBlocksToHTML } from '@/lib/server/render-blocks-to-html';
 
 export async function GET(request, { params }) {
   try {
