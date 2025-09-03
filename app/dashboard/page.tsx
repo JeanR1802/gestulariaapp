@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 
+// Definimos los tipos para el modal y los tenants
 interface CreateSiteModalProps {
   onClose: () => void;
   onSuccess: () => void;
@@ -198,7 +199,7 @@ export default function DashboardPage() {
       })
       const data: { tenants: Tenant[] } = await res.json()
       setTenants(data.tenants || [])
-    } catch (_error: unknown) { // Corregido: 'error' ya no se usa
+    } catch (_error: unknown) {
       console.error('Error loading tenants:', _error)
     } finally {
       setLoading(false)
