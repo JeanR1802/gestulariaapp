@@ -1,4 +1,4 @@
-// app/api/auth/verify/route.js
+// app/api/auth/verify/route.js - CORREGIDO
 import { verifyToken } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
@@ -20,7 +20,8 @@ export async function GET(request) {
     } else {
       return NextResponse.json({ valid: false }, { status: 401 })
     }
-  } catch (error) {
+  } catch {
+    // Removido 'error' no usado
     return NextResponse.json({ valid: false }, { status: 401 })
   }
 }

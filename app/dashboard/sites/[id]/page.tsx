@@ -28,7 +28,7 @@ interface Tenant {
   stats?: { views: number };
 }
 
-export default function SiteEditor({ params }: SiteEditorParams) {
+export default function SiteEditor({ params }: SiteEditorParams) { // <-- Aplicamos el tipo aquí
   const [tenant, setTenant] = useState<Tenant | null>(null) // <-- Le decimos a useState que 'tenant' es de tipo 'Tenant' o 'null'
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
