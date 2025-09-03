@@ -3,15 +3,33 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import SitePreview from '@/components/SitePreview'
 
-// Definimos el tipo para los parámetros de la URL
+// Definimos los tipos para los parámetros de la URL
 interface SiteEditorParams {
   params: {
     id: string;
   };
 }
 
-export default function SiteEditor({ params }: SiteEditorParams) { // <-- Aplicamos el tipo aquí
-  const [tenant, setTenant] = useState(null)
+// Definimos el tipo para los objetos de sitio web (tenant)
+interface Tenant {
+  id: string;
+  userKey: string;
+  name: string;
+  slug: string;
+  domain: string | null;
+  pages: { id: string, title: string, slug: string, content: string, published: boolean }[];
+  createdAt: string;
+  updatedAt: string;
+  config: {
+    customCSS: string;
+    [key: string]: any;
+  };
+  description?: string;
+  stats?: { views: number };
+}
+
+export default function SiteEditor({ params }: SiteEditorParams) {
+  const [tenant, setTenant] = useState<Tenant | null>(null) // <-- Le decimos a useState que 'tenant' es de tipo 'Tenant' o 'null'
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('content')
