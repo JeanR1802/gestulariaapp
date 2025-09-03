@@ -9,6 +9,8 @@ const MoveDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" he
 const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>;
 const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
 const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
+const SmallEditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
+
 
 // ================== DEFINICIONES DE TIPOS ==================
 interface Card { icon: string; title: string; description: string; }
@@ -19,7 +21,7 @@ interface CardsData { title: string; cards: Card[]; }
 type BlockData = HeroData | TextData | ImageData | CardsData;
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
-interface BlockRendererProps { block: Block; isEditing: boolean; onEdit: () => void; onDelete: () => void; onMoveUp?: () => void; onMoveDown?: () => void; }
+interface BlockRendererProps { block: Block; isEditing: boolean; onEdit: () => void; onDelete: () => void; onMoveUp?: () => void; onMoveDown?: () => void; onToggleMobileToolbar: (blockId: number | null) => void; isMobileToolbarVisible: boolean; }
 interface EditPanelProps { block: Block | undefined; onUpdate: (updates: Partial<Block>) => void; onClose: () => void; }
 // =======================================================================
 
@@ -54,9 +56,17 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
+  const [mobileToolbarBlockId, setMobileToolbarBlockId] = useState<number | null>(null); // Nuevo estado para la barra de herramientas móvil
   const router = useRouter();
 
   useEffect(() => { setIsMounted(true); }, []);
+
+  // Cerrar la barra de herramientas móvil si se abre el panel de edición
+  useEffect(() => {
+    if (editingBlockId !== null) {
+      setMobileToolbarBlockId(null);
+    }
+  }, [editingBlockId]);
 
   const loadTenant = useCallback(async () => {
     if (!params.id || !isMounted) return;
@@ -104,7 +114,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     setIsAddPanelOpen(false);
   };
   const updateBlock = (blockId: number, updates: Partial<Block>) => setBlocks(blocks.map(block => block.id === blockId ? { ...block, ...updates } : block));
-  const deleteBlock = (blockId: number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlockId(null); };
+  const deleteBlock = (blockId: number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlockId(null); setMobileToolbarBlockId(null); }; // También cerrar toolbar móvil
   const moveBlock = (fromIndex: number, toIndex: number) => { const newBlocks = [...blocks]; const [movedBlock] = newBlocks.splice(fromIndex, 1); newBlocks.splice(toIndex, 0, movedBlock); setBlocks(newBlocks); };
   const showNotification = (message: string, type = 'info') => {
     const el = document.createElement('div');
@@ -115,6 +125,11 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   };
   
   const editingBlock = blocks.find(b => b.id === editingBlockId);
+
+  // Función para manejar el estado de la barra de herramientas móvil
+  const handleToggleMobileToolbar = useCallback((blockId: number | null) => {
+    setMobileToolbarBlockId(prevId => (prevId === blockId ? null : blockId));
+  }, []);
 
   if (!isMounted || loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
   if (!tenant) return <div className="text-center py-10"><h1 className="text-xl text-slate-600">Sitio no encontrado o sin acceso.</h1></div>;
@@ -159,7 +174,17 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
             <div className="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-[85vh] p-2 md:p-4 space-y-2">
               {blocks.length > 0 ? (
                 blocks.map((block, index) => (
-                  <BlockRenderer key={block.id} block={block} isEditing={editingBlockId === block.id} onEdit={() => setEditingBlockId(block.id)} onDelete={() => deleteBlock(block.id)} onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} />
+                  <BlockRenderer 
+                    key={block.id} 
+                    block={block} 
+                    isEditing={editingBlockId === block.id} 
+                    onEdit={() => { setEditingBlockId(block.id); handleToggleMobileToolbar(null); }} // Cierra toolbar móvil al abrir editor
+                    onDelete={() => deleteBlock(block.id)} 
+                    onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} 
+                    onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} 
+                    onToggleMobileToolbar={handleToggleMobileToolbar} // Pasa la función para togglear
+                    isMobileToolbarVisible={mobileToolbarBlockId === block.id} // Indica si su toolbar móvil debe estar visible
+                  />
                 ))
               ) : (
                 <div className="flex items-center justify-center h-full text-slate-500 p-8 text-center">
@@ -199,22 +224,59 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   );
 }
 
-function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: BlockRendererProps) {
+function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown, onToggleMobileToolbar, isMobileToolbarVisible }: BlockRendererProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const showToolbar = isHovered || isEditing;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768; // Detectar si es móvil
+  const showDesktopToolbar = isHovered || isEditing;
+  const showMobileToolbar = isMobileToolbarVisible;
+
+  const handleClick = (e: MouseEvent) => {
+    e.stopPropagation(); // Evita que el clic se propague y cierre la toolbar si está visible
+    if (isMobile) {
+      onToggleMobileToolbar(block.id);
+    } else {
+      // Comportamiento de desktop: abre el panel de edición directamente
+      if (!isEditing) {
+        onEdit();
+      }
+    }
+  };
+
+  const handleEditClick = (e: MouseEvent) => {
+    e.stopPropagation(); // Evita que el clic se propague
+    onEdit(); // Abre el panel de edición
+    onToggleMobileToolbar(null); // Oculta la barra de herramientas móvil
+  };
+
+  const handleMoveUpClick = (e: MouseEvent) => { e.stopPropagation(); if (onMoveUp) onMoveUp(); onToggleMobileToolbar(null); };
+  const handleMoveDownClick = (e: MouseEvent) => { e.stopPropagation(); if (onMoveDown) onMoveDown(); onToggleMobileToolbar(null); };
+  const handleDeleteClick = (e: MouseEvent) => { e.stopPropagation(); onDelete(); onToggleMobileToolbar(null); };
 
   return (
-    <div 
-      className={`relative rounded-md cursor-pointer transition-all ${isEditing ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-slate-300'}`} 
-      onClick={() => !isEditing && onEdit()}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    > 
-      {showToolbar && (
+    <div
+      className={`relative rounded-md transition-all ${isEditing ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-slate-300'} ${isMobile ? 'cursor-pointer' : ''}`}
+      onClick={handleClick}
+      onMouseEnter={() => !isMobile && setIsHovered(true)} // Solo hover en desktop
+      onMouseLeave={() => !isMobile && setIsHovered(false)} // Solo hover en desktop
+    >
+      {/* Barra de herramientas para Desktop */}
+      {!isMobile && showDesktopToolbar && (
         <div className="absolute top-[-14px] right-2 z-10 flex">
-          {onMoveUp && <button onClick={(e) => { e.stopPropagation(); onMoveUp(); }} className="p-1.5 bg-white border border-slate-300 rounded-l-md text-slate-600 hover:text-slate-900 hover:bg-slate-100"><MoveUpIcon /></button>}
-          {onMoveDown && <button onClick={(e) => { e.stopPropagation(); onMoveDown(); }} className={`p-1.5 bg-white border-y border-r border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-100 ${!onMoveUp ? 'rounded-l-md' : ''}`}><MoveDownIcon /></button>}
-          <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1.5 bg-white border-y border-r border-slate-300 rounded-r-md text-red-600 hover:text-red-800 hover:bg-red-50"><TrashIcon /></button>
+          {onMoveUp && <button onClick={handleMoveUpClick} className="p-1.5 bg-white border border-slate-300 rounded-l-md text-slate-600 hover:text-slate-900 hover:bg-slate-100"><MoveUpIcon /></button>}
+          {onMoveDown && <button onClick={handleMoveDownClick} className={`p-1.5 bg-white border-y border-r border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-100 ${!onMoveUp ? 'rounded-l-md' : ''}`}><MoveDownIcon /></button>}
+          <button onClick={handleDeleteClick} className="p-1.5 bg-white border-y border-r border-slate-300 rounded-r-md text-red-600 hover:text-red-800 hover:bg-red-50"><TrashIcon /></button>
+        </div>
+      )}
+
+      {/* Barra de herramientas para Móvil */}
+      {isMobile && showMobileToolbar && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex bg-white border border-slate-300 rounded-lg shadow-lg divide-x divide-slate-300">
+          <button onClick={handleEditClick} className="p-2 flex items-center gap-1 text-sm text-blue-600 hover:bg-blue-50 rounded-l-lg">
+            <SmallEditIcon /> Editar
+          </button>
+          {onMoveUp && <button onClick={handleMoveUpClick} className="p-2 text-slate-600 hover:bg-slate-50"><MoveUpIcon /></button>}
+          {onMoveDown && <button onClick={handleMoveDownClick} className="p-2 text-slate-600 hover:bg-slate-50"><MoveDownIcon /></button>}
+          <button onClick={handleDeleteClick} className="p-2 text-red-600 hover:bg-red-50 rounded-r-lg"><TrashIcon /></button>
         </div>
       )}
       
