@@ -2,13 +2,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-// Definimos el tipo para las props del modal
+// Definimos los tipos para el modal y los tenants
 interface CreateSiteModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
 
-// Definimos el tipo para los objetos de sitio web (tenant)
 interface Tenant {
   id: string;
   userKey: string;
@@ -51,7 +50,7 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
       const res = await fetch(`/api/check-slug/${slugToCheck}`)
       const data = await res.json()
       setSlugAvailable(data.available)
-    } catch (error) {
+    } catch (_error) {
       setSlugAvailable(null)
     }
   }
@@ -79,7 +78,7 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
         const data = await res.json()
         alert(data.error || 'Error al crear el sitio')
       }
-    } catch (error) {
+    } catch (_error) {
       alert('Error al crear el sitio')
     } finally {
       setLoading(false)
@@ -182,7 +181,7 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
 }
 
 export default function DashboardPage() {
-  const [tenants, setTenants] = useState<Tenant[]>([]) // <-- Le decimos a useState que 'tenants' es un array de 'Tenant'
+  const [tenants, setTenants] = useState<Tenant[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const router = useRouter()
@@ -197,10 +196,10 @@ export default function DashboardPage() {
       const res = await fetch('/api/tenants', {
         headers: { Authorization: `Bearer ${token}` }
       })
-      const data: { tenants: Tenant[] } = await res.json() // <-- Le decimos a TypeScript qué tipo de datos esperamos
+      const data: { tenants: Tenant[] } = await res.json()
       setTenants(data.tenants || [])
-    } catch (error) {
-      console.error('Error loading tenants:', error)
+    } catch (_error) {
+      console.error('Error loading tenants:', _error)
     } finally {
       setLoading(false)
     }
@@ -210,8 +209,13 @@ export default function DashboardPage() {
     try {
       await navigator.clipboard.writeText(text)
       alert('URL copiada al portapapeles!')
-    } catch (err: any) { // Corregido: 'err' es de tipo 'any' para evitar errores
+    } catch (err: unknown) { // <-- Corregido: cambiamos 'any' a 'unknown'
       const textArea = document.createElement('textarea')
+      if (err instanceof Error) { // <-- Corregimos para verificar el tipo de error
+        alert('Error al copiar: ' + err.message)
+      } else {
+        alert('Error al copiar la URL.')
+      }
       textArea.value = text
       document.body.appendChild(textArea)
       textArea.select()
