@@ -2,7 +2,6 @@ import { getTenantBySlug } from '@/lib/tenant';
 import { NextResponse } from 'next/server';
 
 // ================== CÓDIGO PEGADO DIRECTAMENTE ==================
-// Esta función convierte tu estructura de bloques JSON a HTML.
 function blocksToHTML(blocks) {
   if (!Array.isArray(blocks)) return '';
   return blocks.map(block => {
@@ -33,46 +32,40 @@ function blocksToHTML(blocks) {
         `;
       case 'cards':
         return `
-          <div class="bg-gray-50 py-12">
-            <div class="max-w-7xl mx-auto px-4">
-              <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">${data.title}</h2>
-              <div class="grid md:grid-cols-3 gap-8">
-                ${data.cards.map((card) => `
-                  <div class="text-center p-6 bg-white rounded-lg shadow-sm">
-                    <div class="text-4xl mb-4">${card.icon}</div>
-                    <h3 class="text-xl font-semibold mb-2">${card.title}</h3>
-                    <p class="text-gray-600">${card.description}</p>
-                  </div>
-                `).join('')}
-              </div>
+          <div class="bg-slate-50 py-12 px-4 rounded-md">
+            <h2 class="text-3xl font-bold text-center text-slate-800 mb-12">${data.title}</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+              ${(data.cards || []).map(card => `
+                <div class="text-center p-6 bg-white rounded-lg shadow-sm ring-1 ring-slate-100">
+                  <div class="text-4xl mb-4">${card.icon}</div>
+                  <h3 class="text-xl font-semibold mb-2 text-slate-800">${card.title}</h3>
+                  <p class="text-slate-600 text-sm">${card.description}</p>
+                </div>
+              `).join('')}
             </div>
           </div>
         `;
-      case 'contact':
-        return `
-          <div class="bg-white py-12">
-            <div class="max-w-4xl mx-auto px-4">
-              <h2 class="text-2xl font-bold text-center text-gray-900 mb-8">${data.title}</h2>
-              <div class="text-center space-y-4">
-                ${data.showPhone ? `<div class="flex items-center justify-center text-gray-700"><span class="mr-3">📞</span><span>${data.phone}</span></div>` : ''}
-                ${data.showEmail ? `<div class="flex items-center justify-center text-gray-700"><span class="mr-3">✉️</span><span>${data.email}</span></div>` : ''}
-                ${data.showAddress ? `<div class="flex items-center justify-center text-gray-700"><span class="mr-3">📍</span><span>${data.address}</span></div>` : ''}
-              </div>
-            </div>
-          </div>
-        `;
+        
+      // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+      // Se añade la lógica para renderizar el nuevo bloque CTA.
       case 'cta':
         return `
-          <div class="${data.backgroundColor || 'bg-blue-600'} text-white p-12 text-center">
-            <h2 class="text-3xl font-bold mb-4">${data.title}</h2>
-            <p class="text-xl mb-8 opacity-90">${data.subtitle}</p>
-            <a href="${data.buttonLink || '#'}" class="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100">
+          <div class="${data.backgroundColor || 'bg-slate-800'} text-white p-12 rounded-md text-center">
+            <h2 class="text-3xl font-bold mb-2">${data.title}</h2>
+            <p class="text-lg opacity-90 mb-6 max-w-xl mx-auto">${data.subtitle}</p>
+            <a 
+              href="${data.buttonLink || '#'}" 
+              class="inline-block bg-white text-slate-800 px-6 py-2.5 rounded-md text-base font-semibold hover:bg-slate-200"
+            >
               ${data.buttonText}
             </a>
           </div>
         `;
+      // --- FIN DE LA CORRECCIÓN ---
+
       default:
-        return '';
+        // Mensaje de error mejorado para futuras depuraciones
+        return `<!-- Bloque de tipo '${block.type}' no reconocido -->`;
     }
   }).join('');
 }
@@ -99,7 +92,7 @@ export async function GET(request, { params }) {
       if (Array.isArray(blocks)) {
         finalContent = blocksToHTML(blocks);
       } else {
-        finalContent = page.content;
+        finalContent = page.content; // Compatibilidad con contenido antiguo en HTML
       }
     } catch (e) {
       finalContent = page.content;
@@ -123,10 +116,7 @@ export async function GET(request, { params }) {
     return new NextResponse(html, {
       headers: { 
         'Content-Type': 'text/html; charset=utf-8',
-        // ======================= ¡ESTA ES LA LÍNEA CORREGIDA! =======================
-        // Le decimos al navegador y a los servidores que NUNCA guarden una copia.
         'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0'
-        // =========================================================================
       }
     });
   } catch (error) {
@@ -134,4 +124,3 @@ export async function GET(request, { params }) {
     return new NextResponse(`Error en el servidor`, { status: 500 });
   }
 }
-
