@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, ChangeEvent, MouseEvent } from 'react';
-// CORRECCIÓN: Se revierte la importación a 'next/router' para asegurar la compatibilidad con tu entorno.
-import { useRouter } from 'next/router';
+// CORRECCIÓN DEFINITIVA: Se usa 'next/navigation' que es la ruta correcta para tu entorno.
+import { useRouter } from 'next/navigation';
 import React from 'react';
 
 // ================== Icon Components ==================
@@ -70,23 +70,48 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         setTenant(data.tenant);
         const content = data.tenant.pages[0]?.content || '[]';
         let initialBlocks: Block[] = [];
-        try { const parsed = JSON.parse(content); if (Array.isArray(parsed)) initialBlocks = parsed; } 
+        try { const parsed = JSON.parse(content); if (Array.isArray(parsed)) initialBlocks = parsed; }
         catch (e) { console.warn("Contenido inválido, iniciando lienzo en blanco."); }
         setBlocks(initialBlocks);
       } else { router.push('/dashboard'); }
-    } catch (error) { console.error('Error al cargar:', error); router.push('/dashboard'); } 
+    } catch (error) { console.error('Error al cargar:', error); router.push('/dashboard'); }
     finally { setLoading(false); }
   }, [params.id, router, isMounted]);
 
   useEffect(() => { loadTenant(); }, [loadTenant]);
 
-  const saveTenant = async () => { /* ... (sin cambios) ... */ };
+  const saveTenant = async () => {
+    if (!tenant) return;
+    setSaving(true);
+    try {
+      const jsonContent = JSON.stringify(blocks);
+      const updatedTenant = { ...tenant, pages: tenant.pages.map((page) => page.slug === '/' ? { ...page, content: jsonContent, updatedAt: new Date() } : page ) };
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/tenants/${params.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(updatedTenant) });
+      if (res.ok) {
+        showNotification('Sitio guardado exitosamente', 'success');
+        setTenant(updatedTenant);
+      } else { throw new Error('Failed to save'); }
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      showNotification('Error al guardar el sitio', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const addBlock = (blockType: string) => setBlocks([...blocks, createBlock(blockType)]);
   const updateBlock = (blockId: number, updates: Partial<Block>) => setBlocks(blocks.map(block => block.id === blockId ? { ...block, ...updates } : block));
   const deleteBlock = (blockId: number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlockId(null); };
   const moveBlock = (fromIndex: number, toIndex: number) => { const newBlocks = [...blocks]; const [movedBlock] = newBlocks.splice(fromIndex, 1); newBlocks.splice(toIndex, 0, movedBlock); setBlocks(newBlocks); };
-  const showNotification = (message: string, type = 'info') => { /* ... (sin cambios) ... */ };
-  
+  const showNotification = (message: string, type = 'info') => {
+    const el = document.createElement('div');
+    el.className = `fixed top-5 right-5 px-4 py-2 rounded-lg text-white text-sm shadow-lg z-50 ${ type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  };
+
   const editingBlock = blocks.find(b => b.id === editingBlockId);
 
   if (!isMounted || loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
@@ -113,7 +138,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
-      
+
       <main className="flex">
         {/* Sidebar */}
         <aside className="w-72 bg-white border-r border-slate-200 p-4 space-y-4 hidden md:block" style={{ height: 'calc(100vh - 61px)'}}>
@@ -166,12 +191,12 @@ function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDow
   const showToolbar = isHovered || isEditing;
 
   return (
-    <div 
-      className={`relative rounded-md cursor-pointer transition-all ${isEditing ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-slate-300'}`} 
+    <div
+      className={`relative rounded-md cursor-pointer transition-all ${isEditing ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-slate-300'}`}
       onClick={() => !isEditing && onEdit()}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-    > 
+    >
       {showToolbar && (
         <div className="absolute top-[-14px] right-2 z-10 flex">
           {onMoveUp && <button onClick={(e) => { e.stopPropagation(); onMoveUp(); }} className="p-1.5 bg-white border border-slate-300 rounded-l-md text-slate-600 hover:text-slate-900 hover:bg-slate-100"><MoveUpIcon /></button>}
@@ -179,7 +204,7 @@ function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDow
           <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1.5 bg-white border-y border-r border-slate-300 rounded-r-md text-red-600 hover:text-red-800 hover:bg-red-50"><TrashIcon /></button>
         </div>
       )}
-      
+
       {renderBlockContent(block)}
     </div>
   );
@@ -205,7 +230,7 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
     newCards[cardIndex] = { ...newCards[cardIndex], [key]: value };
     onUpdate({ data: { ...currentData, cards: newCards } });
   };
-  
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-slate-200">
@@ -261,4 +286,3 @@ const TextareaField = ({ label, value, rows = 3, onChange }: { label: string, va
         <textarea value={value} onChange={onChange} rows={rows} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
     </div>
 );
-
