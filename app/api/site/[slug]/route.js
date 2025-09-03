@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 // ================== CÓDIGO PEGADO DIRECTAMENTE ==================
 // Esta función convierte tu estructura de bloques JSON a HTML.
-function blocksToHTML(blocks: any[]): string {
+function blocksToHTML(blocks) {
   if (!Array.isArray(blocks)) return '';
   return blocks.map(block => {
     const { data } = block;
@@ -37,7 +37,7 @@ function blocksToHTML(blocks: any[]): string {
             <div class="max-w-7xl mx-auto px-4">
               <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">${data.title}</h2>
               <div class="grid md:grid-cols-3 gap-8">
-                ${data.cards.map((card: any) => `
+                ${data.cards.map((card) => `
                   <div class="text-center p-6 bg-white rounded-lg shadow-sm">
                     <div class="text-4xl mb-4">${card.icon}</div>
                     <h3 class="text-xl font-semibold mb-2">${card.title}</h3>
@@ -78,7 +78,7 @@ function blocksToHTML(blocks: any[]): string {
 }
 // ====================================================================
 
-export async function GET(request: Request, { params }: { params: { slug: string } }) {
+export async function GET(request, { params }) {
   try {
     const { slug } = params;
     const tenant = await getTenantBySlug(slug);
@@ -87,7 +87,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
       return new NextResponse(`Sitio no encontrado`, { status: 404 });
     }
 
-    const page = tenant.pages.find((p: { slug: string; published: boolean; }) => p.slug === '/' && p.published) || tenant.pages[0];
+    const page = tenant.pages.find((p) => p.slug === '/' && p.published) || tenant.pages[0];
     
     if (!page || !page.content) {
       return new NextResponse(`Sitio en construcción`, { status: 200 });
