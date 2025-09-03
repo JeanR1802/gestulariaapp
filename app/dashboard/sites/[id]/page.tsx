@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, ChangeEvent, MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData } from '@/app/components/editor/blocks';
