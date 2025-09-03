@@ -9,14 +9,14 @@ interface CreateSiteModalProps {
 }
 
 // Componente Modal para crear sitio
-function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) { // <-- Aplicamos la interfaz aquí
+function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
-  const [slugAvailable, setSlugAvailable] = useState(null)
-  
-  const generateSlug = (text) => {
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null) // Corregido: añadimos el tipo
+
+  const generateSlug = (text: string): string => { // Corregido: 'text' ahora es 'string'
     return text
       .toLowerCase()
       .normalize('NFD')
@@ -27,8 +27,8 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) { // <-- 
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
   }
-  
-  const checkSlugAvailability = async (slugToCheck) => {
+
+  const checkSlugAvailability = async (slugToCheck: string) => { // Corregido: 'slugToCheck' ahora es 'string'
     if (!slugToCheck || slugToCheck.length < 2) {
       setSlugAvailable(null)
       return
@@ -43,7 +43,7 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) { // <-- 
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => { // Corregido: 'e' es un evento de formulario
     e.preventDefault()
     setLoading(true)
 
@@ -193,7 +193,7 @@ export default function DashboardPage() {
     }
   }
 
-  const copyToClipboard = async (text) => {
+  const copyToClipboard = async (text: string) => { // Corregido: 'text' ahora es 'string'
     try {
       await navigator.clipboard.writeText(text)
       alert('URL copiada al portapapeles!')
