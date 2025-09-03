@@ -1,18 +1,18 @@
-// app/dashboard/sites/[id]/page.tsx - EDITOR VISUAL (VERSIÓN MEJORADA)
+// app/dashboard/sites/[id]/page.tsx - EDITOR VISUAL (VERSIÓN CORREGIDA)
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+// CORRECCIÓN: Se importa useRouter de 'next/router' para mayor compatibilidad.
+import { useRouter } from 'next/router'
 import { 
   BLOCK_TYPES, 
   createBlock, 
   getBlockName, 
   getBlockIcon 
-} from '@/lib/block-editor-utils' // Importamos desde nuestro nuevo archivo
+// CORRECCIÓN: Se usa una ruta relativa para asegurar que el archivo se encuentre.
+} from '../../../lib/block-editor-utils'
 
-// El resto del código es casi idéntico, solo cambiaremos loadTenant y saveTenant
-// (Los componentes BlockRenderer y EditPanel se quedan aquí por simplicidad)
-
-export default function VisualEditor({ params }) {
+// CORRECCIÓN: Se añade el tipo explícito para los 'params' para solucionar el error de TypeScript.
+export default function VisualEditor({ params }: { params: { id: string } }) {
   const [tenant, setTenant] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -21,7 +21,10 @@ export default function VisualEditor({ params }) {
   const router = useRouter()
 
   useEffect(() => {
-    loadTenant()
+    // El router puede no tener los params listos en el primer render
+    if (params.id) {
+      loadTenant()
+    }
   }, [params.id])
 
   const loadTenant = async () => {
@@ -36,16 +39,12 @@ export default function VisualEditor({ params }) {
         const data = await res.json()
         setTenant(data.tenant)
         
-        // --- CAMBIO IMPORTANTE: Lógica para cargar bloques ---
         const content = data.tenant.pages[0]?.content || '[]'
         let initialBlocks = []
         try {
-          // Intentamos interpretar el contenido como JSON (el método nuevo y preferido)
           initialBlocks = JSON.parse(content)
           if (!Array.isArray(initialBlocks)) initialBlocks = [];
         } catch (e) {
-          // Si falla, significa que es HTML antiguo. Dejamos los bloques vacíos
-          // para no romper la app. Podrías añadir lógica más compleja aquí si lo necesitas.
           console.warn("El contenido no es JSON, se iniciará un lienzo en blanco.")
           initialBlocks = []
         }
@@ -66,8 +65,6 @@ export default function VisualEditor({ params }) {
 
     setSaving(true)
     try {
-      // --- CAMBIO IMPORTANTE: Lógica para guardar bloques ---
-      // Convertimos el array de bloques a un string JSON en lugar de HTML
       const jsonContent = JSON.stringify(blocks)
       
       const updatedTenant = {
@@ -100,13 +97,12 @@ export default function VisualEditor({ params }) {
     }
   }
 
-  // --- Funciones de manipulación de bloques (sin cambios) ---
   const addBlock = (blockType) => setBlocks([...blocks, createBlock(blockType)])
   const updateBlock = (blockId, updates) => setBlocks(blocks.map(block => block.id === blockId ? { ...block, ...updates } : block))
   const deleteBlock = (blockId) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlock(null) }
   const moveBlock = (fromIndex, toIndex) => { const newBlocks = [...blocks]; const [movedBlock] = newBlocks.splice(fromIndex, 1); newBlocks.splice(toIndex, 0, movedBlock); setBlocks(newBlocks) }
 
-  const showNotification = (message, type = 'info') => { /* ... (sin cambios) ... */
+  const showNotification = (message, type = 'info') => {
     const notification = document.createElement('div')
     notification.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 ${ type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'}`
     notification.textContent = message
@@ -114,7 +110,6 @@ export default function VisualEditor({ params }) {
     setTimeout(() => notification.remove(), 3000)
   }
 
-  // --- Renderizado JSX (sin cambios) ---
   if (loading) { return <div className="flex items-center justify-center min-h-screen"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div><p className="text-gray-600">Cargando editor...</p></div></div> }
   if (!tenant) { return <div className="text-center py-8"><h1 className="text-xl text-gray-600">Sitio no encontrado</h1></div> }
 
@@ -190,11 +185,7 @@ export default function VisualEditor({ params }) {
   )
 }
 
-
-// --- Componentes Internos del Editor (sin cambios) ---
-
 function BlockRenderer({ block, isEditing, onEdit, onUpdate, onDelete, onMoveUp, onMoveDown }) {
-  // ... (El código de este componente es idéntico al que ya tenías)
   const renderBlock = () => {
     switch (block.type) {
       case 'hero': return (<div className={`${block.data.backgroundColor} p-16 rounded-lg text-center`}><h1 className="text-4xl font-bold text-gray-900 mb-4">{block.data.title}</h1><p className="text-xl text-gray-600 mb-8">{block.data.subtitle}</p><button className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg hover:bg-blue-700">{block.data.buttonText}</button></div>)
@@ -210,7 +201,6 @@ function BlockRenderer({ block, isEditing, onEdit, onUpdate, onDelete, onMoveUp,
 }
 
 function EditPanel({ block, onUpdate, onClose }) {
-  // ... (El código de este componente es idéntico al que ya tenías)
   if (!block) return null
   const updateData = (key, value) => { onUpdate({ data: { ...block.data, [key]: value } }) }
   const updateCardData = (cardIndex, key, value) => { const newCards = [...block.data.cards]; newCards[cardIndex] = { ...newCards[cardIndex], [key]: value }; onUpdate({ data: { ...block.data, cards: newCards } }) }

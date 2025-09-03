@@ -1,6 +1,8 @@
+// app/api/site/[slug]/route.js
 import { getTenantBySlug } from '@/lib/tenant'
 import { NextResponse } from 'next/server'
-import { blocksToHTML } from '@/lib/block-editor-utils' // ¡Importamos nuestra función!
+// CORRECCIÓN: Se usa una ruta relativa para asegurar que el archivo se encuentre.
+import { blocksToHTML } from '../../../lib/block-editor-utils'
 
 export async function GET(request, { params }) {
   try {
@@ -8,40 +10,32 @@ export async function GET(request, { params }) {
     const tenant = await getTenantBySlug(slug)
     
     if (!tenant) {
-      // ... (código de sitio no encontrado sin cambios)
-      return new NextResponse(`...`, { status: 404, headers: { 'Content-Type': 'text/html' } })
+      return new NextResponse(`<!DOCTYPE html><html lang="es"><head><title>Sitio no encontrado</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50 flex items-center justify-center min-h-screen"><div class="text-center"><h1 class="text-2xl font-bold">Sitio no encontrado</h1><p class="text-gray-600">El sitio <strong>${slug}</strong> no existe.</p></div></body></html>`, { status: 404, headers: { 'Content-Type': 'text/html' } })
     }
 
     const page = tenant.pages.find(p => p.slug === '/' && p.published) || tenant.pages[0]
     
     if (!page || !page.content) {
-      // ... (código de sitio en construcción sin cambios)
-      return new NextResponse(`...`, { status: 200, headers: { 'Content-Type': 'text/html' } })
+      return new NextResponse(`<!DOCTYPE html><html lang="es"><head><title>En construcción</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50 flex items-center justify-center min-h-screen"><div class="text-center"><h1 class="text-2xl font-bold">${tenant.name}</h1><p class="text-gray-600">Este sitio está en construcción.</p></div></body></html>`, { status: 200, headers: { 'Content-Type': 'text/html' } })
     }
 
-    // --- NUEVA LÓGICA DE RENDERIZADO ---
     let finalContent = '';
     try {
-      // Intentamos parsear el contenido como JSON
       const blocks = JSON.parse(page.content);
-      // Si es un array, lo convertimos a HTML
       if (Array.isArray(blocks)) {
         finalContent = blocksToHTML(blocks);
       } else {
-        // Si no es un array, es probable que sea HTML antiguo
         finalContent = page.content;
       }
     } catch (e) {
-      // Si falla el parseo, asumimos que es HTML plano
       finalContent = page.content;
     }
 
-    // Generar HTML completo del sitio con el contenido final
     const html = `<!DOCTYPE html>
     <html lang="es">
     <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="viewport" content="width=device-width, initial-scale-1.0">
       <title>${page.title} - ${tenant.name}</title>
       <meta name="description" content="${tenant.description || ''}">
       <script src="https://cdn.tailwindcss.com"></script>
@@ -49,8 +43,6 @@ export async function GET(request, { params }) {
     </head>
     <body>
       ${finalContent}
-      
-      <!-- ... (resto del body, branding, scripts, etc. sin cambios) ... -->
     </body>
     </html>`
 
@@ -62,7 +54,6 @@ export async function GET(request, { params }) {
     })
   } catch (error) {
     console.error('Site render error:', error)
-    // ... (código de manejo de error 500 sin cambios)
-    return new NextResponse(`...`, { status: 500, headers: { 'Content-Type': 'text/html' } })
+    return new NextResponse(`<!DOCTYPE html><html lang="es"><head><title>Error</title></head><body>Error en el servidor.</body></html>`, { status: 500, headers: { 'Content-Type': 'text/html' } })
   }
 }
