@@ -1,8 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import React from 'react'
 
-// Definimos los tipos para el modal y los tenants
 interface CreateSiteModalProps {
   onClose: () => void;
   onSuccess: () => void;
@@ -50,7 +50,7 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
       const res = await fetch(`/api/check-slug/${slugToCheck}`)
       const data = await res.json()
       setSlugAvailable(data.available)
-    } catch (_error) {
+    } catch (_error: unknown) {
       setSlugAvailable(null)
     }
   }
@@ -78,7 +78,7 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
         const data = await res.json()
         alert(data.error || 'Error al crear el sitio')
       }
-    } catch (_error) {
+    } catch (_error: unknown) {
       alert('Error al crear el sitio')
     } finally {
       setLoading(false)
@@ -198,7 +198,7 @@ export default function DashboardPage() {
       })
       const data: { tenants: Tenant[] } = await res.json()
       setTenants(data.tenants || [])
-    } catch (_error) {
+    } catch (_error: unknown) { // Corregido: 'error' ya no se usa
       console.error('Error loading tenants:', _error)
     } finally {
       setLoading(false)
@@ -209,9 +209,9 @@ export default function DashboardPage() {
     try {
       await navigator.clipboard.writeText(text)
       alert('URL copiada al portapapeles!')
-    } catch (err: unknown) { // <-- Corregido: cambiamos 'any' a 'unknown'
+    } catch (err: unknown) {
       const textArea = document.createElement('textarea')
-      if (err instanceof Error) { // <-- Corregimos para verificar el tipo de error
+      if (err instanceof Error) {
         alert('Error al copiar: ' + err.message)
       } else {
         alert('Error al copiar la URL.')

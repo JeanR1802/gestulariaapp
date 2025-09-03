@@ -1,5 +1,3 @@
-// app/api/tenants/route.js
-import { connectToDatabase } from '@/lib/database'
 import { verifyToken } from '@/lib/auth'
 import { getTenantByKey } from '@/lib/tenant'
 import { NextResponse } from 'next/server'

@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-// Definimos el tipo de objeto 'user'
 interface User {
   email: string;
   key: string;
@@ -13,7 +12,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [user, setUser] = useState<User | null>(null) // <-- Le decimos a useState que 'user' es de tipo 'User' o 'null'
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -24,7 +23,6 @@ export default function DashboardLayout({
       return
     }
 
-    // Verificar token
     fetch('/api/auth/verify', {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -38,7 +36,7 @@ export default function DashboardLayout({
       }
     })
     .finally(() => setLoading(false))
-  }, [])
+  }, [router]) // Corregido: 'router' se ha añadido a las dependencias
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -58,7 +56,6 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -81,7 +78,6 @@ export default function DashboardLayout({
         </div>
       </header>
 
-      {/* Contenido */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {children}
       </main>
