@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -56,7 +57,11 @@ export default function SitesPage() {
         const res = await fetch('/api/tenants', {
           headers: { Authorization: `Bearer ${token ?? ''}` }
         })
-        const data = (await res.json()) as { tenants: Tenant[] }
+
+        // Tipamos la respuesta explícitamente
+        type TenantsResponse = { tenants: Tenant[] }
+        const data: TenantsResponse = await res.json()
+
         setTenants(data.tenants || [])
       } catch (err) {
         console.error(err)
