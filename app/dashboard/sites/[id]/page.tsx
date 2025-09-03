@@ -186,7 +186,14 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button onClick={() => window.open(`http://${tenant.slug}.localhost:3000?t=${Date.now()}`, '_blank')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">👁️ Vista Previa</button>
+              {/* ======================= ¡AQUÍ ESTÁ LA CORRECCIÓN! ======================= */}
+              <button 
+                  onClick={() => window.open(`https://${tenant.slug}.gestularia.com?t=${Date.now()}`, '_blank')} 
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                >
+                  👁️ Vista Previa
+                </button>
+              {/* ========================================================================= */}
               <button onClick={saveTenant} disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving ? '⏳ Guardando...' : '💾 Guardar'}</button>
             </div>
           </div>
@@ -256,18 +263,18 @@ function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDow
 function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
   if (!block) return null;
 
-  // CORRECCIÓN FINAL: Se asegura que el objeto actualizado mantenga el tipo correcto.
   const updateData = (key: string, value: unknown) => {
-    const newData = { ...block.data, [key]: value };
+    const newData: BlockData = { ...block.data, [key]: value } as BlockData;
     onUpdate({ data: newData });
   };
 
   const updateCardData = (cardIndex: number, key: string, value: unknown) => {
-    const cards = (block.data as CardsData).cards;
-    const newCards = [...cards];
+    const currentData = block.data as CardsData;
+    const newCards = [...currentData.cards];
     newCards[cardIndex] = { ...newCards[cardIndex], [key]: value };
-    onUpdate({ data: { ...block.data, cards: newCards } });
+    onUpdate({ data: { ...currentData, cards: newCards } });
   };
   
   return (<div className="fixed right-0 top-0 bottom-0 w-80 bg-white border-l shadow-lg z-50 overflow-y-auto"><div className="p-4"><div className="flex items-center justify-between mb-6"><h3 className="text-lg font-semibold">✏️ Editar {getBlockName(block.type)}</h3><button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button></div><div className="space-y-4">{block.type === 'hero' && (() => {const d = block.data as HeroData; return (<><div><label className="block text-sm font-medium text-gray-700 mb-1">Título Principal</label><input type="text" value={d.title} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('title', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" /></div><div><label className="block text-sm font-medium text-gray-700 mb-1">Subtítulo</label><textarea value={d.subtitle} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => updateData('subtitle', e.target.value)} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md" /></div><div><label className="block text-sm font-medium text-gray-700 mb-1">Texto del Botón</label><input type="text" value={d.buttonText} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('buttonText', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" /></div></>);})()}{block.type === 'text' && (() => {const d = block.data as TextData; return (<div><label className="block text-sm font-medium text-gray-700 mb-1">Contenido</label><textarea value={d.content} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => updateData('content', e.target.value)} rows={8} className="w-full px-3 py-2 border border-gray-300 rounded-md" /></div>);})()}{block.type === 'image' && (() => {const d = block.data as ImageData; return (<><div><label className="block text-sm font-medium text-gray-700 mb-1">URL de la Imagen</label><input type="url" value={d.imageUrl} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('imageUrl', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" /></div><div><label className="block text-sm font-medium text-gray-700 mb-1">Descripción (Alt)</label><input type="text" value={d.alt} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('alt', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" /></div><div><label className="block text-sm font-medium text-gray-700 mb-1">Pie de foto</label><input type="text" value={d.caption} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('caption', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" /></div></>);})()}{block.type === 'cards' && (() => {const d = block.data as CardsData; return (<><div><label className="block text-sm font-medium text-gray-700 mb-1">Título de la Sección</label><input type="text" value={d.title} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('title', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" /></div>{d.cards.map((card, index) => (<div key={index} className="border p-3 rounded-lg"><h4 className="font-medium text-sm mb-2">Tarjeta {index + 1}</h4><div className="space-y-2"><input type="text" value={card.icon} onChange={(e: ChangeEvent<HTMLInputElement>) => updateCardData(index, 'icon', e.target.value)} placeholder="Icono (Emoji)" className="w-full px-2 py-1 border rounded" /><input type="text" value={card.title} onChange={(e: ChangeEvent<HTMLInputElement>) => updateCardData(index, 'title', e.target.value)} placeholder="Título" className="w-full px-2 py-1 border rounded" /><textarea value={card.description} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => updateCardData(index, 'description', e.target.value)} placeholder="Descripción" rows={2} className="w-full px-2 py-1 border rounded" /></div></div>))}</>);})()}{block.type === 'contact' && (() => {const d = block.data as ContactData; return (<><div className="space-y-2"><label className="block text-sm font-medium text-gray-700 mb-1">Título</label><input type="text" value={d.title} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('title', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" /></div><div className="space-y-2"><label className="flex items-center"><input type="checkbox" checked={d.showPhone} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('showPhone', e.target.checked)} className="mr-2" /> Mostrar teléfono</label>{d.showPhone && (<input type="text" value={d.phone} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('phone', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />)}</div><div className="space-y-2"><label className="flex items-center"><input type="checkbox" checked={d.showEmail} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('showEmail', e.target.checked)} className="mr-2" /> Mostrar email</label>{d.showEmail && (<input type="email" value={d.email} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('email', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />)}</div><div className="space-y-2"><label className="flex items-center"><input type="checkbox" checked={d.showAddress} onChange={(e: ChangeEvent<HTMLInputElement>) => updateData('showAddress', e.target.checked)} className="mr-2" /> Mostrar dirección</label>{d.showAddress && (<textarea value={d.address} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => updateData('address', e.target.value)} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-md" />)}</div></>);})()}</div></div></div>);
 }
+
