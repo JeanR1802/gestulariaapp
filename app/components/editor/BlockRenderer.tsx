@@ -40,3 +40,4 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
       <BlockComponent data={block.data} />
     </BlockWrapper>
   );
+}
