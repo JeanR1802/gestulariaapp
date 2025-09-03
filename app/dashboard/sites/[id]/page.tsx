@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, ChangeEvent, MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
@@ -8,6 +8,7 @@ const MoveUpIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" heig
 const MoveDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 9 7 7 7-7"/></svg>;
 const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>;
 const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
+const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 
 // ================== DEFINICIONES DE TIPOS ==================
 interface Card { icon: string; title: string; description: string; }
@@ -16,30 +17,11 @@ interface TextData { content: string; }
 interface ImageData { imageUrl: string; alt: string; caption: string; }
 interface CardsData { title: string; cards: Card[]; }
 type BlockData = HeroData | TextData | ImageData | CardsData;
-
-interface Block {
-  id: number;
-  type: string;
-  data: BlockData; // CORRECCIÓN: Se reemplaza 'any' por el tipo estricto 'BlockData'
-}
-
+interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
+interface BlockRendererProps { block: Block; isEditing: boolean; onEdit: () => void; onDelete: () => void; onMoveUp?: () => void; onMoveDown?: () => void; }
 interface EditPanelProps { block: Block | undefined; onUpdate: (updates: Partial<Block>) => void; onClose: () => void; }
 // =======================================================================
-
-// ... (El resto del código, como las funciones createBlock, getBlockName, VisualEditor, etc., se mantiene igual que en la última versión funcional que te proporcioné)
-// ... Te lo incluyo completo a continuación para que no haya dudas.
-
-function createBlock(type: string): Block {
-  const baseBlock = { id: Date.now() + Math.random(), type, data: {} as BlockData };
-  const templates: { [key: string]: Block } = {
-     hero: { ...baseBlock, data: { title: 'Tu Título Principal Aquí', subtitle: 'Un subtítulo atractivo que describa tu negocio.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } },
-    text: { ...baseBlock, data: { content: 'Escribe aquí el contenido de tu párrafo. Puedes hablar sobre tu empresa, servicios, o cualquier información que quieras compartir.' } },
-    image: { ...baseBlock, data: { imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción de la imagen', caption: 'Un pie de foto opcional.' } },
-    cards: { ...baseBlock, data: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve del primer servicio que ofreces.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve del segundo servicio que ofreces.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve del tercer servicio que ofreces.' } ] } },
-  };
-  return templates[type] || baseBlock;
-}
 
 const BLOCK_TYPES = [
   { id: 'hero', name: 'Héroe', icon: '🎯', description: 'Sección principal llamativa.' },
@@ -47,6 +29,17 @@ const BLOCK_TYPES = [
   { id: 'image', name: 'Imagen', icon: '🖼️', description: 'Una sola imagen con pie de foto.' },
   { id: 'cards', name: 'Tarjetas', icon: '🎴', description: 'Grupo de 3 tarjetas de servicio.' },
 ];
+
+function createBlock(type: string): Block {
+  const baseBlock = { id: Date.now() + Math.random(), type, data: {} as BlockData };
+  const templates: { [key: string]: Block } = {
+    hero: { ...baseBlock, data: { title: 'Tu Título Principal Aquí', subtitle: 'Un subtítulo atractivo que describa tu negocio.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } },
+    text: { ...baseBlock, data: { content: 'Escribe aquí el contenido de tu párrafo. Puedes hablar sobre tu empresa, servicios, o cualquier información que quieras compartir.' } },
+    image: { ...baseBlock, data: { imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción de la imagen', caption: 'Un pie de foto opcional.' } },
+    cards: { ...baseBlock, data: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve del primer servicio que ofreces.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve del segundo servicio que ofreces.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve del tercer servicio que ofreces.' } ] } },
+  };
+  return templates[type] || baseBlock;
+}
 
 function getBlockName(type: string): string {
   const blockType = BLOCK_TYPES.find(b => b.id === type);
@@ -60,6 +53,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => { setIsMounted(true); }, []);
@@ -76,7 +70,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         const content = data.tenant.pages[0]?.content || '[]';
         let initialBlocks: Block[] = [];
         try { const parsed = JSON.parse(content); if (Array.isArray(parsed)) initialBlocks = parsed; } 
-        catch (error) { console.warn("Contenido inválido, iniciando lienzo en blanco."); }
+        catch (e) { console.warn("Contenido inválido, iniciando lienzo en blanco."); }
         setBlocks(initialBlocks);
       } else { router.push('/dashboard'); }
     } catch (error) { console.error('Error al cargar:', error); router.push('/dashboard'); } 
@@ -105,7 +99,10 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     }
   };
 
-  const addBlock = (blockType: string) => setBlocks([...blocks, createBlock(blockType)]);
+  const addBlock = (blockType: string) => {
+    setBlocks([...blocks, createBlock(blockType)]);
+    setIsAddPanelOpen(false);
+  };
   const updateBlock = (blockId: number, updates: Partial<Block>) => setBlocks(blocks.map(block => block.id === blockId ? { ...block, ...updates } : block));
   const deleteBlock = (blockId: number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlockId(null); };
   const moveBlock = (fromIndex: number, toIndex: number) => { const newBlocks = [...blocks]; const [movedBlock] = newBlocks.splice(fromIndex, 1); newBlocks.splice(toIndex, 0, movedBlock); setBlocks(newBlocks); };
@@ -124,7 +121,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans">
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-40">
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-screen-xl mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
@@ -178,14 +175,32 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         </div>
 
         <div className={`fixed top-0 right-0 h-full bg-white border-l border-slate-200 shadow-xl transition-transform duration-300 ease-in-out z-50 w-full max-w-sm ${editingBlockId ? 'translate-x-0' : 'translate-x-full'}`}>
-          {editingBlock && <EditPanel block={editingBlock} onUpdate={(updates) => updateBlock(editingBlockId, updates)} onClose={() => setEditingBlockId(null)} />}
+          {/* CORRECCIÓN: Se añade '!' para asegurar a TypeScript que editingBlockId no es null aquí */}
+          {editingBlock && <EditPanel block={editingBlock} onUpdate={(updates) => updateBlock(editingBlockId!, updates)} onClose={() => setEditingBlockId(null)} />}
         </div>
+        
+        <div className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${isAddPanelOpen ? 'bg-black bg-opacity-50' : 'bg-opacity-0 pointer-events-none'}`} onClick={() => setIsAddPanelOpen(false)}>
+            <div className={`absolute bottom-0 left-0 right-0 bg-white p-4 rounded-t-2xl shadow-2xl transition-transform duration-300 ease-in-out ${isAddPanelOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+                <h2 className="font-semibold text-slate-800 text-center mb-4">Agregar Bloque</h2>
+                <div className="space-y-2">
+                    {BLOCK_TYPES.map(blockType => (
+                        <button key={blockType.id} onClick={() => addBlock(blockType.id)} className="w-full p-3 text-left border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50">
+                            <div className="flex items-center gap-3"><span className="text-2xl">{blockType.icon}</span><div><p className="font-medium text-sm text-slate-800">{blockType.name}</p><p className="text-xs text-slate-500">{blockType.description}</p></div></div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+
+        <button onClick={() => setIsAddPanelOpen(true)} className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-blue-700 z-40">
+            <PlusIcon/>
+        </button>
       </main>
     </div>
   );
 }
 
-function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: { block: Block, isEditing: boolean, onEdit: () => void, onDelete: () => void, onMoveUp?: () => void, onMoveDown?: () => void }) {
+function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: BlockRendererProps) {
   const [isHovered, setIsHovered] = useState(false);
   const showToolbar = isHovered || isEditing;
 
@@ -215,7 +230,7 @@ function renderBlockContent(block: Block) {
     case 'text': { const d = block.data as TextData; return (<div className="prose prose-slate max-w-none p-6"><p dangerouslySetInnerHTML={{ __html: d.content.replace(/\n/g, '<br />') }}></p></div>); }
     case 'image': { const d = block.data as ImageData; return (<div className="p-4 text-center"><img src={d.imageUrl} alt={d.alt} className="rounded-lg mx-auto max-w-full h-auto" />{d.caption && (<p className="text-sm text-slate-600 mt-2">{d.caption}</p>)}</div>); }
     case 'cards': { const d = block.data as CardsData; return (<div className="bg-slate-50 py-12 px-4 rounded-md"><h2 className="text-3xl font-bold text-center text-slate-800 mb-12">{d.title}</h2><div className="grid md:grid-cols-3 gap-8">{d.cards.map((card, index) => (<div key={index} className="text-center p-6 bg-white rounded-lg shadow-sm ring-1 ring-slate-100"><div className="text-4xl mb-4">{card.icon}</div><h3 className="text-xl font-semibold mb-2 text-slate-800">{card.title}</h3><p className="text-slate-600 text-sm">{card.description}</p></div>))}</div></div>); }
-    default: return <div className="p-4 bg-red-100 text-red-700 rounded">Bloque &apos;{block.type}&apos; desconocido</div>;
+    default: return <div className="p-4 bg-red-100 text-red-700 rounded">Bloque desconocido</div>;
   }
 }
 
@@ -271,14 +286,14 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
   );
 }
 
-const InputField = ({ label, value, onChange }: { label: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
+const InputField = ({ label, value, onChange }: { label: string, value: string, onChange: (e: ChangeEvent<HTMLInputElement>) => void }) => (
     <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
         <input type="text" value={value} onChange={onChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
     </div>
 );
 
-const TextareaField = ({ label, value, rows = 3, onChange }: { label: string, value: string, rows?: number, onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void }) => (
+const TextareaField = ({ label, value, rows = 3, onChange }: { label: string, value: string, rows?: number, onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void }) => (
     <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
         <textarea value={value} onChange={onChange} rows={rows} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
