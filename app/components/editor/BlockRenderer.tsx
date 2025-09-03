@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
-// CORRECCIÓN: Se importa 'CtaData' para que TypeScript conozca el tipo de datos del nuevo bloque.
-import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData } from './blocks';
+// CORRECCIÓN: Se importa 'FooterData' para que TypeScript conozca el tipo de datos del nuevo bloque.
+import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData } from './blocks';
 import { BlockWrapper } from './blocks/BlockWrapper';
 
 // --- Definiciones de Tipos ---
@@ -20,7 +20,7 @@ interface BlockRendererProps {
   onMoveDown?: () => void; 
 }
 
-// --- El Componente Inteligente (Ahora sí, corregido) ---
+// --- El Componente Inteligente (Ahora sí, completo) ---
 export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: BlockRendererProps) {
   
   // Esta función interna determina qué componente renderizar.
@@ -42,10 +42,14 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
             const Component = BLOCKS.cards.renderer;
             return <Component data={block.data as CardsData} />;
         }
-        // --- ¡AQUÍ ESTÁ LA LÍNEA QUE FALTABA! ---
         case 'cta': {
             const Component = BLOCKS.cta.renderer;
             return <Component data={block.data as CtaData} />;
+        }
+        // --- ¡AQUÍ ESTÁ LA LÍNEA QUE FALTABA! ---
+        case 'footer': {
+            const Component = BLOCKS.footer.renderer;
+            return <Component data={block.data as FooterData} />;
         }
         default:
             return <div className="p-4 bg-red-100 text-red-700 rounded">Error: Bloque de tipo &apos;{block.type}&apos; no está registrado en el renderizador.</div>;
