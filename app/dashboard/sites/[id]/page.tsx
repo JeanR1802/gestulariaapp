@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, ChangeEvent, MouseEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { useRouter } from 'next/router'; 
 import React from 'react';
 
 // ================== DEFINICIONES DETALLADAS DE TIPOS ==================
@@ -187,8 +186,9 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
             </div>
             <div className="flex items-center gap-3">
               {/* ======================= ¡AQUÍ ESTÁ LA CORRECCIÓN! ======================= */}
+              {/* Se elimina el "?t=..." para que la URL sea limpia. */}
               <button 
-                  onClick={() => window.open(`https://${tenant.slug}.gestularia.com?t=${Date.now()}`, '_blank')} 
+                  onClick={() => window.open(`https://${tenant.slug}.gestularia.com`, '_blank')} 
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                 >
                   👁️ Vista Previa
@@ -240,7 +240,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
-      {editingBlock && <EditPanel block={blocks.find(b => b.id === editingBlock)} onUpdate={(updates) => updateBlock(editingBlock, updates)} onClose={() => setEditingBlock(null)} />}
+      {editingBlock && <EditPanel block={blocks.find(b => b.id === editingBlock)} onUpdate={(updates) => updateBlock(editingBlock!, updates)} onClose={() => setEditingBlock(null)} />}
     </div>
   );
 }
@@ -250,7 +250,7 @@ function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDow
     switch (block.type) {
       case 'hero': { const d = block.data as HeroData; return (<div className={`${d.backgroundColor} p-16 rounded-lg text-center`}><h1 className="text-4xl font-bold text-gray-900 mb-4">{d.title}</h1><p className="text-xl text-gray-600 mb-8">{d.subtitle}</p><a href={d.buttonLink || '#'} className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg hover:bg-blue-700">{d.buttonText}</a></div>); }
       case 'text': { const d = block.data as TextData; return (<div className="prose max-w-none"><p className="text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: d.content.replace(/\n/g, '<br />') }}></p></div>); }
-      case 'image': { const d = block.data as ImageData; return (<div className="text-center"><Image src={d.imageUrl} alt={d.alt} width={600} height={400} className="rounded-lg mx-auto max-w-full h-auto" />{d.caption && (<p className="text-sm text-gray-600 mt-2">{d.caption}</p>)}</div>); }
+      case 'image': { const d = block.data as ImageData; return (<div className="text-center"><img src={d.imageUrl} alt={d.alt} className="rounded-lg mx-auto max-w-full h-auto" />{d.caption && (<p className="text-sm text-gray-600 mt-2">{d.caption}</p>)}</div>); }
       case 'cards': { const d = block.data as CardsData; return (<div className="py-8"><h2 className="text-3xl font-bold text-center text-gray-900 mb-12">{d.title}</h2><div className="grid md:grid-cols-3 gap-8">{d.cards.map((card, index) => (<div key={index} className="text-center p-6 bg-white rounded-lg shadow-sm"><div className="text-4xl mb-4">{card.icon}</div><h3 className="text-xl font-semibold mb-2">{card.title}</h3><p className="text-gray-600">{card.description}</p></div>))}</div></div>); }
       case 'contact': { const d = block.data as ContactData; return (<div className="bg-gray-50 p-8 rounded-lg"><h2 className="text-2xl font-bold text-center text-gray-900 mb-8">{d.title}</h2><div className="text-center space-y-4">{d.showPhone && (<div className="flex items-center justify-center"><span className="mr-3">📞</span><span>{d.phone}</span></div>)}{d.showEmail && (<div className="flex items-center justify-center"><span className="mr-3">✉️</span><span>{d.email}</span></div>)}{d.showAddress && (<div className="flex items-center justify-center"><span className="mr-3">📍</span><span>{d.address}</span></div>)}</div></div>); }
       case 'cta': { const d = block.data as CtaData; return (<div className={`${d.backgroundColor} text-white p-12 rounded-lg text-center`}><h2 className="text-3xl font-bold mb-4">{d.title}</h2><p className="text-xl mb-8 opacity-90">{d.subtitle}</p><a href={d.buttonLink || '#'} className="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100">{d.buttonText}</a></div>); }
