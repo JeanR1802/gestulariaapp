@@ -8,15 +8,28 @@ interface CreateSiteModalProps {
   onSuccess: () => void;
 }
 
+// Definimos el tipo para los objetos de sitio web (tenant)
+interface Tenant {
+  id: string;
+  userKey: string;
+  name: string;
+  slug: string;
+  domain: string | null;
+  pages: { id: string, title: string, slug: string, content: string, published: boolean }[];
+  createdAt: string;
+  updatedAt: string;
+  stats?: { views: number };
+}
+
 // Componente Modal para crear sitio
 function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
-  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null) // Corregido: añadimos el tipo
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null)
 
-  const generateSlug = (text: string): string => { // Corregido: 'text' ahora es 'string'
+  const generateSlug = (text: string): string => {
     return text
       .toLowerCase()
       .normalize('NFD')
@@ -28,7 +41,7 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
       .replace(/^-|-$/g, '')
   }
 
-  const checkSlugAvailability = async (slugToCheck: string) => { // Corregido: 'slugToCheck' ahora es 'string'
+  const checkSlugAvailability = async (slugToCheck: string) => {
     if (!slugToCheck || slugToCheck.length < 2) {
       setSlugAvailable(null)
       return
@@ -43,7 +56,7 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => { // Corregido: 'e' es un evento de formulario
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
@@ -169,7 +182,7 @@ function CreateSiteModal({ onClose, onSuccess }: CreateSiteModalProps) {
 }
 
 export default function DashboardPage() {
-  const [tenants, setTenants] = useState([])
+  const [tenants, setTenants] = useState<Tenant[]>([]) // <-- Le decimos a useState que 'tenants' es un array de 'Tenant'
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const router = useRouter()
@@ -184,7 +197,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/tenants', {
         headers: { Authorization: `Bearer ${token}` }
       })
-      const data = await res.json()
+      const data: { tenants: Tenant[] } = await res.json() // <-- Le decimos a TypeScript qué tipo de datos esperamos
       setTenants(data.tenants || [])
     } catch (error) {
       console.error('Error loading tenants:', error)
@@ -193,12 +206,11 @@ export default function DashboardPage() {
     }
   }
 
-  const copyToClipboard = async (text: string) => { // Corregido: 'text' ahora es 'string'
+  const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
       alert('URL copiada al portapapeles!')
-    } catch (err) {
-      // Fallback para navegadores sin clipboard API
+    } catch (err: any) { // Corregido: 'err' es de tipo 'any' para evitar errores
       const textArea = document.createElement('textarea')
       textArea.value = text
       document.body.appendChild(textArea)
