@@ -1,6 +1,38 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import React from 'react';
+
+// ================== DEFINICIONES DE TIPOS DE TYPESCRIPT ==================
+// Esto define la estructura de cada bloque de manera estricta.
+
+interface Block {
+  id: number;
+  type: string;
+  data: any; // Usaremos 'any' aquí por ahora, ya que los datos varían mucho.
+}
+
+interface Tenant {
+  name: string;
+  slug: string;
+  pages: any[];
+}
+
+interface BlockRendererProps {
+  block: Block;
+  isEditing: boolean;
+  onEdit: () => void;
+  onUpdate: (updates: Partial<Block>) => void;
+  onDelete: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+}
+
+interface EditPanelProps {
+  block: Block | undefined;
+  onUpdate: (updates: Partial<Block>) => void;
+  onClose: () => void;
+}
 
 // ================== LÓGICA DE BLOQUES (INCLUIDA DIRECTAMENTE) ==================
 const BLOCK_TYPES = [
@@ -12,13 +44,14 @@ const BLOCK_TYPES = [
   { id: 'cta', name: 'Llamada a la Acción', icon: '📢', description: 'Sección destacada con botón' }
 ];
 
-function createBlock(type: string) {
+function createBlock(type: string): Block {
   const baseBlock = {
     id: Date.now() + Math.random(),
     type,
+    data: {}
   };
 
-  const templates: { [key: string]: any } = {
+  const templates: { [key: string]: Block } = {
     hero: { ...baseBlock, data: { title: 'Tu Título Principal Aquí', subtitle: 'Describe tu negocio o servicio', buttonText: 'Comenzar', backgroundColor: 'bg-gradient-to-br from-blue-50 to-white' } },
     text: { ...baseBlock, data: { content: 'Escribe aquí el contenido de tu párrafo.' } },
     image: { ...baseBlock, data: { imageUrl: 'https://placehold.co/600x400/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción de la imagen', caption: 'Pie de foto opcional' } },
@@ -30,18 +63,18 @@ function createBlock(type: string) {
   return templates[type] || baseBlock;
 }
 
-function getBlockName(type: string) {
+function getBlockName(type: string): string {
   const blockType = BLOCK_TYPES.find(b => b.id === type);
   return blockType ? blockType.name : 'Desconocido';
 }
 // ====================================================================
 
 export default function VisualEditor({ params }: { params: { id: string } }) {
-  const [tenant, setTenant] = useState<any>(null);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [blocks, setBlocks] = useState<any[]>([]);
-  const [editingBlock, setEditingBlock] = useState<string | number | null>(null);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [editingBlock, setEditingBlock] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -63,10 +96,12 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         setTenant(data.tenant);
         
         const content = data.tenant.pages[0]?.content || '[]';
-        let initialBlocks = [];
+        let initialBlocks: Block[] = [];
         try {
-          initialBlocks = JSON.parse(content);
-          if (!Array.isArray(initialBlocks)) initialBlocks = [];
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed)) {
+            initialBlocks = parsed;
+          }
         } catch (e) {
           console.warn("El contenido no es JSON, se iniciará un lienzo en blanco.");
           initialBlocks = [];
@@ -92,7 +127,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
       
       const updatedTenant = {
         ...tenant,
-        pages: tenant.pages.map((page: any) => 
+        pages: tenant.pages.map((page: { slug: string }) => 
           page.slug === '/' 
             ? { ...page, content: jsonContent, updatedAt: new Date() }
             : page
@@ -121,8 +156,8 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   };
 
   const addBlock = (blockType: string) => setBlocks([...blocks, createBlock(blockType)]);
-  const updateBlock = (blockId: string | number, updates: any) => setBlocks(blocks.map(block => block.id === blockId ? { ...block, ...updates } : block));
-  const deleteBlock = (blockId: string | number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlock(null); };
+  const updateBlock = (blockId: number, updates: Partial<Block>) => setBlocks(blocks.map(block => block.id === blockId ? { ...block, ...updates } : block));
+  const deleteBlock = (blockId: number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlock(null); };
   const moveBlock = (fromIndex: number, toIndex: number) => { const newBlocks = [...blocks]; const [movedBlock] = newBlocks.splice(fromIndex, 1); newBlocks.splice(toIndex, 0, movedBlock); setBlocks(newBlocks); };
 
   const showNotification = (message: string, type = 'info') => {
@@ -193,7 +228,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
               ) : (
                 <div className="p-2 md:p-6 space-y-4">
                   {blocks.map((block, index) => (
-                    <BlockRenderer key={block.id} block={block} isEditing={editingBlock === block.id} onEdit={() => setEditingBlock(block.id)} onUpdate={(updates: any) => updateBlock(block.id, updates)} onDelete={() => deleteBlock(block.id)} onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} />
+                    <BlockRenderer key={block.id} block={block} isEditing={editingBlock === block.id} onEdit={() => setEditingBlock(block.id)} onUpdate={(updates) => updateBlock(block.id, updates)} onDelete={() => deleteBlock(block.id)} onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} />
                   ))}
                 </div>
               )}
@@ -202,12 +237,12 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         </div>
       </div>
       {/* Panel de Edición */}
-      {editingBlock && <EditPanel block={blocks.find(b => b.id === editingBlock)} onUpdate={(updates: any) => updateBlock(editingBlock, updates)} onClose={() => setEditingBlock(null)} />}
+      {editingBlock && <EditPanel block={blocks.find(b => b.id === editingBlock)} onUpdate={(updates) => updateBlock(editingBlock, updates)} onClose={() => setEditingBlock(null)} />}
     </div>
   );
 }
 
-function BlockRenderer({ block, isEditing, onEdit, onUpdate, onDelete, onMoveUp, onMoveDown }: any) {
+function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: BlockRendererProps) {
   const renderBlock = () => {
     switch (block.type) {
       case 'hero': return (<div className={`${block.data.backgroundColor} p-16 rounded-lg text-center`}><h1 className="text-4xl font-bold text-gray-900 mb-4">{block.data.title}</h1><p className="text-xl text-gray-600 mb-8">{block.data.subtitle}</p><a href={block.data.buttonLink || '#'} className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg hover:bg-blue-700">{block.data.buttonText}</a></div>);
@@ -222,9 +257,9 @@ function BlockRenderer({ block, isEditing, onEdit, onUpdate, onDelete, onMoveUp,
   return (<div className={`relative group cursor-pointer transition-all ${isEditing ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-gray-300'}`} onClick={() => !isEditing && onEdit()}> {renderBlock()} {isEditing && (<div className="absolute top-2 right-2 flex gap-1 bg-white rounded-lg shadow-lg border p-1">{onMoveUp && (<button onClick={(e) => { e.stopPropagation(); onMoveUp(); }} className="p-1 hover:bg-gray-100 rounded" title="Mover arriba">⬆️</button>)}{onMoveDown && (<button onClick={(e) => { e.stopPropagation(); onMoveDown(); }} className="p-1 hover:bg-gray-100 rounded" title="Mover abajo">⬇️</button>)}<button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 hover:bg-red-100 text-red-600 rounded" title="Eliminar">🗑️</button></div>)}</div>);
 }
 
-function EditPanel({ block, onUpdate, onClose }: any) {
+function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
   if (!block) return null;
-  const updateData = (key: string, value: any) => { onUpdate({ data: { ...block.data, [key]: value } }); };
-  const updateCardData = (cardIndex: number, key: string, value: any) => { const newCards = [...block.data.cards]; newCards[cardIndex] = { ...newCards[cardIndex], [key]: value }; onUpdate({ data: { ...block.data, cards: newCards } }); };
+  const updateData = (key: string, value: unknown) => { onUpdate({ data: { ...block.data, [key]: value } }); };
+  const updateCardData = (cardIndex: number, key: string, value: unknown) => { const newCards = [...block.data.cards]; newCards[cardIndex] = { ...newCards[cardIndex], [key]: value }; onUpdate({ data: { ...block.data, cards: newCards } }); };
   return (<div className="fixed right-0 top-0 bottom-0 w-80 bg-white border-l shadow-lg z-50 overflow-y-auto"><div className="p-4"><div className="flex items-center justify-between mb-6"><h3 className="text-lg font-semibold">✏️ Editar {getBlockName(block.type)}</h3><button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button></div><div className="space-y-4">{block.type === 'hero' && (<><div><label className="block text-sm font-medium text-gray-700 mb-1">Título Principal</label><input type="text" value={block.data.title} onChange={(e) => updateData('title', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div><div><label className="block text-sm font-medium text-gray-700 mb-1">Subtítulo</label><textarea value={block.data.subtitle} onChange={(e) => updateData('subtitle', e.target.value)} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div><div><label className="block text-sm font-medium text-gray-700 mb-1">Texto del Botón</label><input type="text" value={block.data.buttonText} onChange={(e) => updateData('buttonText', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div></>)}{block.type === 'text' && (<div><label className="block text-sm font-medium text-gray-700 mb-1">Contenido</label><textarea value={block.data.content} onChange={(e) => updateData('content', e.target.value)} rows={8} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>)}{block.type === 'image' && (<><div><label className="block text-sm font-medium text-gray-700 mb-1">URL de la Imagen</label><input type="url" value={block.data.imageUrl} onChange={(e) => updateData('imageUrl', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://ejemplo.com/imagen.jpg" /></div><div><label className="block text-sm font-medium text-gray-700 mb-1">Descripción (Alt)</label><input type="text" value={block.data.alt} onChange={(e) => updateData('alt', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div><div><label className="block text-sm font-medium text-gray-700 mb-1">Pie de foto (opcional)</label><input type="text" value={block.data.caption} onChange={(e) => updateData('caption', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div></>)}{block.type === 'cards' && (<><div><label className="block text-sm font-medium text-gray-700 mb-1">Título de la Sección</label><input type="text" value={block.data.title} onChange={(e) => updateData('title', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>{block.data.cards.map((card: any, index: number) => (<div key={index} className="border border-gray-200 rounded-lg p-3"><h4 className="font-medium text-sm text-gray-700 mb-2">Tarjeta {index + 1}</h4><div className="space-y-2"><input type="text" value={card.icon} onChange={(e) => updateCardData(index, 'icon', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="Emoji (ej: 🚀)" /><input type="text" value={card.title} onChange={(e) => updateCardData(index, 'title', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="Título" /><textarea value={card.description} onChange={(e) => updateCardData(index, 'description', e.target.value)} rows={2} className="w-full px-2 py-1 border border-gray-300 rounded text-sm" placeholder="Descripción" /></div></div>))}</>)}{block.type === 'contact' && (<><div><label className="block text-sm font-medium text-gray-700 mb-1">Título</label><input type="text" value={block.data.title} onChange={(e) => updateData('title', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div><div><label className="flex items-center"><input type="checkbox" checked={block.data.showPhone} onChange={(e) => updateData('showPhone', e.target.checked)} className="mr-2" />Mostrar teléfono</label>{block.data.showPhone && (<input type="text" value={block.data.phone} onChange={(e) => updateData('phone', e.target.value)} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md" />)}</div><div><label className="flex items-center"><input type="checkbox" checked={block.data.showEmail} onChange={(e) => updateData('showEmail', e.target.checked)} className="mr-2" />Mostrar email</label>{block.data.showEmail && (<input type="email" value={block.data.email} onChange={(e) => updateData('email', e.target.value)} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md" />)}</div><div><label className="flex items-center"><input type="checkbox" checked={block.data.showAddress} onChange={(e) => updateData('showAddress', e.target.checked)} className="mr-2" />Mostrar dirección</label>{block.data.showAddress && (<textarea value={block.data.address} onChange={(e) => updateData('address', e.target.value)} rows={2} className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md" />)}</div></>)}</div></div></div>);
 }
