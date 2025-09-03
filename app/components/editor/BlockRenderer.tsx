@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
-import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData } from './blocks';
+// CORRECCIÓN: Se importa 'CtaData' para que TypeScript conozca el tipo de datos del nuevo bloque.
+import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData } from './blocks';
 import { BlockWrapper } from './blocks/BlockWrapper';
 
 // --- Definiciones de Tipos ---
@@ -23,8 +24,6 @@ interface BlockRendererProps {
 export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: BlockRendererProps) {
   
   // Esta función interna determina qué componente renderizar.
-  // La clave es que dentro de cada 'case', renderizamos el componente específico
-  // directamente. Esto le permite a TypeScript saber el tipo exacto de 'data'.
   const renderBlockContent = () => {
     switch(block.type) {
         case 'hero': {
@@ -43,8 +42,13 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
             const Component = BLOCKS.cards.renderer;
             return <Component data={block.data as CardsData} />;
         }
+        // --- ¡AQUÍ ESTÁ LA LÍNEA QUE FALTABA! ---
+        case 'cta': {
+            const Component = BLOCKS.cta.renderer;
+            return <Component data={block.data as CtaData} />;
+        }
         default:
-            return <div className="p-4 bg-red-100 text-red-700 rounded">Error: Bloque de tipo &apos;{block.type}&apos; no está registrado.</div>;
+            return <div className="p-4 bg-red-100 text-red-700 rounded">Error: Bloque de tipo &apos;{block.type}&apos; no está registrado en el renderizador.</div>;
     }
   };
 

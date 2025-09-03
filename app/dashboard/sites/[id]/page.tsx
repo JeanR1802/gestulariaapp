@@ -205,7 +205,10 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
               const Editor = BLOCKS.text.editor;
               return <Editor data={block.data as TextData} updateData={updateData} />;
           }
-
+          case 'image': {
+              const Editor = BLOCKS.image.editor;
+              return <Editor data={block.data as ImageData} updateData={updateData} />;
+          }
           case 'cards': {
               const Editor = BLOCKS.cards.editor;
               return <Editor data={block.data as CardsData} updateData={updateData} />;
