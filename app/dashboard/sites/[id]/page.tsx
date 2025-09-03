@@ -9,7 +9,7 @@ import {
   getBlockName, 
   getBlockIcon 
 // CORRECCIÓN: Se usa una ruta relativa para asegurar que el archivo se encuentre.
-} from '../../../lib/block-editor-utils'
+} from '../../../../lib/block-editor-utils'
 
 // CORRECCIÓN: Se añade el tipo explícito para los 'params' para solucionar el error de TypeScript.
 export default function VisualEditor({ params }: { params: { id: string } }) {
