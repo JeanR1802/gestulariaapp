@@ -1,7 +1,166 @@
-// app/dashboard/page.tsx - Actualizado para mostrar subdominio
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+
+// Componente Modal para crear sitio
+function CreateSiteModal({ onClose, onSuccess }) {
+  const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
+  const [description, setDescription] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [slugAvailable, setSlugAvailable] = useState(null)
+
+  const generateSlug = (text) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+  }
+
+  const checkSlugAvailability = async (slugToCheck) => {
+    if (!slugToCheck || slugToCheck.length < 2) {
+      setSlugAvailable(null)
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/check-slug/${slugToCheck}`)
+      const data = await res.json()
+      setSlugAvailable(data.available)
+    } catch (error) {
+      setSlugAvailable(null)
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/tenants/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name, slug, description })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        alert(`¡Sitio creado exitosamente!\n\nTu sitio está disponible en:\nhttps://${data.tenant.slug}.gestularia.com`)
+        onSuccess()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Error al crear el sitio')
+      }
+    } catch (error) {
+      alert('Error al crear el sitio')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-bold mb-4">Crear Nuevo Sitio Web</h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre del Sitio
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value)
+                const newSlug = generateSlug(e.target.value)
+                setSlug(newSlug)
+                checkSlugAvailability(newSlug)
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ej: Mi Empresa"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              URL del Sitio
+            </label>
+            <div className="flex">
+              <input
+                type="text"
+                value={slug}
+                onChange={(e) => {
+                  const newSlug = generateSlug(e.target.value)
+                  setSlug(newSlug)
+                  checkSlugAvailability(newSlug)
+                }}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <span className="inline-flex items-center px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                .gestularia.com
+              </span>
+            </div>
+            {slug && (
+              <div className="mt-1">
+                {slugAvailable === true && (
+                  <p className="text-sm text-green-600">✓ Disponible: {slug}.gestularia.com</p>
+                )}
+                {slugAvailable === false && (
+                  <p className="text-sm text-red-600">✗ No disponible, elige otro nombre</p>
+                )}
+                {slugAvailable === null && slug.length >= 2 && (
+                  <p className="text-sm text-gray-500">Verificando disponibilidad...</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descripción (opcional)
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Breve descripción de tu sitio"
+            />
+          </div>
+          
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading || slugAvailable === false || !slug}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? 'Creando...' : 'Crear Sitio'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
 
 export default function DashboardPage() {
   const [tenants, setTenants] = useState([])
@@ -217,166 +376,6 @@ export default function DashboardPage() {
           }}
         />
       )}
-    </div>
-  )
-}
-
-// Componente Modal para crear sitio
-function CreateSiteModal({ onClose, onSuccess }) {
-  const [name, setName] = useState('')
-  const [slug, setSlug] = useState('')
-  const [description, setDescription] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [slugAvailable, setSlugAvailable] = useState(null)
-
-  const generateSlug = (text) => {
-    return text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-  }
-
-  const checkSlugAvailability = async (slugToCheck) => {
-    if (!slugToCheck || slugToCheck.length < 2) {
-      setSlugAvailable(null)
-      return
-    }
-
-    try {
-      const res = await fetch(`/api/check-slug/${slugToCheck}`)
-      const data = await res.json()
-      setSlugAvailable(data.available)
-    } catch (error) {
-      setSlugAvailable(null)
-    }
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/tenants/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ name, slug, description })
-      })
-
-      if (res.ok) {
-        const data = await res.json()
-        alert(`¡Sitio creado exitosamente!\n\nTu sitio está disponible en:\nhttps://${data.tenant.slug}.gestularia.com`)
-        onSuccess()
-      } else {
-        const data = await res.json()
-        alert(data.error || 'Error al crear el sitio')
-      }
-    } catch (error) {
-      alert('Error al crear el sitio')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Crear Nuevo Sitio Web</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nombre del Sitio
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value)
-                const newSlug = generateSlug(e.target.value)
-                setSlug(newSlug)
-                checkSlugAvailability(newSlug)
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ej: Mi Empresa"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              URL del Sitio
-            </label>
-            <div className="flex">
-              <input
-                type="text"
-                value={slug}
-                onChange={(e) => {
-                  const newSlug = generateSlug(e.target.value)
-                  setSlug(newSlug)
-                  checkSlugAvailability(newSlug)
-                }}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-              <span className="inline-flex items-center px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
-                .gestularia.com
-              </span>
-            </div>
-            {slug && (
-              <div className="mt-1">
-                {slugAvailable === true && (
-                  <p className="text-sm text-green-600">✓ Disponible: {slug}.gestularia.com</p>
-                )}
-                {slugAvailable === false && (
-                  <p className="text-sm text-red-600">✗ No disponible, elige otro nombre</p>
-                )}
-                {slugAvailable === null && slug.length >= 2 && (
-                  <p className="text-sm text-gray-500">Verificando disponibilidad...</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Descripción (opcional)
-            </label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Breve descripción de tu sitio"
-            />
-          </div>
-          
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading || slugAvailable === false || !slug}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Creando...' : 'Crear Sitio'}
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
   )
 }
