@@ -1,14 +1,19 @@
-// app/dashboard/layout.tsx
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+
+// Definimos el tipo de objeto 'user'
+interface User {
+  email: string;
+  key: string;
+}
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null) // <-- Le decimos a useState que 'user' es de tipo 'User' o 'null'
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
