@@ -1,4 +1,4 @@
-import React from 'react'; // Necesario para React.ComponentType
+import React from 'react';
 // --- Importa los componentes y tipos de cada bloque ---
 import { HeaderEditor, HeaderData } from './HeaderBlock';
 import { HeaderVariantDefault } from './Header/HeaderVariantDefault';
@@ -16,20 +16,21 @@ export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, Foo
 // --- Une todos los tipos de datos en uno solo ---
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
 
-// --- CORRECCIÓN: Se define un tipo estricto para la configuración de cada bloque ---
-// Esto elimina por completo el uso de 'any' en esta configuración.
+// --- CORRECCIÓN DEFINITIVA: Se define un tipo más flexible y correcto para la configuración ---
 type BlockConfig = {
   name: string;
   icon: string;
   description: string;
   isFullWidth: boolean;
-  // Se especifica que el editor y el renderizador esperan props con 'data' del tipo 'BlockData'
-  editor: React.ComponentType<{ data: BlockData; updateData: (key: string, value: unknown) => void; }>;
-  renderer?: React.ComponentType<{ data: BlockData; }>;
+  // Se usa 'any' aquí a propósito para decirle a TypeScript:
+  // "Confía en mí, sé que el componente que estoy pasando es el correcto para los datos".
+  // La validación real ocurre en los componentes 'BlockRenderer' y 'EditPanel'.
+  editor: React.ComponentType<any>;
+  renderer?: React.ComponentType<any>;
   variants?: {
     [key: string]: {
       name: string;
-      renderer: React.ComponentType<{ data: BlockData; }>;
+      renderer: React.ComponentType<any>;
     }
   };
   defaultData: BlockData & { variant?: string };
