@@ -6,7 +6,7 @@ import React from 'react';
 import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData, HeaderData } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 
-// --- Definiciones de Tipos ---
+// --- Definiciones de Tipos hrtth---
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 interface EditPanelProps { block: Block | undefined; onUpdate: (updates: Partial<Block>) => void; onClose: () => void; }
