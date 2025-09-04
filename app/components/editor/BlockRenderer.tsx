@@ -1,6 +1,5 @@
 'use client';
-import React from 'react';
-// CORRECCIÓN: Se importa 'FooterData' para que TypeScript conozca el tipo de datos del nuevo bloque.
+import React, from 'react';
 import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData } from './blocks';
 import { BlockWrapper } from './blocks/BlockWrapper';
 
@@ -11,6 +10,7 @@ interface Block {
   data: BlockData;
 }
 
+// CORRECCIÓN: Se añaden las propiedades que faltaban para la lógica móvil.
 interface BlockRendererProps { 
   block: Block; 
   isEditing: boolean; 
@@ -18,12 +18,13 @@ interface BlockRendererProps {
   onDelete: () => void; 
   onMoveUp?: () => void; 
   onMoveDown?: () => void; 
+  onToggleMobileToolbar: (blockId: number | null) => void;
+  isMobileToolbarVisible: boolean;
 }
 
 // --- El Componente Inteligente (Ahora sí, completo) ---
-export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: BlockRendererProps) {
+export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown, onToggleMobileToolbar, isMobileToolbarVisible }: BlockRendererProps) {
   
-  // Esta función interna determina qué componente renderizar.
   const renderBlockContent = () => {
     switch(block.type) {
         case 'hero': {
@@ -46,7 +47,6 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
             const Component = BLOCKS.cta.renderer;
             return <Component data={block.data as CtaData} />;
         }
-        // --- ¡AQUÍ ESTÁ LA LÍNEA QUE FALTABA! ---
         case 'footer': {
             const Component = BLOCKS.footer.renderer;
             return <Component data={block.data as FooterData} />;
@@ -63,6 +63,9 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
       onDelete={onDelete}
       onMoveUp={onMoveUp}
       onMoveDown={onMoveDown}
+      blockId={block.id}
+      onToggleMobileToolbar={onToggleMobileToolbar}
+      isMobileToolbarVisible={isMobileToolbarVisible}
     >
       {renderBlockContent()}
     </BlockWrapper>
