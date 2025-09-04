@@ -13,7 +13,25 @@ export function renderBlocksToHTML(blocks) {
       return `<!-- Bloque de tipo '${type}' no reconocido -->`;
     }
 
+    // Usamos un switch simple para generar el HTML, lo que es 100% compatible.
     switch (type) {
+      // --- ¡AQUÍ ESTÁ LA CORRECCIÓN QUE FALTABA! ---
+      // Se añade la lógica para renderizar el nuevo bloque Header en la página pública.
+      case 'header':
+        return `
+          <header class="bg-white p-4 border-b border-slate-200 w-full">
+            <div class="max-w-5xl mx-auto flex justify-between items-center">
+              <h1 class="text-xl font-bold text-slate-800">${data.logoText || 'Mi Negocio'}</h1>
+              <nav class="hidden md:flex items-center space-x-6 text-sm text-slate-600">
+                <a href="#" class="hover:text-blue-600">${data.link1 || 'Inicio'}</a>
+                <a href="#" class="hover:text-blue-600">${data.link2 || 'Servicios'}</a>
+                <a href="#" class="hover:text-blue-600">${data.link3 || 'Contacto'}</a>
+              </nav>
+            </div>
+          </header>
+        `;
+      // --- FIN DE LA CORRECCIÓN ---
+
       case 'hero':
         return `
           <div class="${data.backgroundColor || 'bg-slate-100'} p-12 md:p-20 rounded-md text-center">
@@ -60,12 +78,9 @@ export function renderBlocksToHTML(blocks) {
             </a>
           </div>
         `;
-      
-      // --- ¡AQUÍ ESTÁ LA CORRECCIÓN QUE FALTABA! ---
-      // Se añade la lógica para renderizar el nuevo bloque Footer en la página pública.
       case 'footer':
         return `
-          <footer class="bg-slate-800 text-slate-400 text-sm text-center p-8 rounded-md">
+          <footer class="bg-slate-800 text-slate-400 text-sm text-center p-8">
             <p class="mb-4">${data.copyrightText || ''}</p>
             <div class="flex justify-center space-x-4">
               ${(data.socialLinks || []).map(link => 
@@ -74,8 +89,6 @@ export function renderBlocksToHTML(blocks) {
             </div>
           </footer>
         `;
-      // --- FIN DE LA CORRECCIÓN ---
-
       default:
         return '';
     }
