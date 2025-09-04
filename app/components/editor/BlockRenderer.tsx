@@ -1,5 +1,6 @@
 'use client';
-import React, from 'react';
+// CORRECCIÓN: Se eliminó la coma extra después de 'React'
+import React from 'react';
 import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData } from './blocks';
 import { BlockWrapper } from './blocks/BlockWrapper';
 
@@ -10,7 +11,6 @@ interface Block {
   data: BlockData;
 }
 
-// CORRECCIÓN: Se añaden las propiedades que faltaban para la lógica móvil.
 interface BlockRendererProps { 
   block: Block; 
   isEditing: boolean; 
@@ -22,7 +22,7 @@ interface BlockRendererProps {
   isMobileToolbarVisible: boolean;
 }
 
-// --- El Componente Inteligente (Ahora sí, completo) ---
+// --- El Componente Inteligente (Ahora sí, corregido y completo) ---
 export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown, onToggleMobileToolbar, isMobileToolbarVisible }: BlockRendererProps) {
   
   const renderBlockContent = () => {
