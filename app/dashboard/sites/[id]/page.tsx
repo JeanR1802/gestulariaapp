@@ -1,8 +1,7 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, ChangeEvent, MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-// CORRECCIÓN: Se importan los tipos de datos de TODOS los bloques, incluyendo CtaData y FooterData
 import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 
@@ -23,9 +22,18 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
+  // Estado para gestionar qué barra de herramientas móvil está visible
+  const [mobileToolbarBlockId, setMobileToolbarBlockId] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => { setIsMounted(true); }, []);
+
+  // Si se abre el panel de edición, nos aseguramos de cerrar la barra de herramientas móvil
+  useEffect(() => {
+    if (editingBlockId !== null) {
+      setMobileToolbarBlockId(null);
+    }
+  }, [editingBlockId]);
 
   const loadTenant = useCallback(async () => {
     if (!params.id || !isMounted) return;
@@ -76,7 +84,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     setIsAddPanelOpen(false);
   };
   const updateBlock = (blockId: number, updates: Partial<Block>) => setBlocks(blocks.map(block => block.id === blockId ? { ...block, ...updates } : block));
-  const deleteBlock = (blockId: number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlockId(null); };
+  const deleteBlock = (blockId: number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlockId(null); setMobileToolbarBlockId(null); };
   const moveBlock = (fromIndex: number, toIndex: number) => { const newBlocks = [...blocks]; const [movedBlock] = newBlocks.splice(fromIndex, 1); newBlocks.splice(toIndex, 0, movedBlock); setBlocks(newBlocks); };
   const showNotification = (message: string, type = 'info') => {
     const el = document.createElement('div');
@@ -87,6 +95,11 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   };
   
   const editingBlock = blocks.find(b => b.id === editingBlockId);
+  
+  // Función para abrir/cerrar la barra de herramientas de un bloque en móvil
+  const handleToggleMobileToolbar = useCallback((blockId: number | null) => {
+    setMobileToolbarBlockId(prevId => (prevId === blockId ? null : blockId));
+  }, []);
 
   if (!isMounted || loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
   if (!tenant) return <div className="text-center py-10"><h1 className="text-xl text-slate-600">Sitio no encontrado o sin acceso.</h1></div>;
@@ -131,7 +144,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         </aside>
 
         <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 61px)'}}>
-          <div className="max-w-3xl mx-auto my-6 p-2">
+          <div className="max-w-3xl mx-auto my-6 p-2" onClick={() => setMobileToolbarBlockId(null)}>
             <div className="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-[85vh] p-2 md:p-4 space-y-2">
               {blocks.length > 0 ? (
                 blocks.map((block, index) => (
@@ -143,6 +156,8 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
                     onDelete={() => deleteBlock(block.id)}
                     onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} 
                     onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined}
+                    onToggleMobileToolbar={handleToggleMobileToolbar}
+                    isMobileToolbarVisible={mobileToolbarBlockId === block.id}
                   />
                 ))
               ) : (
@@ -196,33 +211,13 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
 
     const renderEditorContent = () => {
       switch(block.type) {
-          case 'hero': {
-              const Editor = BLOCKS.hero.editor;
-              return <Editor data={block.data as HeroData} updateData={updateData} />;
-          }
-          case 'text': {
-              const Editor = BLOCKS.text.editor;
-              return <Editor data={block.data as TextData} updateData={updateData} />;
-          }
-          case 'image': {
-              const Editor = BLOCKS.image.editor;
-              return <Editor data={block.data as ImageData} updateData={updateData} />;
-          }
-          case 'cards': {
-              const Editor = BLOCKS.cards.editor;
-              return <Editor data={block.data as CardsData} updateData={updateData} />;
-          }
-          // --- ¡AQUÍ ESTÁ LA CORRECCIÓN QUE FALTABA! ---
-          case 'cta': {
-              const Editor = BLOCKS.cta.editor;
-              return <Editor data={block.data as CtaData} updateData={updateData} />;
-          }
-          case 'footer': {
-              const Editor = BLOCKS.footer.editor;
-              return <Editor data={block.data as FooterData} updateData={updateData} />;
-          }
-          default:
-              return <div className="text-sm text-slate-500">Este bloque no tiene opciones de edición.</div>;
+          case 'hero': { const Editor = BLOCKS.hero.editor; return <Editor data={block.data as HeroData} updateData={updateData} />; }
+          case 'text': { const Editor = BLOCKS.text.editor; return <Editor data={block.data as TextData} updateData={updateData} />; }
+          case 'image': { const Editor = BLOCKS.image.editor; return <Editor data={block.data as ImageData} updateData={updateData} />; }
+          case 'cards': { const Editor = BLOCKS.cards.editor; return <Editor data={block.data as CardsData} updateData={updateData} />; }
+          case 'cta': { const Editor = BLOCKS.cta.editor; return <Editor data={block.data as CtaData} updateData={updateData} />; }
+          case 'footer': { const Editor = BLOCKS.footer.editor; return <Editor data={block.data as FooterData} updateData={updateData} />; }
+          default: return <div className="text-sm text-slate-500">Este bloque no tiene opciones de edición.</div>;
       }
     };
 
