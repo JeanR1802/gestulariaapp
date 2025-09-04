@@ -16,7 +16,7 @@ export interface CardsData {
 // --- Componente Visual ---
 export function CardsBlock({ data }: { data: CardsData }) {
   return (
-    <div className="bg-slate-50 py-12 px-4 rounded-md">
+    <div className="bg-slate-50 py-12 px-4">
       <h2 className="text-3xl font-bold text-center text-slate-800 mb-12">{data.title}</h2>
       <div className="grid md:grid-cols-3 gap-8">
         {(data.cards || []).map((card, index) => (

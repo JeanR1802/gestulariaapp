@@ -113,7 +113,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
 
         <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 61px)'}}>
           <div className="max-w-3xl mx-auto my-6 p-2" onClick={() => setMobileToolbarBlockId(null)}>
-            <div className="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-[85vh] p-2 md:p-4 space-y-2">
+            <div className="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-[85vh] p-2 md:p-4">
               {blocks.length > 0 ? (
                 blocks.map((block, index) => (
                   <BlockRenderer 
