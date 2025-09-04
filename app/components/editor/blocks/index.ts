@@ -1,5 +1,5 @@
 import React from 'react';
-// --- 1. Importa todos los componentes y tipos de datos de cada bloque ---
+// 1. Importa todos los componentes y tipos de datos de cada bloque
 import { HeaderEditor, HeaderData } from './HeaderBlock';
 import { HeaderVariantDefault } from './Header/HeaderVariantDefault';
 import { HeaderVariantCentered } from './Header/HeaderVariantCentered';
@@ -10,33 +10,15 @@ import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 
-// --- 2. Re-exporta los tipos de datos para que estén disponibles en un solo lugar ---
+// 2. Re-exporta los tipos de datos para que estén disponibles en un solo lugar
 export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
 
-// --- 3. Une todos los tipos de datos en uno solo ---
+// 3. Une todos los tipos de datos en uno solo
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
 
-// --- CORRECCIÓN DEFINITIVA: Se define un "contrato" flexible y correcto ---
-// Le decimos a TypeScript que 'renderer' y 'variants' son opcionales.
-type BlockConfig = {
-  name: string;
-  icon: string;
-  description: string;
-  isFullWidth: boolean;
-  editor: React.ComponentType<{ data: any; updateData: (key: string, value: any) => void; }>;
-  defaultData: BlockData & { variant?: string };
-  renderer?: React.ComponentType<{ data: any; }>; // Para bloques sin variantes
-  variants?: { // Para bloques CON variantes
-    [key: string]: {
-      name: string;
-      renderer: React.ComponentType<{ data: any; }>;
-    }
-  }
-};
-
-// --- 4. Define y exporta el registro oficial de bloques ---
-// Ahora este objeto cumple perfectamente con el "contrato" de BlockConfig.
-export const BLOCKS: { [key: string]: BlockConfig } = {
+// 4. Define y exporta el registro oficial de bloques SIN un tipo predefinido
+// Dejamos que TypeScript infiera el tipo exacto de cada propiedad. Esta es la clave.
+export const BLOCKS = {
   header: {
     name: 'Encabezado',
     icon: '🔝',
@@ -53,7 +35,7 @@ export const BLOCKS: { [key: string]: BlockConfig } = {
     name: 'Héroe',
     icon: '🎯',
     description: 'Sección principal llamativa.',
-    renderer: HeroBlock, // Este bloque no tiene 'variants', y es correcto.
+    renderer: HeroBlock,
     editor: HeroEditor,
     defaultData: { title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' },
     isFullWidth: false
@@ -105,4 +87,5 @@ export const BLOCKS: { [key: string]: BlockConfig } = {
   },
 };
 
+// 5. Derivamos los tipos a partir del objeto BLOCKS
 export type BlockType = keyof typeof BLOCKS;

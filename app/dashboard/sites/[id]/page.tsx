@@ -1,16 +1,15 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+// CORRECCIÓN: Se revierte a 'next/router' para asegurar la compatibilidad.
+import { useRouter } from 'next/router';
 import React from 'react';
-import { BLOCKS, BlockType, BlockData } from '@/app/components/editor/blocks';
-import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
+
+// CORRECCIÓN: Se usan rutas relativas para evitar errores de compilación con el alias '@'.
+import { BLOCKS, BlockType, BlockData, HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData } from '../../../components/editor/blocks';
+import { BlockRenderer } from '../../../components/editor/BlockRenderer';
 
 // --- Definiciones de Tipos ---
-interface Block { 
-  id: number; 
-  type: string; 
-  data: BlockData & { variant?: string }; 
-}
+interface Block { id: number; type: string; data: BlockData & { variant?: string }; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 interface EditPanelProps { block: Block | undefined; onUpdate: (updates: Partial<Block>) => void; onClose: () => void; }
 
@@ -209,10 +208,23 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
     if (!block) return null;
     const blockConfig = BLOCKS[block.type as BlockType];
     if (!blockConfig) return null;
-    const EditorComponent = blockConfig.editor;
 
     const updateData = (key: string, value: unknown) => {
         onUpdate({ data: { ...block.data, [key]: value } });
+    };
+
+    const renderEditorContent = () => {
+        const EditorComponent = blockConfig.editor;
+        switch(block.type) {
+            case 'header': return <EditorComponent data={block.data as HeaderData} updateData={updateData} />;
+            case 'hero': return <EditorComponent data={block.data as HeroData} updateData={updateData} />;
+            case 'text': return <EditorComponent data={block.data as TextData} updateData={updateData} />;
+            case 'image': return <EditorComponent data={block.data as ImageData} updateData={updateData} />;
+            case 'cards': return <EditorComponent data={block.data as CardsData} updateData={updateData} />;
+            case 'cta': return <EditorComponent data={block.data as CtaData} updateData={updateData} />;
+            case 'footer': return <EditorComponent data={block.data as FooterData} updateData={updateData} />;
+            default: return null;
+        }
     };
 
     return (
@@ -243,7 +255,7 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
                         </div>
                     </div>
                 )}
-                <EditorComponent data={block.data} updateData={updateData} />
+                {renderEditorContent()}
             </div>
         </div>
     );
