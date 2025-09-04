@@ -1,6 +1,6 @@
 import React from 'react';
-// --- Importa los componentes y tipos de cada bloque ---
-import { HeaderEditor, HeaderData } from './HeaderBlock';
+// --- 1. Importa todos los componentes y tipos de datos de cada bloque ---
+import { HeaderBlock, HeaderEditor, HeaderData } from './HeaderBlock';
 import { HeaderVariantDefault } from './Header/HeaderVariantDefault';
 import { HeaderVariantCentered } from './Header/HeaderVariantCentered';
 import { HeroBlock, HeroEditor, HeroData } from './HeroBlock';
@@ -10,34 +10,12 @@ import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 
-// --- Re-exporta los tipos de datos para que estén disponibles en un solo lugar ---
+// --- 2. Re-exporta los tipos de datos para que estén disponibles en un solo lugar ---
 export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
 
-// --- Une todos los tipos de datos en uno solo ---
-export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
-
-// --- CORRECCIÓN DEFINITIVA: Se define un tipo más flexible y correcto para la configuración ---
-type BlockConfig = {
-  name: string;
-  icon: string;
-  description: string;
-  isFullWidth: boolean;
-  // Se usa 'any' aquí a propósito para decirle a TypeScript:
-  // "Confía en mí, sé que el componente que estoy pasando es el correcto para los datos".
-  // La validación real ocurre en los componentes 'BlockRenderer' y 'EditPanel'.
-  editor: React.ComponentType<any>;
-  renderer?: React.ComponentType<any>;
-  variants?: {
-    [key: string]: {
-      name: string;
-      renderer: React.ComponentType<any>;
-    }
-  };
-  defaultData: BlockData & { variant?: string };
-};
-
-// --- Define y exporta el registro oficial de bloques ---
-export const BLOCKS: { [key: string]: BlockConfig } = {
+// --- 3. Define y exporta el registro oficial de bloques SIN un tipo predefinido ---
+// Dejamos que TypeScript infiera el tipo exacto de cada propiedad, lo que es más seguro.
+export const BLOCKS = {
   header: {
     name: 'Encabezado',
     icon: '🔝',
@@ -106,4 +84,7 @@ export const BLOCKS: { [key: string]: BlockConfig } = {
   },
 };
 
+// --- 4. Derivamos los tipos a partir del objeto BLOCKS ---
+// Esto crea automáticamente los tipos correctos sin que tengamos que definirlos manualmente.
 export type BlockType = keyof typeof BLOCKS;
+export type BlockData = (typeof BLOCKS)[BlockType]['defaultData'];
