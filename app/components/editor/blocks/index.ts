@@ -1,8 +1,6 @@
 import React from 'react';
 // 1. Importa todos los componentes y tipos de datos de cada bloque
-import { HeaderEditor, HeaderData } from './HeaderBlock';
-import { HeaderVariantDefault } from './Header/HeaderVariantDefault';
-import { HeaderVariantCentered } from './Header/HeaderVariantCentered';
+import { HeaderBlock, HeaderEditor, HeaderData } from './HeaderBlock';
 import { HeroBlock, HeroEditor, HeroData } from './HeroBlock';
 import { TextBlock, TextEditor, TextData } from './TextBlock';
 import { ImageBlock, ImageEditor, ImageData } from './ImageBlock';
@@ -10,26 +8,22 @@ import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 
-// 2. Re-exporta los tipos de datos para que estén disponibles en un solo lugar
+// 2. Re-exporta los tipos de datos
 export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
 
 // 3. Une todos los tipos de datos en uno solo
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
 
-// 4. Define y exporta el registro oficial de bloques SIN un tipo predefinido
-// Dejamos que TypeScript infiera el tipo exacto de cada propiedad. Esta es la clave.
+// 4. Define y exporta el registro oficial de bloques (versión simple y estable)
 export const BLOCKS = {
   header: {
     name: 'Encabezado',
     icon: '🔝',
     description: 'Barra de navegación principal.',
+    renderer: HeaderBlock,
     editor: HeaderEditor,
-    defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto', variant: 'default' },
-    isFullWidth: true,
-    variants: {
-      default: { name: 'Clásico', renderer: HeaderVariantDefault },
-      centered: { name: 'Centrado', renderer: HeaderVariantCentered }
-    }
+    defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData,
+    isFullWidth: true
   },
   hero: {
     name: 'Héroe',
@@ -37,7 +31,7 @@ export const BLOCKS = {
     description: 'Sección principal llamativa.',
     renderer: HeroBlock,
     editor: HeroEditor,
-    defaultData: { title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' },
+    defaultData: { title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } as HeroData,
     isFullWidth: false
   },
   text: {
@@ -46,7 +40,7 @@ export const BLOCKS = {
     description: 'Párrafo de texto simple.',
     renderer: TextBlock,
     editor: TextEditor,
-    defaultData: { content: 'Escribe aquí tu contenido.' },
+    defaultData: { content: 'Escribe aquí tu contenido.' } as TextData,
     isFullWidth: false
   },
   image: {
@@ -55,7 +49,7 @@ export const BLOCKS = {
     description: 'Una sola imagen con pie de foto.',
     renderer: ImageBlock,
     editor: ImageEditor,
-    defaultData: { imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción', caption: 'Pie de foto.' },
+    defaultData: { imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción', caption: 'Pie de foto.' } as ImageData,
     isFullWidth: false
   },
   cards: {
@@ -64,7 +58,7 @@ export const BLOCKS = {
     description: 'Grupo de 3 tarjetas de servicio.',
     renderer: CardsBlock,
     editor: CardsEditor,
-    defaultData: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve.' } ] },
+    defaultData: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve.' } ] } as CardsData,
     isFullWidth: false
   },
   cta: {
@@ -73,7 +67,7 @@ export const BLOCKS = {
     description: 'Invita a los usuarios a actuar.',
     renderer: CtaBlock,
     editor: CtaEditor,
-    defaultData: { title: '¿Listo para empezar?', subtitle: 'Únete a miles de clientes satisfechos.', buttonText: 'Contactar Ahora', backgroundColor: 'bg-slate-800' },
+    defaultData: { title: '¿Listo para empezar?', subtitle: 'Únete a miles de clientes satisfechos.', buttonText: 'Contactar Ahora', backgroundColor: 'bg-slate-800' } as CtaData,
     isFullWidth: false
   },
   footer: {
@@ -82,10 +76,9 @@ export const BLOCKS = {
     description: 'Sección final con copyright y enlaces.',
     renderer: FooterBlock,
     editor: FooterEditor,
-    defaultData: { copyrightText: `© ${new Date().getFullYear()} Mi Negocio.`, socialLinks: [{ platform: 'Twitter', url: '' }, { platform: 'Instagram', url: '' }] },
+    defaultData: { copyrightText: `© ${new Date().getFullYear()} Mi Negocio.`, socialLinks: [{ platform: 'Twitter', url: '' }, { platform: 'Instagram', url: '' }] } as FooterData,
     isFullWidth: true
   },
 };
 
-// 5. Derivamos los tipos a partir del objeto BLOCKS
 export type BlockType = keyof typeof BLOCKS;

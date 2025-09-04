@@ -1,15 +1,12 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
-// CORRECCIÓN: Se revierte a 'next/router' para asegurar la compatibilidad.
-import { useRouter } from 'next/router';
+import { useState, useEffect, useCallback, ChangeEvent, MouseEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import React from 'react';
-
-// CORRECCIÓN: Se usan rutas relativas para evitar errores de compilación con el alias '@'.
-import { BLOCKS, BlockType, BlockData, HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData } from '../../../components/editor/blocks';
-import { BlockRenderer } from '../../../components/editor/BlockRenderer';
+import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData, HeaderData } from '@/app/components/editor/blocks';
+import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 
 // --- Definiciones de Tipos ---
-interface Block { id: number; type: string; data: BlockData & { variant?: string }; }
+interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 interface EditPanelProps { block: Block | undefined; onUpdate: (updates: Partial<Block>) => void; onClose: () => void; }
 
@@ -146,22 +143,21 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 61px)'}}>
           <div className="max-w-3xl mx-auto my-6 p-2" onClick={() => setMobileToolbarBlockId(null)}>
             <div className="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-[85vh] p-2 md:p-4">
+              {/* CORRECCIÓN: Se ha eliminado el div intermedio con la clase 'space-y-2' */}
               {blocks.length > 0 ? (
-                <div className="space-y-2">
-                  {blocks.map((block, index) => (
-                    <BlockRenderer 
-                      key={block.id} 
-                      block={block} 
-                      isEditing={editingBlockId === block.id} 
-                      onEdit={() => setEditingBlockId(block.id)} 
-                      onDelete={() => deleteBlock(block.id)}
-                      onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} 
-                      onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined}
-                      onToggleMobileToolbar={handleToggleMobileToolbar}
-                      isMobileToolbarVisible={mobileToolbarBlockId === block.id}
-                    />
-                  ))}
-                </div>
+                blocks.map((block, index) => (
+                  <BlockRenderer 
+                    key={block.id} 
+                    block={block} 
+                    isEditing={editingBlockId === block.id} 
+                    onEdit={() => setEditingBlockId(block.id)} 
+                    onDelete={() => deleteBlock(block.id)}
+                    onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} 
+                    onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined}
+                    onToggleMobileToolbar={handleToggleMobileToolbar}
+                    isMobileToolbarVisible={mobileToolbarBlockId === block.id}
+                  />
+                ))
               ) : (
                 <div className="flex items-center justify-center h-full text-slate-500 p-8 text-center">
                   <div>
@@ -206,25 +202,22 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
 
 function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
     if (!block) return null;
-    const blockConfig = BLOCKS[block.type as BlockType];
-    if (!blockConfig) return null;
 
     const updateData = (key: string, value: unknown) => {
-        onUpdate({ data: { ...block.data, [key]: value } });
+        onUpdate({ data: { ...block.data, [key]: value } as BlockData });
     };
 
     const renderEditorContent = () => {
-        const EditorComponent = blockConfig.editor;
-        switch(block.type) {
-            case 'header': return <EditorComponent data={block.data as HeaderData} updateData={updateData} />;
-            case 'hero': return <EditorComponent data={block.data as HeroData} updateData={updateData} />;
-            case 'text': return <EditorComponent data={block.data as TextData} updateData={updateData} />;
-            case 'image': return <EditorComponent data={block.data as ImageData} updateData={updateData} />;
-            case 'cards': return <EditorComponent data={block.data as CardsData} updateData={updateData} />;
-            case 'cta': return <EditorComponent data={block.data as CtaData} updateData={updateData} />;
-            case 'footer': return <EditorComponent data={block.data as FooterData} updateData={updateData} />;
-            default: return null;
-        }
+      switch(block.type) {
+          case 'header': { const Editor = BLOCKS.header.editor; return <Editor data={block.data as HeaderData} updateData={updateData} />; }
+          case 'hero': { const Editor = BLOCKS.hero.editor; return <Editor data={block.data as HeroData} updateData={updateData} />; }
+          case 'text': { const Editor = BLOCKS.text.editor; return <Editor data={block.data as TextData} updateData={updateData} />; }
+          case 'image': { const Editor = BLOCKS.image.editor; return <Editor data={block.data as ImageData} updateData={updateData} />; }
+          case 'cards': { const Editor = BLOCKS.cards.editor; return <Editor data={block.data as CardsData} updateData={updateData} />; }
+          case 'cta': { const Editor = BLOCKS.cta.editor; return <Editor data={block.data as CtaData} updateData={updateData} />; }
+          case 'footer': { const Editor = BLOCKS.footer.editor; return <Editor data={block.data as FooterData} updateData={updateData} />; }
+          default: return <div className="text-sm text-slate-500">Este bloque no tiene opciones de edición.</div>;
+      }
     };
 
     return (
@@ -233,28 +226,12 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <EditIcon/>
-                        <h3 className="text-lg font-semibold text-slate-800">Editar {blockConfig.name}</h3>
+                        <h3 className="text-lg font-semibold text-slate-800">Editar {BLOCKS[block.type as BlockType].name}</h3>
                     </div>
                     <button onClick={onClose} className="text-slate-500 hover:text-slate-800 text-2xl">×</button>
                 </div>
             </div>
             <div className="p-4 space-y-5 overflow-y-auto flex-1">
-                {blockConfig.variants && (
-                    <div className="space-y-2 pb-4 border-b border-slate-200">
-                        <label className="block text-sm font-medium text-slate-700">Diseño</label>
-                        <div className="flex flex-wrap gap-2">
-                            {Object.keys(blockConfig.variants).map(variantKey => (
-                                <button
-                                    key={variantKey}
-                                    onClick={() => updateData('variant', variantKey)}
-                                    className={`px-3 py-1 text-sm rounded-full ${block.data.variant === variantKey ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'}`}
-                                >
-                                    {blockConfig.variants![variantKey].name}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
                 {renderEditorContent()}
             </div>
         </div>
