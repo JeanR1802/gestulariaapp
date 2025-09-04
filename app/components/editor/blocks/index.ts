@@ -1,5 +1,5 @@
 import React from 'react';
-// 1. Importa todos los componentes y tipos de datos de cada bloque
+// 1. Importa todos los componentes y tipos de datos, incluyendo las variantes
 import { HeaderEditor, HeaderData } from './HeaderBlock';
 import { HeaderVariantDefault } from './Header/HeaderVariantDefault';
 import { HeaderVariantCentered } from './Header/HeaderVariantCentered';
@@ -10,10 +10,10 @@ import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 
-// 2. Re-exporta los tipos de datos para que estén disponibles en un solo lugar
+// 2. Re-exporta todos los tipos de datos
 export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
 
-// 3. Une todos los tipos de datos en uno solo
+// 3. Une todos los tipos de datos en un solo tipo "BlockData"
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
 
 // 4. Define una estructura flexible pero segura para la configuración de cada bloque
