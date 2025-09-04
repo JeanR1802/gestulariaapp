@@ -1,3 +1,4 @@
+import React from 'react'; // Necesario para React.ComponentType
 // --- Importa los componentes y tipos de cada bloque ---
 import { HeaderEditor, HeaderData } from './HeaderBlock';
 import { HeaderVariantDefault } from './Header/HeaderVariantDefault';
@@ -9,28 +10,29 @@ import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 
-// --- Re-exporta los tipos de datos ---
+// --- Re-exporta los tipos de datos para que estén disponibles en un solo lugar ---
 export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
 
 // --- Une todos los tipos de datos en uno solo ---
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
 
-// --- Define la estructura de la configuración de un bloque ---
-// Esto nos permite tener bloques con y sin variantes de forma segura
+// --- CORRECCIÓN: Se define un tipo estricto para la configuración de cada bloque ---
+// Esto elimina por completo el uso de 'any' en esta configuración.
 type BlockConfig = {
   name: string;
   icon: string;
   description: string;
   isFullWidth: boolean;
-  editor: React.ComponentType<{ data: any; updateData: (key: string, value: any) => void; }>;
-  defaultData: BlockData & { variant?: string };
-  renderer?: React.ComponentType<{ data: any; }>; // Para bloques sin variantes
-  variants?: { // Para bloques CON variantes
+  // Se especifica que el editor y el renderizador esperan props con 'data' del tipo 'BlockData'
+  editor: React.ComponentType<{ data: BlockData; updateData: (key: string, value: unknown) => void; }>;
+  renderer?: React.ComponentType<{ data: BlockData; }>;
+  variants?: {
     [key: string]: {
       name: string;
-      renderer: React.ComponentType<{ data: any; }>;
+      renderer: React.ComponentType<{ data: BlockData; }>;
     }
-  }
+  };
+  defaultData: BlockData & { variant?: string };
 };
 
 // --- Define y exporta el registro oficial de bloques ---
