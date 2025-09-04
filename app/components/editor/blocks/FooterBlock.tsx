@@ -16,7 +16,7 @@ export interface FooterData {
 // --- 2. Creamos el componente visual (cómo se ve en la página) ---
 export function FooterBlock({ data }: { data: FooterData }) {
   return (
-    <footer className="bg-slate-800 text-slate-400 text-sm text-center p-8 rounded-md">
+    <footer className="bg-slate-800 text-slate-400 text-sm text-center p-8">
       <p className="mb-4">{data.copyrightText || '© 2025 Mi Negocio. Todos los derechos reservados.'}</p>
       <div className="flex justify-center space-x-4">
         {(data.socialLinks || []).map((link, index) => (
