@@ -1,4 +1,4 @@
-// --- 1. Importa los componentes y tipos de cada bloque ---
+// --- Importa los componentes y tipos de cada bloque ---
 import { HeaderEditor, HeaderData } from './HeaderBlock';
 import { HeaderVariantDefault } from './Header/HeaderVariantDefault';
 import { HeaderVariantCentered } from './Header/HeaderVariantCentered';
@@ -9,46 +9,52 @@ import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 
-// --- 2. Re-exporta los tipos de datos para que estén disponibles en un solo lugar ---
+// --- Re-exporta los tipos de datos ---
 export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
 
-// --- 3. Une todos los tipos de datos en un solo tipo "BlockData" ---
+// --- Une todos los tipos de datos en uno solo ---
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
 
-// --- 4. Define y exporta el registro oficial de bloques ---
-export const BLOCKS = {
+// --- Define la estructura de la configuración de un bloque ---
+// Esto nos permite tener bloques con y sin variantes de forma segura
+type BlockConfig = {
+  name: string;
+  icon: string;
+  description: string;
+  isFullWidth: boolean;
+  editor: React.ComponentType<{ data: any; updateData: (key: string, value: any) => void; }>;
+  defaultData: BlockData & { variant?: string };
+  renderer?: React.ComponentType<{ data: any; }>; // Para bloques sin variantes
+  variants?: { // Para bloques CON variantes
+    [key: string]: {
+      name: string;
+      renderer: React.ComponentType<{ data: any; }>;
+    }
+  }
+};
+
+// --- Define y exporta el registro oficial de bloques ---
+export const BLOCKS: { [key: string]: BlockConfig } = {
   header: {
     name: 'Encabezado',
     icon: '🔝',
     description: 'Barra de navegación principal.',
     editor: HeaderEditor,
-    defaultData: { 
-      logoText: 'Mi Negocio', 
-      link1: 'Inicio', 
-      link2: 'Servicios', 
-      link3: 'Contacto',
-      variant: 'default' // Variante por defecto
-    } as HeaderData & { variant: string },
-    isFullWidth: true, // Este bloque ocupa todo el ancho
-    variants: { // Contiene los diferentes diseños
-      default: {
-        name: 'Clásico',
-        renderer: HeaderVariantDefault,
-      },
-      centered: {
-        name: 'Centrado',
-        renderer: HeaderVariantCentered,
-      }
+    defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto', variant: 'default' },
+    isFullWidth: true,
+    variants: {
+      default: { name: 'Clásico', renderer: HeaderVariantDefault },
+      centered: { name: 'Centrado', renderer: HeaderVariantCentered }
     }
   },
   hero: {
     name: 'Héroe',
     icon: '🎯',
     description: 'Sección principal llamativa.',
-    renderer: HeroBlock, // Este bloque no tiene variantes, así que el renderer va aquí
+    renderer: HeroBlock,
     editor: HeroEditor,
-    defaultData: { title: 'Tu Título Principal Aquí', subtitle: 'Un subtítulo atractivo que describa tu negocio.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } as HeroData,
-    isFullWidth: false // Este bloque es de contenido (centrado)
+    defaultData: { title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' },
+    isFullWidth: false
   },
   text: {
     name: 'Texto',
@@ -56,7 +62,7 @@ export const BLOCKS = {
     description: 'Párrafo de texto simple.',
     renderer: TextBlock,
     editor: TextEditor,
-    defaultData: { content: 'Escribe aquí el contenido de tu párrafo.' } as TextData,
+    defaultData: { content: 'Escribe aquí tu contenido.' },
     isFullWidth: false
   },
   image: {
@@ -65,7 +71,7 @@ export const BLOCKS = {
     description: 'Una sola imagen con pie de foto.',
     renderer: ImageBlock,
     editor: ImageEditor,
-    defaultData: { imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción de la imagen', caption: 'Un pie de foto opcional.' } as ImageData,
+    defaultData: { imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción', caption: 'Pie de foto.' },
     isFullWidth: false
   },
   cards: {
@@ -74,7 +80,7 @@ export const BLOCKS = {
     description: 'Grupo de 3 tarjetas de servicio.',
     renderer: CardsBlock,
     editor: CardsEditor,
-    defaultData: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve del primer servicio.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve del segundo servicio.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve del tercer servicio.' } ] } as CardsData,
+    defaultData: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve.' } ] },
     isFullWidth: false
   },
   cta: {
@@ -83,7 +89,7 @@ export const BLOCKS = {
     description: 'Invita a los usuarios a actuar.',
     renderer: CtaBlock,
     editor: CtaEditor,
-    defaultData: { title: '¿Listo para empezar?', subtitle: 'Únete a miles de clientes satisfechos y lleva tu negocio al siguiente nivel.', buttonText: 'Contactar Ahora', backgroundColor: 'bg-slate-800' } as CtaData,
+    defaultData: { title: '¿Listo para empezar?', subtitle: 'Únete a miles de clientes satisfechos.', buttonText: 'Contactar Ahora', backgroundColor: 'bg-slate-800' },
     isFullWidth: false
   },
   footer: {
@@ -92,17 +98,9 @@ export const BLOCKS = {
     description: 'Sección final con copyright y enlaces.',
     renderer: FooterBlock,
     editor: FooterEditor,
-    defaultData: { 
-      copyrightText: `© ${new Date().getFullYear()} Mi Negocio. Todos los derechos reservados.`,
-      socialLinks: [
-        { platform: 'Twitter', url: '' },
-        { platform: 'Instagram', url: '' },
-        { platform: 'LinkedIn', url: '' },
-      ]
-    } as FooterData,
+    defaultData: { copyrightText: `© ${new Date().getFullYear()} Mi Negocio.`, socialLinks: [{ platform: 'Twitter', url: '' }, { platform: 'Instagram', url: '' }] },
     isFullWidth: true
   },
 };
 
-// --- 5. Exporta el tipo que representa los nombres de los bloques ---
 export type BlockType = keyof typeof BLOCKS;

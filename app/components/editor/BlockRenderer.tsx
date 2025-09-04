@@ -3,11 +3,11 @@ import React from 'react';
 import { BLOCKS, BlockType, BlockData, HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData } from './blocks';
 import { BlockWrapper } from './blocks/BlockWrapper';
 
-// --- Definiciones de Tipos ---
+// CORRECCIÓN: Se añade 'variant' como propiedad opcional a los datos del bloque.
 interface Block { 
   id: number; 
   type: string; 
-  data: BlockData & { variant?: string }; // Se añade la propiedad opcional 'variant'
+  data: BlockData & { variant?: string };
 }
 
 interface BlockRendererProps { 
@@ -21,15 +21,13 @@ interface BlockRendererProps {
   isMobileToolbarVisible: boolean;
 }
 
-// --- El Componente Inteligente (Ahora sí, 100% corregido) ---
 export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown, onToggleMobileToolbar, isMobileToolbarVisible }: BlockRendererProps) {
-  
   const blockConfig = BLOCKS[block.type as BlockType];
   if (!blockConfig) {
     return <div className="p-4 bg-red-100 text-red-700 rounded">Error: Bloque &apos;{block.type}&apos; no registrado.</div>;
   }
 
-  // Lógica para seleccionar el componente correcto, ya sea de una variante o el principal
+  // CORRECCIÓN: Lógica mejorada para manejar variantes de forma segura.
   const getRenderer = () => {
     if (blockConfig.variants) {
       const variantKey = block.data.variant || 'default';
@@ -43,9 +41,9 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
   if (!Component) {
     return <div className="p-4 bg-red-100 text-red-700 rounded">Error: No se encontró el renderizador para &apos;{block.type}&apos;.</div>;
   }
-  
-  // Esta función interna determina qué componente renderizar, asegurando los tipos correctos.
+
   const renderBlockContent = () => {
+    // El switch sigue siendo útil para el tipado estricto de datos
     switch(block.type) {
         case 'header': return <Component data={block.data as HeaderData} />;
         case 'hero': return <Component data={block.data as HeroData} />;
@@ -57,8 +55,8 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
         default: return null;
     }
   };
-
-  return (
+  
+  const blockElement = (
     <BlockWrapper 
       isEditing={isEditing} 
       onEdit={onEdit} 
@@ -72,4 +70,14 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
       {renderBlockContent()}
     </BlockWrapper>
   );
+
+  if (!blockConfig.isFullWidth) {
+    return (
+      <div className="max-w-5xl mx-auto px-4">
+        {blockElement}
+      </div>
+    );
+  }
+
+  return blockElement;
 }
