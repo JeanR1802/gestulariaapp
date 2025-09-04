@@ -13,7 +13,7 @@ export interface CtaData {
 // --- 2. Creamos el componente visual (cómo se ve en la página) ---
 export function CtaBlock({ data }: { data: CtaData }) {
   return (
-    <div className={`${data.backgroundColor || 'bg-slate-800'} text-white p-12 rounded-md text-center`}>
+    <div className={`${data.backgroundColor || 'bg-slate-800'} text-white p-12 text-center`}>
       <h2 className="text-3xl font-bold mb-2">{data.title}</h2>
       <p className="text-lg opacity-90 mb-6 max-w-xl mx-auto">{data.subtitle}</p>
       <a 

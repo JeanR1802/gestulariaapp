@@ -34,7 +34,7 @@ export function renderBlocksToHTML(blocks) {
 
       case 'hero':
         return `
-          <div class="${data.backgroundColor || 'bg-slate-100'} p-12 md:p-20 rounded-md text-center">
+          <div class="${data.backgroundColor || 'bg-slate-100'} p-12 md:p-20  text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">${data.title}</h1>
             <p class="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">${data.subtitle}</p>
             <a href="${data.buttonLink || '#'}" class="inline-block bg-blue-600 text-white px-6 py-2.5 rounded-md text-base font-semibold hover:bg-blue-700">${data.buttonText}</a>
@@ -55,7 +55,7 @@ export function renderBlocksToHTML(blocks) {
         `;
       case 'cards':
         return `
-          <div class="bg-slate-50 py-12 px-4 rounded-md">
+          <div class="bg-slate-50 py-12 px-4">
             <h2 class="text-3xl font-bold text-center text-slate-800 mb-12">${data.title}</h2>
             <div class="grid md:grid-cols-3 gap-8">
               ${(data.cards || []).map(card => `
@@ -70,7 +70,7 @@ export function renderBlocksToHTML(blocks) {
         `;
       case 'cta':
         return `
-          <div class="${data.backgroundColor || 'bg-slate-800'} text-white p-12 rounded-md text-center">
+          <div class="${data.backgroundColor || 'bg-slate-800'} text-white p-12 text-center">
             <h2 class="text-3xl font-bold mb-2">${data.title}</h2>
             <p class="text-lg opacity-90 mb-6 max-w-xl mx-auto">${data.subtitle}</p>
             <a href="${data.buttonLink || '#'}" class="inline-block bg-white text-slate-800 px-6 py-2.5 rounded-md text-base font-semibold hover:bg-slate-200">
