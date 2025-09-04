@@ -1,9 +1,10 @@
-// Archivo: src/app/visual-editor/[id]/page.tsx
+// Archivo: src/app/visual-editor/[id]/page.tsx (CORREGIDO Y LIMPIADO)
 'use client';
-import { useState, useEffect, useCallback, ChangeEvent, MouseEvent } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData, HeaderData } from '@/app/components/editor/blocks';
+// CORRECCIÓN: Se eliminan los imports de datos específicos que no se usan directamente.
+import { BLOCKS, BlockType, BlockData } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 
 // --- Definiciones de Tipos ---
@@ -23,9 +24,9 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   
-  // --- NUEVOS ESTADOS PARA LA BANDEJA DE BLOQUES ---
-  const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
-  const [activeBlockType, setActiveBlockType] = useState<BlockType | null>(null);
+  // CORRECCIÓN: Se elimina el estado 'isAddPanelOpen' que ya no se usaba.
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(false); // Para el panel de tipos en móvil
+  const [activeBlockType, setActiveBlockType] = useState<BlockType | null>(null); // Para la bandeja de variantes
   
   const [mobileToolbarBlockId, setMobileToolbarBlockId] = useState<number | null>(null);
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         const content = data.tenant.pages[0]?.content || '[]';
         let initialBlocks: Block[] = [];
         try { const parsed = JSON.parse(content); if (Array.isArray(parsed)) initialBlocks = parsed; }
-        catch (e) { console.warn("Contenido inválido, iniciando lienzo en blanco."); }
+        catch { console.warn("Contenido inválido, iniciando lienzo en blanco."); }
         setBlocks(initialBlocks);
       } else { router.push('/dashboard'); }
     } catch (error) { console.error('Error al cargar:', error); router.push('/dashboard'); }
@@ -64,7 +65,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     setSaving(true);
     try {
       const jsonContent = JSON.stringify(blocks);
-      const updatedTenant = { ...tenant, pages: tenant.pages.map((page) => page.slug === '/' ? { ...page, content: jsonContent, updatedAt: new Date() } : page ) };
+      const updatedTenant = { ...tenant, pages: tenant.pages.map((page) => page.slug === '/' ? { ...page, content: jsonContent } : page ) };
       const token = localStorage.getItem('token');
       const res = await fetch(`/api/tenants/${params.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(updatedTenant) });
       if (res.ok) {
@@ -78,8 +79,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
       setSaving(false);
     }
   };
-
-  // --- FUNCIÓN MODIFICADA PARA AÑADIR BLOQUES ---
+  
   const addBlock = (blockType: BlockType, data: BlockData) => {
     const newBlock: Block = {
       id: Date.now() + Math.random(),
@@ -87,8 +87,8 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
       data,
     };
     setBlocks([...blocks, newBlock]);
-    setIsAddPanelOpen(false); // Cierra el panel principal
-    setActiveBlockType(null); // Cierra la bandeja de variantes
+    setIsMobilePanelOpen(false);
+    setActiveBlockType(null);
   };
 
   const updateBlock = (blockId: number, updates: Partial<Block>) => setBlocks(blocks.map(block => block.id === blockId ? { ...block, ...updates } : block));
@@ -112,7 +112,6 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans">
-      {/* ... (el header no cambia) ... */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-screen-xl mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
@@ -134,7 +133,6 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
       </header>
 
       <main className="flex">
-        {/* --- PANEL LATERAL MODIFICADO --- */}
         <aside className="w-72 bg-white border-r border-slate-200 p-4 space-y-4 hidden md:block" style={{ height: 'calc(100vh - 61px)'}}>
           <h2 className="font-semibold text-slate-800">Agregar Bloques</h2>
           {Object.keys(BLOCKS).map((key) => {
@@ -151,7 +149,6 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
           })}
         </aside>
 
-        {/* --- Lienzo principal (no cambia) --- */}
         <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 61px)'}}>
           <div className="max-w-3xl mx-auto my-6 p-2" onClick={() => setMobileToolbarBlockId(null)}>
             <div className="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-[85vh] p-2 md:p-4">
@@ -181,13 +178,29 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
             </div>
           </div>
         </div>
-
-        {/* --- PANEL DERECHO DE EDICIÓN (no cambia) --- */}
+        
         <div className={`fixed top-0 right-0 h-full bg-white border-l border-slate-200 shadow-xl transition-transform duration-300 ease-in-out z-50 w-full max-w-sm ${editingBlockId ? 'translate-x-0' : 'translate-x-full'}`}>
-            {editingBlock && <EditPanel block={editingBlock} onUpdate={(updates) => updateBlock(editingBlock.id, updates)} onClose={() => setEditingBlockId(null)} />}
+          {editingBlock && <EditPanel block={editingBlock} onUpdate={(updates) => updateBlock(editingBlock.id, updates)} onClose={() => setEditingBlockId(null)} />}
         </div>
-
-        {/* --- NUEVA BANDEJA DE VARIANTES DE BLOQUES (para móvil y escritorio) --- */}
+        
+        {/* CORRECCIÓN: Lógica mejorada para paneles en móvil */}
+        <div className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${isMobilePanelOpen ? 'bg-black bg-opacity-50' : 'bg-opacity-0 pointer-events-none'}`} onClick={() => setIsMobilePanelOpen(false)}>
+          <div className={`absolute bottom-0 left-0 right-0 bg-white p-4 rounded-t-2xl shadow-2xl transition-transform duration-300 ease-in-out ${isMobilePanelOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+            <h2 className="font-semibold text-slate-800 text-center mb-4">Agregar Bloque</h2>
+            <div className="space-y-2">
+              {Object.keys(BLOCKS).map((key) => {
+                const blockKey = key as BlockType;
+                const blockInfo = BLOCKS[blockKey];
+                return (
+                  <button key={blockKey} onClick={() => { setIsMobilePanelOpen(false); setActiveBlockType(blockKey); }} className="w-full p-3 text-left border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50">
+                    <div className="flex items-center gap-3"><span className="text-2xl">{blockInfo.icon}</span><div><p className="font-medium text-sm text-slate-800">{blockInfo.name}</p><p className="text-xs text-slate-500">{blockInfo.description}</p></div></div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        
         <div className={`fixed top-0 left-0 h-full bg-black bg-opacity-50 z-40 transition-opacity ${activeBlockType ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setActiveBlockType(null)}>
           <div className={`absolute top-0 bg-white h-full shadow-2xl transition-transform duration-300 ease-in-out w-96 ${activeBlockType ? 'translate-x-0' : '-translate-x-full'} left-0 md:left-72`} onClick={e => e.stopPropagation()}>
             <AddBlockPanel
@@ -197,20 +210,17 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
             />
           </div>
         </div>
-
-        {/* ... (el resto del código para móvil se mantiene igual) ... */}
-        <button onClick={() => setIsAddPanelOpen(true)} className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-blue-700 z-40">
-            <PlusIcon/>
+        
+        <button onClick={() => setIsMobilePanelOpen(true)} className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-blue-700 z-40">
+          <PlusIcon/>
         </button>
       </main>
     </div>
   );
 }
 
-// --- NUEVO COMPONENTE: BANDEJA PARA SELECCIONAR VARIANTES DE BLOQUES ---
 function AddBlockPanel({ blockType, onAddBlock, onClose }: { blockType: BlockType | null, onAddBlock: (type: BlockType, data: BlockData) => void, onClose: () => void }) {
   if (!blockType) return null;
-
   const blockConfig = BLOCKS[blockType];
 
   return (
@@ -226,13 +236,14 @@ function AddBlockPanel({ blockType, onAddBlock, onClose }: { blockType: BlockTyp
       </div>
       <div className="p-4 space-y-4 overflow-y-auto flex-1 bg-slate-50">
         {blockConfig.variants.map((variant, index) => {
-          const PreviewComponent = variant.preview;
+          // CORRECCIÓN: Se añade un tipado estricto para eliminar el 'any'
+          const PreviewComponent = variant.preview as React.FC<{ data: BlockData }>;
           return (
             <div key={index} className="bg-white border border-slate-200 rounded-lg p-3">
               <h4 className="font-medium text-sm mb-2">{variant.name}</h4>
               <p className="text-xs text-slate-500 mb-3">{variant.description}</p>
               <div className="h-32 w-full overflow-hidden border border-dashed border-slate-300 rounded-md mb-3 flex items-center justify-center">
-                  <PreviewComponent data={variant.defaultData as any} />
+                <PreviewComponent data={variant.defaultData} />
               </div>
               <button
                 onClick={() => onAddBlock(blockType, variant.defaultData)}
@@ -241,11 +252,11 @@ function AddBlockPanel({ blockType, onAddBlock, onClose }: { blockType: BlockTyp
                 Agregar
               </button>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
 function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
@@ -257,7 +268,8 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
 
   const renderEditorContent = () => {
     const blockConfig = BLOCKS[block.type as BlockType];
-    const Editor = blockConfig.editor as React.FC<any>; // Forzamos el tipo aquí
+    // CORRECCIÓN: Se añade un tipado estricto para eliminar el 'any'
+    const Editor = blockConfig.editor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }>;
     return <Editor data={block.data} updateData={updateData} />;
   };
 
