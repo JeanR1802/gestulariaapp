@@ -1,8 +1,10 @@
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
+import { HeaderData } from './Header/HeaderVariantDefault'; // Importamos la interfaz desde una de las variantes
 
 export interface HeroData { title: string; subtitle: string; buttonText: string; backgroundColor: string; buttonLink?: string; }
 
+// Cómo se ve el bloque en la página
 export function HeroBlock({ data }: { data: HeroData }) {
   return (
     <div className={`${data.backgroundColor} p-12 md:p-20 text-center`}>
@@ -13,6 +15,7 @@ export function HeroBlock({ data }: { data: HeroData }) {
   );
 }
 
+// Cómo se edita el bloque en el panel lateral
 export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
   return (
     <div className="space-y-4">
