@@ -1,26 +1,34 @@
-import React from 'react';
-import { InputField, TextareaField } from './InputField';
+import React, { ChangeEvent } from 'react';
+import { InputField } from './InputField';
+import { HeaderData as HeaderDataType } from './Header/HeaderVariantDefault'; // Importamos la interfaz desde una de las variantes
 
-export interface HeroData { title: string; subtitle: string; buttonText: string; backgroundColor: string; buttonLink?: string; }
+// Exportamos la interfaz para que el registro y otros componentes la puedan usar
+export type HeaderData = HeaderDataType;
 
-// Cómo se ve el bloque en la página
-export function HeroBlock({ data }: { data: HeroData }) {
-  return (
-    <div className={`${data.backgroundColor} p-12 md:p-20 text-center`}>
-      <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">{data.title}</h1>
-      <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">{data.subtitle}</p>
-      <a href={data.buttonLink || '#'} className="inline-block bg-blue-600 text-white px-6 py-2.5 rounded-md text-base font-semibold hover:bg-blue-700">{data.buttonText}</a>
-    </div>
-  );
-}
-
-// Cómo se edita el bloque en el panel lateral
-export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
+// El formulario de edición es el mismo para todas las variantes del Header
+export function HeaderEditor({ data, updateData }: { data: HeaderData, updateData: (key: keyof HeaderData, value: string) => void }) {
   return (
     <div className="space-y-4">
-      <InputField label="Título Principal" value={data.title} onChange={(e) => updateData('title', e.target.value)} />
-      <TextareaField label="Subtítulo" value={data.subtitle} onChange={(e) => updateData('subtitle', e.target.value)} />
-      <InputField label="Texto del Botón" value={data.buttonText} onChange={(e) => updateData('buttonText', e.target.value)} />
+      <InputField 
+        label="Texto del Logo" 
+        value={data.logoText} 
+        onChange={(e) => updateData('logoText', e.target.value)} 
+      />
+      <InputField 
+        label="Enlace 1" 
+        value={data.link1} 
+        onChange={(e) => updateData('link1', e.target.value)} 
+      />
+      <InputField 
+        label="Enlace 2" 
+        value={data.link2} 
+        onChange={(e) => updateData('link2', e.target.value)} 
+      />
+      <InputField 
+        label="Enlace 3" 
+        value={data.link3} 
+        onChange={(e) => updateData('link3', e.target.value)} 
+      />
     </div>
   );
 }
