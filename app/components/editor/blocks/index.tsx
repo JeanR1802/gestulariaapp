@@ -14,7 +14,7 @@ import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 // CORRECCIÓN: Se añade la importación que faltaba aquí
 import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview } from './Header/HeaderPreviews';
 import { HeroPreviewDefault, HeroPreviewLeftImage, HeroPreviewDarkMinimal } from './Hero/HeroPreviews';
-import { TextPreview } from './Text/TextPreviews';
+import { TextPreviewDefault, TextPreviewQuote, TextPreviewHighlighted } from './Text/TextPreviews';
 import { ImagePreview } from './Image/ImagePreviews';
 import { CardsPreview } from './Cards/CardsPreviews';
 import { CtaPreview } from './Cta/CtaPreviews';
@@ -75,7 +75,24 @@ export const BLOCKS = {
   text: {
     name: 'Texto', icon: '📝', description: 'Párrafo de texto simple.', renderer: TextBlock, editor: TextEditor,
     variants: [
-      { name: 'Párrafo', description: 'Un bloque de texto simple.', preview: TextPreview, defaultData: { content: 'Escribe aquí tu contenido.' } as TextData }
+      { 
+        name: 'Párrafo Estándar', 
+        description: 'Un bloque de texto simple y legible.', 
+        preview: TextPreviewDefault, 
+        defaultData: { variant: 'default', content: 'Escribe aquí tu contenido. Este es el estilo de párrafo estándar.' } as TextData 
+      },
+      {
+        name: 'Cita Destacada',
+        description: 'Ideal para resaltar testimonios o frases.',
+        preview: TextPreviewQuote,
+        defaultData: { variant: 'quote', content: 'Esta es una cita para resaltar una idea importante.' } as TextData
+      },
+      {
+        name: 'Texto Resaltado',
+        description: 'Un párrafo con fondo para llamar la atención.',
+        preview: TextPreviewHighlighted,
+        defaultData: { variant: 'highlighted', content: 'Usa este bloque para notas importantes o advertencias.' } as TextData
+      }
     ]
   },
   image: {

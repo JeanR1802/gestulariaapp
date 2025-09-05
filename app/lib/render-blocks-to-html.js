@@ -149,6 +149,34 @@ export function renderBlocksToHTML(blocks) {
               </div>
             `;
         }
+              case 'text':
+        const formattedContent = (data.content || '').replace(/\n/g, '<br />');
+        switch (data.variant) {
+          case 'quote':
+            return `
+              <div class="max-w-4xl mx-auto py-8 px-4">
+                <blockquote class="border-l-4 border-slate-400 pl-4 italic text-slate-600">
+                  <p>${formattedContent}</p>
+                </blockquote>
+              </div>
+            `;
+          case 'highlighted':
+            return `
+              <div class="max-w-4xl mx-auto py-8 px-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800">
+                  <p>${formattedContent}</p>
+                </div>
+              </div>
+            `;
+          case 'default':
+          default:
+            return `
+              <div class="max-w-4xl mx-auto py-8 px-4 prose prose-slate">
+                <p>${formattedContent}</p>
+              </div>
+            `;
+        }
+
       case 'cta':
         return `
           <div class="${data.backgroundColor || 'bg-slate-800'} text-white p-12 text-center">
