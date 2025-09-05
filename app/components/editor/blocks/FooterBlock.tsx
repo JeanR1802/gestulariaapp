@@ -1,6 +1,6 @@
-// Archivo: app/components/editor/blocks/FooterBlock.tsx (ACTUALIZADO)
+// Archivo: app/components/editor/blocks/FooterBlock.tsx (CORREGIDO)
 import React from 'react';
-import { InputField, TextareaField } from './InputField'; // Usaremos Textarea para los enlaces
+import { InputField, TextareaField } from './InputField';
 
 // --- Interfaces de Datos Actualizadas ---
 interface SocialLink {
@@ -10,7 +10,7 @@ interface SocialLink {
 
 interface FooterColumn {
     title: string;
-    links: string[]; // Los enlaces serán un string simple, separados por saltos de línea
+    links: string[];
 }
 
 export interface FooterData {
@@ -72,7 +72,8 @@ const FooterMinimal = ({ data }: { data: FooterData }) => (
 );
 
 // --- Editor de Campos Condicional ---
-export function FooterEditor({ data, updateData }: { data: FooterData, updateData: (key: keyof FooterData, value: any) => void }) {
+// CORRECCIÓN: Se ha eliminado el 'any' y se ha especificado un tipo de unión más estricto.
+export function FooterEditor({ data, updateData }: { data: FooterData, updateData: (key: keyof FooterData, value: string | SocialLink[] | FooterColumn[]) => void }) {
     
   const handleSocialLinkChange = (index: number, field: keyof SocialLink, value: string) => {
     const newLinks = [...(data.socialLinks || [])];
