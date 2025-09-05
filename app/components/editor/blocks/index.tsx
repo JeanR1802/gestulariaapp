@@ -1,4 +1,4 @@
-// Archivo: app/components/editor/blocks/index.ts (CORREGIDO)
+// Archivo: app/components/editor/blocks/index.ts (CORREGIDO PARA PREVISUALIZACIONES)
 import React from 'react';
 
 // 1. Importa TODOS los componentes, tanto los de renderizado como los de previsualización
@@ -10,6 +10,7 @@ import { ImageBlock, ImageEditor, ImageData } from './ImageBlock';
 import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
+import { BlockPreviewWrapper } from '@/app/components/editor/BlockPreviewWrapper'; // Importamos el wrapper
 
 // 2. Re-exporta los tipos de datos (sin cambios)
 export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
@@ -17,25 +18,36 @@ export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, Foo
 // 3. Une todos los tipos de datos en uno solo (sin cambios)
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
 
-// 4. Define el registro de bloques CORREGIDO
+// Función auxiliar para envolver los componentes de previsualización
+const wrapPreview = (Component: React.FC<any>) => {
+  const WrappedComponent: React.FC<any> = (props) => (
+    <BlockPreviewWrapper>
+      <Component {...props} />
+    </BlockPreviewWrapper>
+  );
+  WrappedComponent.displayName = `Wrapped${Component.displayName || Component.name}`;
+  return WrappedComponent;
+};
+
+// 4. Define el registro de bloques con previsualizaciones envueltas
 export const BLOCKS = {
   header: {
     name: 'Encabezado',
     icon: '🔝',
     description: 'Barra de navegación principal.',
-    renderer: HeaderBlock, // <--- Propiedad AÑADIDA DE NUEVO
+    renderer: HeaderBlock,
     editor: HeaderEditor,
     variants: [
       {
         name: 'Clásico',
         description: 'Logo a la izquierda, enlaces a la derecha.',
-        preview: HeaderVariantDefault,
+        preview: wrapPreview(HeaderVariantDefault), // Usamos wrapPreview
         defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData,
       },
       {
         name: 'Centrado',
         description: 'Logo y enlaces centrados.',
-        preview: HeaderVariantCentered,
+        preview: wrapPreview(HeaderVariantCentered), // Usamos wrapPreview
         defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData,
       }
     ]
@@ -44,13 +56,13 @@ export const BLOCKS = {
     name: 'Héroe',
     icon: '🎯',
     description: 'Sección principal llamativa.',
-    renderer: HeroBlock, // <--- Propiedad AÑADIDA DE NUEVO
+    renderer: HeroBlock,
     editor: HeroEditor,
     variants: [
       {
         name: 'Por Defecto',
         description: 'Un héroe estándar y efectivo.',
-        preview: HeroBlock,
+        preview: wrapPreview(HeroBlock), // Usamos wrapPreview
         defaultData: { title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } as HeroData,
       }
     ]
@@ -59,13 +71,13 @@ export const BLOCKS = {
     name: 'Texto',
     icon: '📝',
     description: 'Párrafo de texto simple.',
-    renderer: TextBlock, // <--- Propiedad AÑADIDA DE NUEVO
+    renderer: TextBlock,
     editor: TextEditor,
     variants: [
         {
             name: 'Párrafo',
             description: 'Un bloque de texto simple.',
-            preview: TextBlock,
+            preview: wrapPreview(TextBlock), // Usamos wrapPreview
             defaultData: { content: 'Escribe aquí tu contenido.' } as TextData,
         }
     ]
@@ -74,13 +86,13 @@ export const BLOCKS = {
     name: 'Imagen',
     icon: '🖼️',
     description: 'Una sola imagen con pie de foto.',
-    renderer: ImageBlock, // <--- Propiedad AÑADIDA DE NUEVO
+    renderer: ImageBlock,
     editor: ImageEditor,
     variants: [
         {
             name: 'Imagen Simple',
             description: 'Una imagen con pie de foto opcional.',
-            preview: ImageBlock,
+            preview: wrapPreview(ImageBlock), // Usamos wrapPreview
             defaultData: { imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción', caption: 'Pie de foto.' } as ImageData,
         }
     ]
@@ -89,13 +101,13 @@ export const BLOCKS = {
     name: 'Tarjetas',
     icon: '🎴',
     description: 'Grupo de 3 tarjetas de servicio.',
-    renderer: CardsBlock, // <--- Propiedad AÑADIDA DE NUEVO
+    renderer: CardsBlock,
     editor: CardsEditor,
     variants: [
         {
             name: 'Tres Columnas',
             description: 'Muestra características o servicios.',
-            preview: CardsBlock,
+            preview: wrapPreview(CardsBlock), // Usamos wrapPreview
             defaultData: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve.' } ] } as CardsData,
         }
     ]
@@ -104,13 +116,13 @@ export const BLOCKS = {
     name: 'Llamada a la Acción',
     icon: '📢',
     description: 'Invita a los usuarios a actuar.',
-    renderer: CtaBlock, // <--- Propiedad AÑADIDA DE NUEVO
+    renderer: CtaBlock,
     editor: CtaEditor,
     variants: [
         {
             name: 'Banner Oscuro',
             description: 'Un banner con fondo oscuro para resaltar.',
-            preview: CtaBlock,
+            preview: wrapPreview(CtaBlock), // Usamos wrapPreview
             defaultData: { title: '¿Listo para empezar?', subtitle: 'Únete a miles de clientes satisfechos.', buttonText: 'Contactar Ahora', backgroundColor: 'bg-slate-800' } as CtaData,
         }
     ]
@@ -119,13 +131,13 @@ export const BLOCKS = {
     name: 'Pie de Página',
     icon: '🦶',
     description: 'Sección final con copyright y enlaces.',
-    renderer: FooterBlock, // <--- Propiedad AÑADIDA DE NUEVO
+    renderer: FooterBlock,
     editor: FooterEditor,
     variants: [
         {
             name: 'Simple',
             description: 'Copyright y redes sociales.',
-            preview: FooterBlock,
+            preview: wrapPreview(FooterBlock), // Usamos wrapPreview
             defaultData: { copyrightText: `© ${new Date().getFullYear()} Mi Negocio.`, socialLinks: [{ platform: 'Twitter', url: '' }, { platform: 'Instagram', url: '' }] } as FooterData,
         }
     ]
