@@ -1,10 +1,10 @@
-// Archivo: app/components/editor/blocks/HeroBlock.tsx (ACTUALIZADO CON COLOR DE TEXTO)
+// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO FINAL Y COMPLETO)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
-import { TextColorPalette } from '../controls/TextColorPalette'; // Importamos la nueva paleta
+import { TextColorPalette } from '../controls/TextColorPalette';
 
-// 1. Actualizamos la interfaz para incluir colores de texto
+// 1. Interfaz de datos completa con variantes y colores
 export interface HeroData {
   variant: 'default' | 'leftImage' | 'darkMinimal';
   title: string;
@@ -17,12 +17,20 @@ export interface HeroData {
   imageUrl?: string;
 }
 
-// --- Componente "Director" que elige qué diseño renderizar ---
+// 2. Componente "director" que SÍ renderiza el diseño correcto
 export function HeroBlock({ data }: { data: HeroData }) {
-  // ... (código existente sin cambios, se pasa 'data' completo)
+  switch (data.variant) {
+    case 'leftImage':
+      return <HeroLeftImage data={data} />;
+    case 'darkMinimal':
+      return <HeroDarkMinimal data={data} />;
+    case 'default':
+    default:
+      return <HeroDefault data={data} />;
+  }
 }
 
-// 2. Componentes internos ahora usan los colores de texto dinámicos
+// --- Componentes internos para cada variante (con colores dinámicos) ---
 const HeroDefault = ({ data }: { data: HeroData }) => (
   <div className={`${data.backgroundColor || 'bg-slate-100'} p-12 md:p-20 text-center`}>
     <h1 className={`text-3xl md:text-4xl font-bold mb-4 ${data.titleColor || 'text-slate-800'}`}>{data.title}</h1>
@@ -53,7 +61,7 @@ const HeroDarkMinimal = ({ data }: { data: HeroData }) => (
     </div>
 );
 
-// 3. Editor ahora incluye la paleta de colores de texto
+// --- Editor con ambas Paletas de Colores ---
 export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
   return (
     <div className="space-y-4">
