@@ -1,53 +1,55 @@
-// Archivo: app/components/editor/blocks/TextBlock.tsx (ACTUALIZADO)
 import React from 'react';
 import { TextareaField } from './InputField';
+import { ColorPalette } from '../controls/ColorPalette';
+import { TextColorPalette } from '../controls/TextColorPalette';
 
-// 1. Actualizamos la interfaz para que incluya la variante
 export interface TextData {
   variant: 'default' | 'quote' | 'highlighted';
   content: string;
+  backgroundColor: string;
+  textColor: string;
 }
 
-// 2. Componente "director" que elige qué diseño de texto mostrar
 export function TextBlock({ data }: { data: TextData }) {
   switch (data.variant) {
-    case 'quote':
-      return <TextQuote data={data} />;
-    case 'highlighted':
-      return <TextHighlighted data={data} />;
-    case 'default':
-    default:
-      return <TextDefault data={data} />;
+    case 'quote': return <TextQuote data={data} />;
+    case 'highlighted': return <TextHighlighted data={data} />;
+    default: return <TextDefault data={data} />;
   }
 }
 
-// --- Componentes internos para cada variante ---
 const TextDefault = ({ data }: { data: TextData }) => (
-  <div className="prose prose-slate max-w-none p-4">
-    <p dangerouslySetInnerHTML={{ __html: (data.content || '').replace(/\n/g, '<br />') }}></p>
+  <div className={`prose prose-slate max-w-none p-4 ${data.backgroundColor || ''}`}>
+    <p className={data.textColor || 'text-slate-800'} dangerouslySetInnerHTML={{ __html: (data.content || '').replace(/\n/g, '<br />') }}></p>
   </div>
 );
-
 const TextQuote = ({ data }: { data: TextData }) => (
-  <div className="p-4">
-    <blockquote className="border-l-4 border-slate-400 pl-4 italic text-slate-600">
-      <p dangerouslySetInnerHTML={{ __html: (data.content || '').replace(/\n/g, '<br />') }}></p>
+  <div className={`p-4 ${data.backgroundColor || ''}`}>
+    <blockquote className="border-l-4 border-slate-400 pl-4 italic">
+      <p className={data.textColor || 'text-slate-600'} dangerouslySetInnerHTML={{ __html: (data.content || '').replace(/\n/g, '<br />') }}></p>
     </blockquote>
   </div>
 );
-
 const TextHighlighted = ({ data }: { data: TextData }) => (
   <div className="p-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800">
-        <p dangerouslySetInnerHTML={{ __html: (data.content || '').replace(/\n/g, '<br />') }}></p>
-      </div>
+    <div className={`border rounded-lg p-4 ${data.backgroundColor || 'bg-blue-50 border-blue-200'}`}>
+      <p className={data.textColor || 'text-blue-800'} dangerouslySetInnerHTML={{ __html: (data.content || '').replace(/\n/g, '<br />') }}></p>
+    </div>
   </div>
 );
 
-
-// 3. El editor sigue siendo el mismo, ya que todas las variantes usan el mismo campo
-export function TextEditor({ data, updateData }: { data: TextData, updateData: (key: keyof TextData, value: string) => void }) {
+export function TextEditor({ data, updateData }: { data: TextData, updateData: (key: keyof TextData, value: any) => void }) {
   return (
-    <TextareaField label="Contenido" value={data.content} rows={8} onChange={(e) => updateData('content', e.target.value)} />
+    <div className="space-y-4">
+      <div>
+        <h4 className="font-medium text-sm text-slate-600">Contenido</h4>
+        <TextareaField label="Contenido" value={data.content} rows={8} onChange={(e) => updateData('content', e.target.value)} />
+      </div>
+      <div className="border-t border-slate-200 pt-4 space-y-4">
+        <h4 className="font-medium text-sm text-slate-600 mb-3">Diseño</h4>
+        <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
+        <TextColorPalette label="Color del Texto" selectedColor={data.textColor} onChange={(color) => updateData('textColor', color)} />
+      </div>
+    </div>
   );
 }

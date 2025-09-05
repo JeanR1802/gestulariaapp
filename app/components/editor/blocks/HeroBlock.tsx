@@ -1,11 +1,11 @@
-// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO COMPLETO Y CORREGIDO)
+// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO CORREGIDO Y FUNCIONAL)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { ButtonColorPalette } from '../controls/ButtonColorPalette';
 
-// 1. Interfaz de datos completa
+// 1. Interfaz de datos completa (sin cambios)
 export interface HeroData {
   variant: 'default' | 'leftImage' | 'darkMinimal';
   title: string;
@@ -20,7 +20,7 @@ export interface HeroData {
   imageUrl?: string;
 }
 
-// 2. Componentes de renderizado (sin cambios, ya aplican los colores dinámicos)
+// 2. Componentes de renderizado (ya aplican los colores dinámicos)
 export function HeroBlock({ data }: { data: HeroData }) {
   switch (data.variant) {
     case 'leftImage':
@@ -64,7 +64,6 @@ const HeroDarkMinimal = ({ data }: { data: HeroData }) => (
         <a href={data.buttonLink || '#'} className={`${buttonBaseClasses} ${data.buttonBgColor || 'bg-white'} ${data.buttonTextColor || 'text-slate-800'}`}>{data.buttonText}</a>
     </div>
 );
-
 
 // 3. Editor con la lógica de actualización corregida
 export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
