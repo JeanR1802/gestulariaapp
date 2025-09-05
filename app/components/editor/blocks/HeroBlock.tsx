@@ -1,4 +1,4 @@
-// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO FINAL Y COMPLETO)
+// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO COMPLETO Y CORREGIDO)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
@@ -20,7 +20,7 @@ export interface HeroData {
   imageUrl?: string;
 }
 
-// 2. Componente "director" que elige qué diseño renderizar
+// 2. Componentes de renderizado (sin cambios, ya aplican los colores dinámicos)
 export function HeroBlock({ data }: { data: HeroData }) {
   switch (data.variant) {
     case 'leftImage':
@@ -33,7 +33,6 @@ export function HeroBlock({ data }: { data: HeroData }) {
   }
 }
 
-// 3. Componentes internos para cada variante (AHORA COMPLETOS)
 const buttonBaseClasses = "inline-block px-6 py-2.5 rounded-md text-base font-semibold transition-transform hover:scale-105";
 
 const HeroDefault = ({ data }: { data: HeroData }) => (
@@ -66,29 +65,34 @@ const HeroDarkMinimal = ({ data }: { data: HeroData }) => (
     </div>
 );
 
-// 4. Editor con todas las paletas de colores
-export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (updates: Partial<HeroData>) => void }) {
+
+// 3. Editor con la lógica de actualización corregida
+export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
   return (
     <div className="space-y-4">
       <div className="space-y-4">
         <h4 className="font-medium text-sm text-slate-600">Contenido</h4>
-        <InputField label="Título Principal" value={data.title} onChange={(e) => updateData({ title: e.target.value })} />
-        {data.variant !== 'darkMinimal' && (<TextareaField label="Subtítulo" value={data.subtitle} onChange={(e) => updateData({ subtitle: e.target.value })} />)}
-        <InputField label="Texto del Botón" value={data.buttonText} onChange={(e) => updateData({ buttonText: e.target.value })} />
-        {data.variant === 'leftImage' && (<InputField label="URL de la Imagen" value={data.imageUrl || ''} onChange={(e) => updateData({ imageUrl: e.target.value })} />)}
+        <InputField label="Título Principal" value={data.title} onChange={(e) => updateData('title', e.target.value)} />
+        {data.variant !== 'darkMinimal' && (<TextareaField label="Subtítulo" value={data.subtitle} onChange={(e) => updateData('subtitle', e.target.value)} />)}
+        <InputField label="Texto del Botón" value={data.buttonText} onChange={(e) => updateData('buttonText', e.target.value)} />
+        {data.variant === 'leftImage' && (<InputField label="URL de la Imagen" value={data.imageUrl || ''} onChange={(e) => updateData('imageUrl', e.target.value)} />)}
       </div>
+
       <div className="border-t border-slate-200 pt-4 space-y-4">
         <h4 className="font-medium text-sm text-slate-600 mb-3">Diseño</h4>
-        <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData({ backgroundColor: color })} />
-        <TextColorPalette label="Color de Texto del Título" selectedColor={data.titleColor} onChange={(color) => updateData({ titleColor: color })} />
+        <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
+        <TextColorPalette label="Color de Texto del Título" selectedColor={data.titleColor} onChange={(color) => updateData('titleColor', color)} />
         {data.variant !== 'darkMinimal' && (
-          <TextColorPalette label="Color de Texto del Subtítulo" selectedColor={data.subtitleColor} onChange={(color) => updateData({ subtitleColor: color })} />
+          <TextColorPalette label="Color de Texto del Subtítulo" selectedColor={data.subtitleColor} onChange={(color) => updateData('subtitleColor', color)} />
         )}
         <ButtonColorPalette 
           label="Estilo del Botón"
           selectedBgColor={data.buttonBgColor}
+          // CORRECCIÓN CLAVE: Hacemos dos llamadas a updateData, una para cada propiedad.
+          // Esto es compatible con la lógica que ya tienes en page.tsx.
           onChange={(bg, text) => {
-            updateData({ buttonBgColor: bg, buttonTextColor: text });
+            updateData('buttonBgColor', bg);
+            updateData('buttonTextColor', text);
           }}
         />
       </div>
