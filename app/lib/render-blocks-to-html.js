@@ -1,4 +1,4 @@
-// Archivo: app/lib/render-blocks-to-html.js (VERSIÓN COMPLETA Y FINAL)
+// Archivo: app/lib/render-blocks-to-html.js (CORREGIDO)
 import { BLOCKS } from '@/app/components/editor/blocks';
 
 export function renderBlocksToHTML(blocks) {
@@ -92,6 +92,47 @@ export function renderBlocksToHTML(blocks) {
           default: 
             const darkButtonClasses = `inline-block px-6 py-2.5 rounded-md text-base font-semibold transition-transform hover:scale-105 ${data.buttonBgColor || 'bg-white'} ${data.buttonTextColor || 'text-slate-800'}`;
             return `<div class="${data.backgroundColor || 'bg-slate-800'} p-12 text-center"><h2 class="text-3xl font-bold mb-2 ${data.titleColor || 'text-white'}">${data.title}</h2><p class="text-lg opacity-90 mb-6 max-w-xl mx-auto ${data.subtitleColor || 'text-slate-300'}">${data.subtitle}</p><a href="#" class="${darkButtonClasses}">${data.buttonText}</a></div>`;
+        }
+      } // <-- ESTA ES LA LLAVE QUE FALTABA
+
+      case 'pricing': {
+        const titleHtml = `<h2 class="text-3xl font-bold text-center mb-2 ${data.titleColor || 'text-slate-800'}">${data.title}</h2><p class="text-lg text-slate-600 text-center mb-12 max-w-2xl mx-auto">${data.subtitle}</p>`;
+        
+        switch (data.variant) {
+          case 'list':
+            return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-4xl mx-auto">${titleHtml}<div class="space-y-4">${(data.plans || []).map(plan => `
+              <div class="p-4 border rounded-lg grid md:grid-cols-3 items-center gap-4 ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}">
+                <div class="md:col-span-2">
+                  <h3 class="text-xl font-semibold mb-1">${plan.name}</h3>
+                  <p class="text-sm text-slate-500">${plan.description}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-3xl font-bold">$${plan.price}<span class="text-sm font-normal text-slate-500">${plan.frequency}</span></p>
+                  <a href="#" class="mt-2 inline-block w-full text-center py-2 rounded-md font-semibold bg-slate-800 text-white hover:bg-slate-700">${plan.buttonText}</a>
+                </div>
+              </div>`).join('')}</div></div></div>`;
+          case 'simple':
+            return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-4xl mx-auto">${titleHtml}<div class="grid md:grid-cols-2 gap-8">${(data.plans || []).map(plan => `
+              <div class="p-6 border rounded-lg ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}">
+                <h3 class="text-xl font-semibold mb-2">${plan.name}</h3>
+                <p class="text-4xl font-bold mb-4">$${plan.price}<span class="text-base font-normal text-slate-500">${plan.frequency}</span></p>
+                <p class="text-slate-500 text-sm mb-4">${plan.description}</p>
+                <a href="#" class="w-full block text-center py-2 rounded-md font-semibold bg-slate-800 text-white hover:bg-slate-700">${plan.buttonText}</a>
+              </div>`).join('')}</div></div></div>`;
+          default: // columns
+            return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-5xl mx-auto">${titleHtml}<div class="grid md:grid-cols-3 gap-8">${(data.plans || []).map(plan => `
+              <div class="p-6 border rounded-lg text-left flex flex-col ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}">
+                <h3 class="text-xl font-semibold mb-1">${plan.name}</h3>
+                <p class="text-slate-500 mb-4">${plan.description}</p>
+                <p class="text-4xl font-bold mb-1">$${plan.price}<span class="text-base font-normal text-slate-500">${plan.frequency}</span></p>
+                <ul class="text-sm text-slate-600 space-y-2 my-6 flex-grow">
+                  ${(plan.features || []).map(feat => `<li class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green-500"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>${feat}</span>
+                  </li>`).join('')}
+                </ul>
+                <a href="#" class="w-full text-center py-2 rounded-md font-semibold ${plan.highlighted ? `${data.highlightColor ? data.highlightColor.replace('border-', 'bg-') : 'bg-blue-600'} text-white` : 'bg-slate-100 text-slate-800 hover:bg-slate-200'}">${plan.buttonText}</a>
+              </div>`).join('')}</div></div></div>`;
         }
       }
 

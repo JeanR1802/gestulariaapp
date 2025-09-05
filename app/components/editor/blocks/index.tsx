@@ -1,4 +1,4 @@
-// Archivo: app/components/editor/blocks/index.tsx (VERSIÓN COMPLETA Y FINAL)
+// Archivo: app/components/editor/blocks/index.tsx (VERSIÓN CORREGIDA Y FINAL)
 import React from 'react';
 
 // Importaciones de componentes principales (renderer y editor)
@@ -8,6 +8,7 @@ import { TextBlock, TextEditor, TextData } from './TextBlock';
 import { ImageBlock, ImageEditor, ImageData } from './ImageBlock';
 import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
+import { PricingBlock, PricingEditor, PricingData } from './PricingBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 
 // Importaciones de TODOS los componentes de previsualización para la bandeja
@@ -17,11 +18,12 @@ import { TextPreviewDefault, TextPreviewQuote, TextPreviewHighlighted } from './
 import { ImagePreviewDefault, ImagePreviewBordered, ImagePreviewFullWidth } from './Image/ImagePreviews';
 import { CardsPreviewDefault, CardsPreviewList, CardsPreviewImageTop } from './Cards/CardsPreviews';
 import { CtaPreviewDark, CtaPreviewLight, CtaPreviewSplit } from './Cta/CtaPreviews';
+import { PricingPreviewColumns, PricingPreviewList, PricingPreviewSimple } from './Pricing/PricingPreviews';
 import { FooterPreviewSimple, FooterPreviewMultiColumn, FooterPreviewMinimal } from './Footer/FooterPreviews';
 
 // Re-exporta los tipos de datos para que otros archivos puedan usarlos
-export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
-export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
+export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, PricingData, FooterData };
+export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData;
 
 // Define el registro de bloques completo con todas las variantes
 export const BLOCKS = {
@@ -71,6 +73,51 @@ export const BLOCKS = {
       { name: 'Banner Oscuro', description: 'Un banner con fondo oscuro para resaltar.', preview: CtaPreviewDark, defaultData: { variant: 'dark', title: '¿Listo para empezar?', subtitle: 'Únete a miles de clientes satisfechos.', buttonText: 'Contactar Ahora', backgroundColor: 'bg-slate-800' } as CtaData },
       { name: 'Banner Claro', description: 'Un diseño limpio con fondo claro.', preview: CtaPreviewLight, defaultData: { variant: 'light', title: 'Prueba Nuestra Plataforma', subtitle: 'Descubre todo lo que puedes hacer.', buttonText: 'Comenzar Gratis', backgroundColor: 'bg-slate-100' } as CtaData },
       { name: 'Dividido con Imagen', description: 'Texto a un lado e imagen al otro.', preview: CtaPreviewSplit, defaultData: { variant: 'split', title: 'Lleva tu Negocio al Siguiente Nivel', subtitle: 'Nuestras herramientas te ayudarán a crecer.', buttonText: 'Saber Más', backgroundColor: 'bg-white', imageUrl: 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen' } as CtaData }
+    ]
+  },
+  pricing: {
+    name: 'Precios', icon: '💰', description: 'Muestra tus planes y precios.', renderer: PricingBlock, editor: PricingEditor,
+    variants: [
+      { 
+        name: 'Columnas Comparativas', 
+        description: 'Ideal para comparar 2-3 planes.', 
+        preview: PricingPreviewColumns, 
+        defaultData: { 
+          variant: 'columns', title: 'Nuestros Planes', subtitle: 'Elige el plan que mejor se adapte a tus necesidades.',
+          backgroundColor: 'bg-white', highlightColor: 'border-blue-600',
+          plans: [
+            { name: 'Básico', price: '10', frequency: '/mes', description: 'Para empezar.', features: ['Característica 1', 'Característica 2'], buttonText: 'Elegir Plan', highlighted: false },
+            { name: 'Popular', price: '25', frequency: '/mes', description: 'El más elegido.', features: ['Todo lo del Básico', 'Característica 3', 'Característica 4'], buttonText: 'Elegir Plan', highlighted: true },
+            { name: 'Pro', price: '50', frequency: '/mes', description: 'Para expertos.', features: ['Todo lo del Popular', 'Soporte VIP'], buttonText: 'Elegir Plan', highlighted: false },
+          ] 
+        } as PricingData 
+      },
+      { 
+        name: 'Lista Detallada', 
+        description: 'Cuando cada plan tiene muchas características.', 
+        preview: PricingPreviewList, 
+        defaultData: { 
+          variant: 'list', title: 'Planes Disponibles', subtitle: 'Soluciones para todos los tamaños.',
+          backgroundColor: 'bg-white', highlightColor: 'border-blue-600',
+           plans: [
+            { name: 'Plan Inicial', price: '15', frequency: '/mes', description: 'Perfecto para proyectos personales y pequeños.', features: [], buttonText: 'Suscribirse', highlighted: false },
+            { name: 'Plan Crecimiento', price: '45', frequency: '/mes', description: 'Herramientas potentes para hacer crecer tu negocio.', features: [], buttonText: 'Suscribirse', highlighted: true },
+          ] 
+        } as PricingData 
+      },
+      { 
+        name: 'Simple', 
+        description: 'Un diseño limpio y directo para dos opciones.', 
+        preview: PricingPreviewSimple, 
+        defaultData: { 
+          variant: 'simple', title: 'Elige tu Plan', subtitle: 'Precios simples y transparentes.',
+          backgroundColor: 'bg-white', highlightColor: 'border-blue-600',
+           plans: [
+            { name: 'Mensual', price: '20', frequency: '/mes', description: 'Flexibilidad total, cancela cuando quieras.', features: [], buttonText: 'Comprar', highlighted: false },
+            { name: 'Anual', price: '200', frequency: '/año', description: 'Ahorra un 20% con el plan anual.', features: [], buttonText: 'Comprar', highlighted: true },
+          ] 
+        } as PricingData 
+      }
     ]
   },
   footer: {
