@@ -1,4 +1,4 @@
-// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO FINAL Y FUNCIONAL)
+// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO COMPLETO Y CORREGIDO)
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,7 +10,7 @@ import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 // Se corrige la firma de onUpdate para que sea específica y segura
-interface EditPanelProps { block: Block | undefined; onUpdate: (updates: Partial<BlockData>) => void; onClose: () => void; }
+interface EditPanelProps { block: Block | undefined; onUpdate: (key: string, value: unknown) => void; onClose: () => void; }
 
 // --- Iconos ---
 const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
@@ -40,6 +40,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
 
   const showNotification = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     const el = document.createElement('div');
+    // CORRECCIÓN: El parámetro 'type' ahora se utiliza correctamente
     el.className = `fixed top-5 right-5 px-4 py-2 rounded-lg text-white text-sm shadow-lg z-50 ${ type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
     el.textContent = message;
     document.body.appendChild(el);
@@ -69,6 +70,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     if(isMounted) {
       loadTenant(); 
     }
+  // CORRECCIÓN: Se corrigen las dependencias del Hook
   }, [isMounted, loadTenant]);
 
   const saveTenant = useCallback(async () => {
@@ -98,12 +100,11 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     setActiveBlockType(null);
   };
 
-  // ESTA ES LA FUNCIÓN CORREGIDA QUE ARREGLA LA EDICIÓN
-  const updateBlock = (blockId: number, dataUpdates: Partial<BlockData>) => {
+  const updateBlock = (blockId: number, key: string, value: unknown) => {
     setBlocks(prevBlocks =>
       prevBlocks.map(block =>
         block.id === blockId
-          ? { ...block, data: { ...block.data, ...dataUpdates } }
+          ? { ...block, data: { ...block.data, [key]: value } }
           : block
       )
     );
@@ -167,7 +168,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         </div>
         
         <div className={`fixed top-0 right-0 h-full bg-white border-l border-slate-200 shadow-xl transition-transform duration-300 ease-in-out z-50 w-full max-w-sm ${editingBlockId ? 'translate-x-0' : 'translate-x-full'}`}>
-          {editingBlock && <EditPanel block={editingBlock} onUpdate={(updates) => updateBlock(editingBlock.id, updates)} onClose={() => setEditingBlockId(null)} />}
+          {editingBlock && <EditPanel block={editingBlock} onUpdate={(key, value) => updateBlock(editingBlock.id, key, value)} onClose={() => setEditingBlockId(null)} />}
         </div>
         
         <div className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${isMobilePanelOpen ? 'bg-black bg-opacity-50' : 'bg-opacity-0 pointer-events-none'}`} onClick={() => setIsMobilePanelOpen(false)}>
@@ -189,7 +190,11 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         
         <div className={`fixed top-0 left-0 h-full bg-black bg-opacity-50 z-40 transition-opacity ${activeBlockType ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setActiveBlockType(null)}>
           <div className={`absolute top-0 bg-white h-full shadow-2xl transition-transform duration-300 ease-in-out w-96 ${activeBlockType ? 'translate-x-0' : '-translate-x-full'} left-0 md:left-72`} onClick={(e) => e.stopPropagation()}>
-            <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />
+            <AddBlockPanel
+              blockType={activeBlockType}
+              onAddBlock={addBlock}
+              onClose={() => setActiveBlockType(null)}
+            />
           </div>
         </div>
         
@@ -230,15 +235,10 @@ function AddBlockPanel({ blockType, onAddBlock, onClose }: { blockType: BlockTyp
 function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
   if (!block) return null;
 
-  // ESTA FUNCIÓN AHORA RECIBE UN OBJETO DE CAMBIOS Y FUNCIONA CORRECTAMENTE
-  const updateData = (updates: Partial<BlockData>) => {
-    onUpdate(updates);
-  };
-
   const renderEditorContent = () => {
     const blockConfig = BLOCKS[block.type as BlockType];
-    const EditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (updates: Partial<BlockData>) => void }>;
-    return <EditorComponent data={block.data} updateData={updateData} />;
+    const EditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }>;
+    return <EditorComponent data={block.data} updateData={onUpdate} />;
   };
 
   return (
