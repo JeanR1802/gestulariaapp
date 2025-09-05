@@ -1,4 +1,4 @@
-// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO FINAL Y LIMPIO)
+// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO COMPLETO Y CORREGIDO)
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,7 +9,7 @@ import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 // --- Definiciones de Tipos ---
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
-// Se corrige la firma de onUpdate para que sea específica y no use 'any'
+// Se corrige la firma de onUpdate para que sea específica y segura
 interface EditPanelProps { block: Block | undefined; onUpdate: (key: string, value: unknown) => void; onClose: () => void; }
 
 // --- Iconos ---
