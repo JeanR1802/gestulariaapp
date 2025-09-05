@@ -98,6 +98,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     setActiveBlockType(null);
   };
 
+  // ESTA ES LA FUNCIÓN CORREGIDA QUE ARREGLA LA EDICIÓN
   const updateBlock = (blockId: number, key: string, value: unknown) => {
     setBlocks(prevBlocks =>
       prevBlocks.map(block =>
