@@ -1,4 +1,4 @@
-// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO COMPLETO Y CORREGIDO)
+// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO FINAL Y FUNCIONAL)
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
