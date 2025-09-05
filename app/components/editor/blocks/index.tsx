@@ -1,7 +1,7 @@
-// Archivo: app/components/editor/blocks/index.ts (CORREGIDO PARA PREVISUALIZACIONES)
+// Archivo: app/components/editor/blocks/index.tsx (VERSIÓN FINAL)
 import React from 'react';
 
-// 1. Importa TODOS los componentes, tanto los de renderizado como los de previsualización
+// 1. Importa TODOS los componentes
 import { HeaderBlock, HeaderEditor, HeaderData } from './HeaderBlock';
 import { HeaderVariantDefault, HeaderVariantCentered } from './Header/HeaderPreviews';
 import { HeroBlock, HeroEditor, HeroData } from './HeroBlock';
@@ -10,17 +10,22 @@ import { ImageBlock, ImageEditor, ImageData } from './ImageBlock';
 import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
-import { BlockPreviewWrapper } from '@/app/components/editor/BlockPreviewWrapper'; // Importamos el wrapper
+import { BlockPreviewWrapper } from '@/app/components/editor/BlockPreviewWrapper';
 
-// 2. Re-exporta los tipos de datos (sin cambios)
+// 2. Re-exporta los tipos de datos
 export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData };
 
-// 3. Une todos los tipos de datos en uno solo (sin cambios)
+// 3. Une todos los tipos de datos en uno solo
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
+
+// CORRECCIÓN: Definimos un tipo estricto para las props de los componentes de bloque
+interface BlockComponentProps {
+  data: BlockData;
+}
 
 // Función auxiliar para envolver los componentes de previsualización
 const wrapPreview = (Component: React.FC<any>) => {
-  const WrappedComponent: React.FC<any> = (props) => (
+  const WrappedComponent: React.FC<BlockComponentProps> = (props) => ( // Usamos el tipo estricto
     <BlockPreviewWrapper>
       <Component {...props} />
     </BlockPreviewWrapper>
@@ -28,6 +33,7 @@ const wrapPreview = (Component: React.FC<any>) => {
   WrappedComponent.displayName = `Wrapped${Component.displayName || Component.name}`;
   return WrappedComponent;
 };
+
 
 // 4. Define el registro de bloques con previsualizaciones envueltas
 export const BLOCKS = {
@@ -41,13 +47,13 @@ export const BLOCKS = {
       {
         name: 'Clásico',
         description: 'Logo a la izquierda, enlaces a la derecha.',
-        preview: wrapPreview(HeaderVariantDefault), // Usamos wrapPreview
+        preview: wrapPreview(HeaderVariantDefault),
         defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData,
       },
       {
         name: 'Centrado',
         description: 'Logo y enlaces centrados.',
-        preview: wrapPreview(HeaderVariantCentered), // Usamos wrapPreview
+        preview: wrapPreview(HeaderVariantCentered),
         defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData,
       }
     ]
@@ -62,7 +68,7 @@ export const BLOCKS = {
       {
         name: 'Por Defecto',
         description: 'Un héroe estándar y efectivo.',
-        preview: wrapPreview(HeroBlock), // Usamos wrapPreview
+        preview: wrapPreview(HeroBlock),
         defaultData: { title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } as HeroData,
       }
     ]
@@ -77,7 +83,7 @@ export const BLOCKS = {
         {
             name: 'Párrafo',
             description: 'Un bloque de texto simple.',
-            preview: wrapPreview(TextBlock), // Usamos wrapPreview
+            preview: wrapPreview(TextBlock),
             defaultData: { content: 'Escribe aquí tu contenido.' } as TextData,
         }
     ]
@@ -92,7 +98,7 @@ export const BLOCKS = {
         {
             name: 'Imagen Simple',
             description: 'Una imagen con pie de foto opcional.',
-            preview: wrapPreview(ImageBlock), // Usamos wrapPreview
+            preview: wrapPreview(ImageBlock),
             defaultData: { imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción', caption: 'Pie de foto.' } as ImageData,
         }
     ]
@@ -107,7 +113,7 @@ export const BLOCKS = {
         {
             name: 'Tres Columnas',
             description: 'Muestra características o servicios.',
-            preview: wrapPreview(CardsBlock), // Usamos wrapPreview
+            preview: wrapPreview(CardsBlock),
             defaultData: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve.' } ] } as CardsData,
         }
     ]
@@ -122,7 +128,7 @@ export const BLOCKS = {
         {
             name: 'Banner Oscuro',
             description: 'Un banner con fondo oscuro para resaltar.',
-            preview: wrapPreview(CtaBlock), // Usamos wrapPreview
+            preview: wrapPreview(CtaBlock),
             defaultData: { title: '¿Listo para empezar?', subtitle: 'Únete a miles de clientes satisfechos.', buttonText: 'Contactar Ahora', backgroundColor: 'bg-slate-800' } as CtaData,
         }
     ]
@@ -137,7 +143,7 @@ export const BLOCKS = {
         {
             name: 'Simple',
             description: 'Copyright y redes sociales.',
-            preview: wrapPreview(FooterBlock), // Usamos wrapPreview
+            preview: wrapPreview(FooterBlock),
             defaultData: { copyrightText: `© ${new Date().getFullYear()} Mi Negocio.`, socialLinks: [{ platform: 'Twitter', url: '' }, { platform: 'Instagram', url: '' }] } as FooterData,
         }
     ]
