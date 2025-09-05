@@ -1,10 +1,11 @@
-// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO FINAL Y COMPLETO)
+// Archivo: app/components/editor/blocks/HeroBlock.tsx (ACTUALIZADO CON COLOR DE BOTÓN)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
+import { ButtonColorPalette } from '../controls/ButtonColorPalette'; // Importamos la nueva paleta
 
-// 1. Interfaz de datos completa con variantes y colores
+// 1. Actualizamos la interfaz para incluir colores de botón
 export interface HeroData {
   variant: 'default' | 'leftImage' | 'darkMinimal';
   title: string;
@@ -13,29 +14,29 @@ export interface HeroData {
   backgroundColor: string;
   titleColor: string;
   subtitleColor: string;
+  buttonBgColor: string;
+  buttonTextColor: string;
   buttonLink?: string;
   imageUrl?: string;
 }
 
-// 2. Componente "director" que SÍ renderiza el diseño correcto
+// --- Componente "Director" ---
 export function HeroBlock({ data }: { data: HeroData }) {
   switch (data.variant) {
-    case 'leftImage':
-      return <HeroLeftImage data={data} />;
-    case 'darkMinimal':
-      return <HeroDarkMinimal data={data} />;
-    case 'default':
-    default:
-      return <HeroDefault data={data} />;
+    case 'leftImage': return <HeroLeftImage data={data} />;
+    case 'darkMinimal': return <HeroDarkMinimal data={data} />;
+    default: return <HeroDefault data={data} />;
   }
 }
 
-// --- Componentes internos para cada variante (con colores dinámicos) ---
+// 2. Componentes internos ahora usan los colores de botón dinámicos
+const buttonBaseClasses = "inline-block px-6 py-2.5 rounded-md text-base font-semibold transition-transform hover:scale-105";
+
 const HeroDefault = ({ data }: { data: HeroData }) => (
   <div className={`${data.backgroundColor || 'bg-slate-100'} p-12 md:p-20 text-center`}>
     <h1 className={`text-3xl md:text-4xl font-bold mb-4 ${data.titleColor || 'text-slate-800'}`}>{data.title}</h1>
     <p className={`text-lg mb-8 max-w-2xl mx-auto ${data.subtitleColor || 'text-slate-600'}`}>{data.subtitle}</p>
-    <a href={data.buttonLink || '#'} className="inline-block bg-blue-600 text-white px-6 py-2.5 rounded-md text-base font-semibold hover:bg-blue-700">{data.buttonText}</a>
+    <a href={data.buttonLink || '#'} className={`${buttonBaseClasses} ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`}>{data.buttonText}</a>
   </div>
 );
 
@@ -45,7 +46,7 @@ const HeroLeftImage = ({ data }: { data: HeroData }) => (
       <div className="text-center md:text-left">
         <h1 className={`text-3xl md:text-4xl font-bold mb-4 ${data.titleColor || 'text-slate-800'}`}>{data.title}</h1>
         <p className={`text-lg mb-8 ${data.subtitleColor || 'text-slate-600'}`}>{data.subtitle}</p>
-        <a href={data.buttonLink || '#'} className="inline-block bg-blue-600 text-white px-6 py-2.5 rounded-md text-base font-semibold hover:bg-blue-700">{data.buttonText}</a>
+        <a href={data.buttonLink || '#'} className={`${buttonBaseClasses} ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`}>{data.buttonText}</a>
       </div>
       <div>
         <img src={data.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'} alt={data.title} className="rounded-lg shadow-lg mx-auto" />
@@ -57,11 +58,11 @@ const HeroLeftImage = ({ data }: { data: HeroData }) => (
 const HeroDarkMinimal = ({ data }: { data: HeroData }) => (
     <div className={`${data.backgroundColor || 'bg-slate-900'} p-12 md:p-24 text-center`}>
         <h1 className={`text-4xl md:text-5xl font-bold mb-8 ${data.titleColor || 'text-white'}`}>{data.title}</h1>
-        <a href={data.buttonLink || '#'} className="inline-block bg-white text-slate-800 px-8 py-3 rounded-md text-base font-semibold hover:bg-slate-200">{data.buttonText}</a>
+        <a href={data.buttonLink || '#'} className={`${buttonBaseClasses} ${data.buttonBgColor || 'bg-white'} ${data.buttonTextColor || 'text-slate-800'}`}>{data.buttonText}</a>
     </div>
 );
 
-// --- Editor con ambas Paletas de Colores ---
+// 3. Editor ahora incluye la paleta de colores de botón
 export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
   return (
     <div className="space-y-4">
@@ -79,6 +80,14 @@ export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (
         {data.variant !== 'darkMinimal' && (
           <TextColorPalette label="Color de Texto del Subtítulo" selectedColor={data.subtitleColor} onChange={(color) => updateData('subtitleColor', color)} />
         )}
+        <ButtonColorPalette 
+          label="Estilo del Botón"
+          selectedBgColor={data.buttonBgColor}
+          onChange={(bg, text) => {
+            updateData('buttonBgColor', bg);
+            updateData('buttonTextColor', text);
+          }}
+        />
       </div>
     </div>
   );
