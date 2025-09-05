@@ -13,7 +13,7 @@ import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 // Importaciones de las nuevas previsualizaciones
 // CORRECCIÓN: Se añade la importación que faltaba aquí
 import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview } from './Header/HeaderPreviews';
-import { HeroPreview } from './Hero/HeroPreviews';
+import { HeroPreviewDefault, HeroPreviewLeftImage, HeroPreviewDarkMinimal } from './Hero/HeroPreviews';
 import { TextPreview } from './Text/TextPreviews';
 import { ImagePreview } from './Image/ImagePreviews';
 import { CardsPreview } from './Cards/CardsPreviews';
@@ -52,7 +52,24 @@ export const BLOCKS = {
   hero: {
     name: 'Héroe', icon: '🎯', description: 'Sección principal llamativa.', renderer: HeroBlock, editor: HeroEditor,
     variants: [
-      { name: 'Por Defecto', description: 'Un héroe estándar y efectivo.', preview: HeroPreview, defaultData: { title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } as HeroData }
+      { 
+        name: 'Centrado Clásico', 
+        description: 'Ideal para mensajes directos.', 
+        preview: HeroPreviewDefault, 
+        defaultData: { variant: 'default', title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo que describe tu propuesta de valor.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } as HeroData 
+      },
+      {
+        name: 'Izquierda con Imagen',
+        description: 'Combina texto con un elemento visual.',
+        preview: HeroPreviewLeftImage,
+        defaultData: { variant: 'leftImage', title: 'Describe tu Producto', subtitle: 'Atrae a tus clientes con una descripción clara y una imagen de apoyo.', buttonText: 'Ver Más', backgroundColor: 'bg-white', imageUrl: 'https://placehold.co/600x400/e2e8f0/64748b?text=Tu+Imagen' } as HeroData
+      },
+      {
+        name: 'Mínimo Oscuro',
+        description: 'Un diseño elegante y moderno.',
+        preview: HeroPreviewDarkMinimal,
+        defaultData: { variant: 'darkMinimal', title: 'Un Mensaje Impactante', subtitle: '', buttonText: 'Descubrir', backgroundColor: 'bg-slate-900' } as HeroData
+      }
     ]
   },
   text: {
