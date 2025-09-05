@@ -1,10 +1,11 @@
-// Archivo: app/components/editor/blocks/HeroBlock.tsx (CORREGIDO)
+// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO CORREGIDO)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 
-// Se ha eliminado la importación innecesaria de 'HeaderData' que causaba el error.
+// Se ha eliminado la importación innecesaria de 'HeaderData' que causaba el error de compilación.
 
 export interface HeroData { 
+  variant?: 'default'; // Añadido para futura consistencia
   title: string; 
   subtitle: string; 
   buttonText: string; 

@@ -1,3 +1,4 @@
+// Archivo: app/lib/render-blocks-to-html.js (ACTUALIZADO)
 import { BLOCKS } from '@/app/components/editor/blocks';
 
 // Esta función ahora construye el HTML directamente, evitando la librería que causa el error.
@@ -10,27 +11,109 @@ export function renderBlocksToHTML(blocks) {
     const blockConfig = BLOCKS[type];
     if (!blockConfig) {
       console.warn(`AVISO: El tipo de bloque "${type}" no está registrado y no será renderizado.`);
-      return `<!-- Bloque de tipo '${type}' no reconocido -->`;
+      return ``;
     }
 
     // Usamos un switch simple para generar el HTML, lo que es 100% compatible.
     switch (type) {
-      // --- ¡AQUÍ ESTÁ LA CORRECCIÓN QUE FALTABA! ---
-      // Se añade la lógica para renderizar el nuevo bloque Header en la página pública.
+      
+      // --- SECCIÓN HEADER ACTUALIZADA ---
       case 'header':
-        return `
-          <header class="bg-white p-4 border-b border-slate-200 w-full">
-            <div class="max-w-5xl mx-auto flex justify-between items-center">
-              <h1 class="text-xl font-bold text-slate-800">${data.logoText || 'Mi Negocio'}</h1>
-              <nav class="hidden md:flex items-center space-x-6 text-sm text-slate-600">
+        const headerId = `header-${block.id}`;
+        const mobileMenuId = `mobile-menu-${block.id}`;
+        const toggleButtonId = `toggle-button-${block.id}`;
+
+        let headerHtml = '';
+        switch (data.variant) {
+          case 'centered':
+            headerHtml = `
+              <div class="max-w-5xl mx-auto flex justify-between items-center md:flex-col md:gap-3">
+                <h1 class="text-xl md:text-2xl font-bold text-slate-800">${data.logoText || 'Mi Negocio'}</h1>
+                <nav class="hidden md:flex items-center space-x-6 text-sm text-slate-600">
+                  <a href="#" class="hover:text-blue-600">${data.link1 || 'Inicio'}</a>
+                  <a href="#" class="hover:text-blue-600">${data.link2 || 'Servicios'}</a>
+                  <a href="#" class="hover:text-blue-600">${data.link3 || 'Contacto'}</a>
+                </nav>
+                <div class="md:hidden">
+                  <button id="${toggleButtonId}" aria-label="Toggle Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+              <nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4">
                 <a href="#" class="hover:text-blue-600">${data.link1 || 'Inicio'}</a>
                 <a href="#" class="hover:text-blue-600">${data.link2 || 'Servicios'}</a>
                 <a href="#" class="hover:text-blue-600">${data.link3 || 'Contacto'}</a>
               </nav>
-            </div>
+            `;
+            break;
+          case 'withButton':
+            headerHtml = `
+              <div class="max-w-5xl mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold text-slate-800">${data.logoText || 'Mi Negocio'}</h1>
+                <div class="hidden md:flex items-center gap-6">
+                  <nav class="flex items-center space-x-6 text-sm text-slate-600">
+                    <a href="#" class="hover:text-blue-600">${data.link1 || 'Producto'}</a>
+                    <a href="#" class="hover:text-blue-600">${data.link2 || 'Precios'}</a>
+                  </nav>
+                  <a href="#" class="bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-700">${data.buttonText || 'Acción'}</a>
+                </div>
+                <div class="md:hidden">
+                  <button id="${toggleButtonId}" aria-label="Toggle Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+              <nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4">
+                  <a href="#" class="hover:text-blue-600">${data.link1 || 'Producto'}</a>
+                  <a href="#" class="hover:text-blue-600">${data.link2 || 'Precios'}</a>
+                  <a href="#" class="mt-2 bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm font-semibold hover:bg-blue-700 w-fit">${data.buttonText || 'Acción'}</a>
+              </nav>
+            `;
+            break;
+          case 'default':
+          default:
+             headerHtml = `
+              <div class="max-w-5xl mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold text-slate-800">${data.logoText || 'Mi Negocio'}</h1>
+                <nav class="hidden md:flex items-center space-x-6 text-sm text-slate-600">
+                  <a href="#" class="hover:text-blue-600">${data.link1 || 'Inicio'}</a>
+                  <a href="#" class="hover:text-blue-600">${data.link2 || 'Servicios'}</a>
+                  <a href="#" class="hover:text-blue-600">${data.link3 || 'Contacto'}</a>
+                </nav>
+                <div class="md:hidden">
+                  <button id="${toggleButtonId}" aria-label="Toggle Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+              <nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4">
+                  <a href="#" class="hover:text-blue-600">${data.link1 || 'Inicio'}</a>
+                  <a href="#" class="hover:text-blue-600">${data.link2 || 'Servicios'}</a>
+                  <a href="#" class="hover:text-blue-600">${data.link3 || 'Contacto'}</a>
+              </nav>
+            `;
+            break;
+        }
+
+        return `
+          <header id="${headerId}" class="bg-white p-4 border-b border-slate-200 w-full relative">
+            ${headerHtml}
           </header>
+          <script>
+            (function() {
+              var button = document.getElementById('${toggleButtonId}');
+              var menu = document.getElementById('${mobileMenuId}');
+              if (button && menu) {
+                button.addEventListener('click', function() {
+                  menu.classList.toggle('hidden');
+                });
+              }
+            })();
+          </script>
         `;
-      // --- FIN DE LA CORRECCIÓN ---
+      
+      // --- FIN DE SECCIÓN HEADER ---
 
       case 'hero':
         return `
@@ -42,10 +125,11 @@ export function renderBlocksToHTML(blocks) {
         `;
       case 'text':
         return `
-          <div class="prose prose-slate max-w-none p-4">
+          <div class="max-w-4xl mx-auto py-8 px-4 prose prose-slate">
             <p>${(data.content || '').replace(/\n/g, '<br />')}</p>
           </div>
         `;
+      // ... (el resto de los casos se mantienen igual)
       case 'image':
         return `
           <div class="p-4 text-center">
@@ -57,7 +141,7 @@ export function renderBlocksToHTML(blocks) {
         return `
           <div class="bg-slate-50 py-12 px-4">
             <h2 class="text-3xl font-bold text-center text-slate-800 mb-12">${data.title}</h2>
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
               ${(data.cards || []).map(card => `
                 <div class="text-center p-6 bg-white rounded-lg shadow-sm ring-1 ring-slate-100">
                   <div class="text-4xl mb-4">${card.icon}</div>
