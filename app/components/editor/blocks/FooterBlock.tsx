@@ -1,41 +1,30 @@
-// Archivo: app/components/editor/blocks/FooterBlock.tsx (CORREGIDO)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
+import { ColorPalette } from '../controls/ColorPalette';
+import { TextColorPalette } from '../controls/TextColorPalette';
 
-// --- Interfaces de Datos Actualizadas ---
-interface SocialLink {
-  platform: string;
-  url: string;
-}
-
-interface FooterColumn {
-    title: string;
-    links: string[];
-}
+interface SocialLink { platform: string; url: string; }
+interface FooterColumn { title: string; links: string[]; }
 
 export interface FooterData {
-  variant: 'simple' | 'multiColumn' | 'minimal';
-  copyrightText: string;
-  socialLinks?: SocialLink[];
-  columns?: FooterColumn[];
+    variant: 'simple' | 'multiColumn' | 'minimal';
+    copyrightText: string;
+    backgroundColor: string;
+    textColor: string;
+    socialLinks?: SocialLink[];
+    columns?: FooterColumn[];
 }
 
-// --- Componente "Director" ---
 export function FooterBlock({ data }: { data: FooterData }) {
   switch (data.variant) {
-    case 'multiColumn':
-      return <FooterMultiColumn data={data} />;
-    case 'minimal':
-      return <FooterMinimal data={data} />;
-    case 'simple':
-    default:
-      return <FooterSimple data={data} />;
+    case 'multiColumn': return <FooterMultiColumn data={data} />;
+    case 'minimal': return <FooterMinimal data={data} />;
+    default: return <FooterSimple data={data} />;
   }
 }
 
-// --- Componentes Internos para Cada Variante ---
 const FooterSimple = ({ data }: { data: FooterData }) => (
-    <footer className="bg-slate-800 text-slate-400 text-sm text-center p-8">
+    <footer className={`${data.backgroundColor || 'bg-slate-800'} ${data.textColor || 'text-slate-400'} text-sm text-center p-8`}>
         <p className="mb-4">{data.copyrightText || '© 2025 Mi Negocio. Todos los derechos reservados.'}</p>
         <div className="flex justify-center space-x-4">
         {(data.socialLinks || []).map((link, index) => (
@@ -44,9 +33,8 @@ const FooterSimple = ({ data }: { data: FooterData }) => (
         </div>
     </footer>
 );
-
 const FooterMultiColumn = ({ data }: { data: FooterData }) => (
-    <footer className="bg-slate-800 text-slate-400 text-sm p-8">
+    <footer className={`${data.backgroundColor || 'bg-slate-800'} ${data.textColor || 'text-slate-400'} text-sm p-8`}>
         <div className="max-w-5xl mx-auto grid md:grid-cols-4 gap-8">
             {(data.columns || []).map((col, index) => (
                 <div key={index}>
@@ -64,23 +52,19 @@ const FooterMultiColumn = ({ data }: { data: FooterData }) => (
         </div>
     </footer>
 );
-
 const FooterMinimal = ({ data }: { data: FooterData }) => (
-    <footer className="bg-white text-slate-500 text-xs text-center p-4">
+    <footer className={`${data.backgroundColor || 'bg-white'} ${data.textColor || 'text-slate-500'} text-xs text-center p-4`}>
         <p>{data.copyrightText || '© 2025 Mi Negocio. Todos los derechos reservados.'}</p>
     </footer>
 );
 
-// --- Editor de Campos Condicional ---
-// CORRECCIÓN: Se ha eliminado el 'any' y se ha especificado un tipo de unión más estricto.
-export function FooterEditor({ data, updateData }: { data: FooterData, updateData: (key: keyof FooterData, value: string | SocialLink[] | FooterColumn[]) => void }) {
+export function FooterEditor({ data, updateData }: { data: FooterData, updateData: (key: keyof FooterData, value: any) => void }) {
     
   const handleSocialLinkChange = (index: number, field: keyof SocialLink, value: string) => {
     const newLinks = [...(data.socialLinks || [])];
     newLinks[index] = { ...newLinks[index], [field]: value };
     updateData('socialLinks', newLinks);
   };
-
   const handleColumnChange = (index: number, field: 'title' | 'links', value: string) => {
     const newColumns = [...(data.columns || [])];
     if (field === 'links') {
@@ -93,11 +77,13 @@ export function FooterEditor({ data, updateData }: { data: FooterData, updateDat
 
   return (
     <div className="space-y-4">
-      <InputField label="Texto de Copyright" value={data.copyrightText} onChange={(e) => updateData('copyrightText', e.target.value)} />
-      
+      <div>
+        <h4 className="font-medium text-sm text-slate-600">Contenido</h4>
+        <InputField label="Texto de Copyright" value={data.copyrightText} onChange={(e) => updateData('copyrightText', e.target.value)} />
+      </div>
       {data.variant === 'simple' && (
         <>
-            <h4 className="font-medium text-slate-600 pt-2 border-t border-slate-200">Redes Sociales</h4>
+            <h4 className="font-medium text-sm text-slate-600">Redes Sociales</h4>
             {(data.socialLinks || []).map((link, index) => (
                 <div key={index} className="border border-slate-200 p-3 rounded-lg space-y-3 bg-slate-50">
                 <InputField label={`Plataforma ${index + 1}`} value={link.platform} onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value)} />
@@ -106,10 +92,9 @@ export function FooterEditor({ data, updateData }: { data: FooterData, updateDat
             ))}
         </>
       )}
-
       {data.variant === 'multiColumn' && (
         <>
-            <h4 className="font-medium text-slate-600 pt-2 border-t border-slate-200">Columnas de Enlaces</h4>
+            <h4 className="font-medium text-sm text-slate-600">Columnas de Enlaces</h4>
             {(data.columns || []).map((col, index) => (
                 <div key={index} className="border border-slate-200 p-3 rounded-lg space-y-3 bg-slate-50">
                     <InputField label={`Título Columna ${index + 1}`} value={col.title} onChange={(e) => handleColumnChange(index, 'title', e.target.value)} />
@@ -118,6 +103,11 @@ export function FooterEditor({ data, updateData }: { data: FooterData, updateDat
             ))}
         </>
       )}
+       <div className="border-t border-slate-200 pt-4 space-y-4">
+        <h4 className="font-medium text-sm text-slate-600 mb-3">Diseño</h4>
+        <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
+        <TextColorPalette label="Color del Texto" selectedColor={data.textColor} onChange={(color) => updateData('textColor', color)} />
+      </div>
     </div>
   );
 }
