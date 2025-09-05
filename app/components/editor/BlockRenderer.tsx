@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
-import { BLOCKS, BlockType, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData, HeaderData } from './blocks';
+// 1. Importar PricingData junto con los demás
+import { BLOCKS, BlockData, HeroData, TextData, ImageData, CardsData, CtaData, FooterData, HeaderData, PricingData } from './blocks';
 import { BlockWrapper } from './blocks/BlockWrapper';
 
 // --- Definiciones de Tipos ---
@@ -21,12 +22,9 @@ interface BlockRendererProps {
   isMobileToolbarVisible: boolean;
 }
 
-// --- El Componente Inteligente (Ahora sí, 100% corregido) ---
+// --- El Componente Inteligente (Actualizado) ---
 export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown, onToggleMobileToolbar, isMobileToolbarVisible }: BlockRendererProps) {
   
-  // Esta función interna determina qué componente renderizar.
-  // La clave es que dentro de cada 'case', obtenemos el componente específico.
-  // Esto le permite a TypeScript saber el tipo exacto de 'data' que corresponde.
   const renderBlockContent = () => {
     switch(block.type) {
         case 'header': {
@@ -52,6 +50,11 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
         case 'cta': {
             const Component = BLOCKS.cta.renderer;
             return <Component data={block.data as CtaData} />;
+        }
+        // 2. AÑADIR EL CASE PARA EL NUEVO BLOQUE DE PRECIOS
+        case 'pricing': {
+            const Component = BLOCKS.pricing.renderer;
+            return <Component data={block.data as PricingData} />;
         }
         case 'footer': {
             const Component = BLOCKS.footer.renderer;
