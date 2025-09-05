@@ -1,4 +1,4 @@
-// Archivo: app/components/editor/blocks/index.tsx (VERSIÓN FINAL)
+// Archivo: app/components/editor/blocks/index.tsx (VERSIÓN FINAL, AHORA SÍ)
 import React from 'react';
 
 // 1. Importa TODOS los componentes
@@ -18,19 +18,20 @@ export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, Foo
 // 3. Une todos los tipos de datos en uno solo
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | FooterData;
 
-// CORRECCIÓN: Definimos un tipo estricto para las props de los componentes de bloque
+// Definimos un tipo estricto para las props de los componentes de bloque
 interface BlockComponentProps {
   data: BlockData;
 }
 
 // Función auxiliar para envolver los componentes de previsualización
-const wrapPreview = (Component: React.FC<any>) => {
-  const WrappedComponent: React.FC<BlockComponentProps> = (props) => ( // Usamos el tipo estricto
+// CORRECCIÓN FINAL: Se elimina el último 'any' del parámetro de la función.
+const wrapPreview = (Component: React.ComponentType<BlockComponentProps>) => {
+  const WrappedComponent: React.FC<BlockComponentProps> = (props) => (
     <BlockPreviewWrapper>
       <Component {...props} />
     </BlockPreviewWrapper>
   );
-  WrappedComponent.displayName = `Wrapped${Component.displayName || Component.name}`;
+  WrappedComponent.displayName = `Wrapped${(Component as any).displayName || Component.name}`;
   return WrappedComponent;
 };
 
@@ -47,13 +48,13 @@ export const BLOCKS = {
       {
         name: 'Clásico',
         description: 'Logo a la izquierda, enlaces a la derecha.',
-        preview: wrapPreview(HeaderVariantDefault),
+        preview: wrapPreview(HeaderVariantDefault as React.ComponentType<BlockComponentProps>),
         defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData,
       },
       {
         name: 'Centrado',
         description: 'Logo y enlaces centrados.',
-        preview: wrapPreview(HeaderVariantCentered),
+        preview: wrapPreview(HeaderVariantCentered as React.ComponentType<BlockComponentProps>),
         defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData,
       }
     ]
@@ -68,7 +69,7 @@ export const BLOCKS = {
       {
         name: 'Por Defecto',
         description: 'Un héroe estándar y efectivo.',
-        preview: wrapPreview(HeroBlock),
+        preview: wrapPreview(HeroBlock as React.ComponentType<BlockComponentProps>),
         defaultData: { title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } as HeroData,
       }
     ]
@@ -83,7 +84,7 @@ export const BLOCKS = {
         {
             name: 'Párrafo',
             description: 'Un bloque de texto simple.',
-            preview: wrapPreview(TextBlock),
+            preview: wrapPreview(TextBlock as React.ComponentType<BlockComponentProps>),
             defaultData: { content: 'Escribe aquí tu contenido.' } as TextData,
         }
     ]
@@ -98,7 +99,7 @@ export const BLOCKS = {
         {
             name: 'Imagen Simple',
             description: 'Una imagen con pie de foto opcional.',
-            preview: wrapPreview(ImageBlock),
+            preview: wrapPreview(ImageBlock as React.ComponentType<BlockComponentProps>),
             defaultData: { imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Tu+Imagen', alt: 'Descripción', caption: 'Pie de foto.' } as ImageData,
         }
     ]
@@ -113,7 +114,7 @@ export const BLOCKS = {
         {
             name: 'Tres Columnas',
             description: 'Muestra características o servicios.',
-            preview: wrapPreview(CardsBlock),
+            preview: wrapPreview(CardsBlock as React.ComponentType<BlockComponentProps>),
             defaultData: { title: 'Nuestros Servicios', cards: [ { icon: '🚀', title: 'Servicio 1', description: 'Descripción breve.' }, { icon: '✨', title: 'Servicio 2', description: 'Descripción breve.' }, { icon: '💎', title: 'Servicio 3', description: 'Descripción breve.' } ] } as CardsData,
         }
     ]
@@ -128,7 +129,7 @@ export const BLOCKS = {
         {
             name: 'Banner Oscuro',
             description: 'Un banner con fondo oscuro para resaltar.',
-            preview: wrapPreview(CtaBlock),
+            preview: wrapPreview(CtaBlock as React.ComponentType<BlockComponentProps>),
             defaultData: { title: '¿Listo para empezar?', subtitle: 'Únete a miles de clientes satisfechos.', buttonText: 'Contactar Ahora', backgroundColor: 'bg-slate-800' } as CtaData,
         }
     ]
@@ -143,7 +144,7 @@ export const BLOCKS = {
         {
             name: 'Simple',
             description: 'Copyright y redes sociales.',
-            preview: wrapPreview(FooterBlock),
+            preview: wrapPreview(FooterBlock as React.ComponentType<BlockComponentProps>),
             defaultData: { copyrightText: `© ${new Date().getFullYear()} Mi Negocio.`, socialLinks: [{ platform: 'Twitter', url: '' }, { platform: 'Instagram', url: '' }] } as FooterData,
         }
     ]
