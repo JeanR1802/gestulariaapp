@@ -38,7 +38,7 @@ const TextHighlighted = ({ data }: { data: TextData }) => (
   </div>
 );
 
-export function TextEditor({ data, updateData }: { data: TextData, updateData: (key: keyof TextData, value: any) => void }) {
+export function TextEditor({ data, updateData }: { data: TextData, updateData: (key: keyof TextData, value: string) => void }) {
   return (
     <div className="space-y-4">
       <div>
