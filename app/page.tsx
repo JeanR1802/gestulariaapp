@@ -206,10 +206,10 @@ export default function HomePage() {
         {/* Testimonial */}
         <section className="py-24 bg-blue-600">
           <div className="max-w-4xl mx-auto px-6 text-center">
-            <blockquote className="text-3xl font-medium text-white mb-8 leading-relaxed">
-              "Gestularia eliminó el caos de nuestras operaciones. 
-              Ahora nos enfocamos en crecer, no en administrar herramientas."
-            </blockquote>
+          <blockquote className="text-3xl font-medium text-white mb-8 leading-relaxed">
+          &quot;Gestularia eliminó el caos de nuestras operaciones. 
+          Ahora nos enfocamos en crecer, no en administrar herramientas.&quot;
+          </blockquote>
             <div className="flex items-center justify-center gap-4">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white font-bold">
                 M
