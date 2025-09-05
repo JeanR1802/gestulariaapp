@@ -1,4 +1,4 @@
-// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO COMPLETO Y CORREGIDO)
+// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO FINAL Y FUNCIONAL)
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,7 +10,7 @@ import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 // Se corrige la firma de onUpdate para que sea específica y segura
-interface EditPanelProps { block: Block | undefined; onUpdate: (key: string, value: unknown) => void; onClose: () => void; }
+interface EditPanelProps { block: Block | undefined; onUpdate: (updates: Partial<BlockData>) => void; onClose: () => void; }
 
 // --- Iconos ---
 const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
@@ -99,11 +99,11 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   };
 
   // ESTA ES LA FUNCIÓN CORREGIDA QUE ARREGLA LA EDICIÓN
-  const updateBlock = (blockId: number, key: string, value: unknown) => {
+  const updateBlock = (blockId: number, dataUpdates: Partial<BlockData>) => {
     setBlocks(prevBlocks =>
       prevBlocks.map(block =>
         block.id === blockId
-          ? { ...block, data: { ...block.data, [key]: value } }
+          ? { ...block, data: { ...block.data, ...dataUpdates } }
           : block
       )
     );
@@ -128,16 +128,11 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <button onClick={() => router.push('/dashboard')} className="text-slate-500 hover:text-slate-800 text-xl">←</button>
-              <div>
-                <h1 className="font-semibold text-slate-800">{tenant.name}</h1>
-                <p className="text-xs text-slate-500">{tenant.slug}.gestularia.com</p>
-              </div>
+              <div> <h1 className="font-semibold text-slate-800">{tenant.name}</h1> <p className="text-xs text-slate-500">{tenant.slug}.gestularia.com</p> </div>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => window.open(`https://${tenant.slug}.gestularia.com`, '_blank')} className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200">Vista Previa</button>
-              <button onClick={saveTenant} disabled={saving} className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                {saving ? 'Guardando...' : 'Guardar'}
-              </button>
+              <button onClick={saveTenant} disabled={saving} className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"> {saving ? 'Guardando...' : 'Guardar'} </button>
             </div>
           </div>
         </div>
@@ -151,10 +146,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
             const blockInfo = BLOCKS[blockKey];
             return (
               <button key={blockKey} onClick={() => setActiveBlockType(blockKey)} className="w-full p-3 text-left border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{blockInfo.icon}</span>
-                  <div><p className="font-medium text-sm text-slate-800">{blockInfo.name}</p><p className="text-xs text-slate-500">{blockInfo.description}</p></div>
-                </div>
+                <div className="flex items-center gap-3"> <span className="text-2xl">{blockInfo.icon}</span> <div><p className="font-medium text-sm text-slate-800">{blockInfo.name}</p><p className="text-xs text-slate-500">{blockInfo.description}</p></div> </div>
               </button>
             );
           })}
@@ -175,7 +167,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         </div>
         
         <div className={`fixed top-0 right-0 h-full bg-white border-l border-slate-200 shadow-xl transition-transform duration-300 ease-in-out z-50 w-full max-w-sm ${editingBlockId ? 'translate-x-0' : 'translate-x-full'}`}>
-          {editingBlock && <EditPanel block={editingBlock} onUpdate={(key, value) => updateBlock(editingBlock.id, key, value)} onClose={() => setEditingBlockId(null)} />}
+          {editingBlock && <EditPanel block={editingBlock} onUpdate={(updates) => updateBlock(editingBlock.id, updates)} onClose={() => setEditingBlockId(null)} />}
         </div>
         
         <div className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${isMobilePanelOpen ? 'bg-black bg-opacity-50' : 'bg-opacity-0 pointer-events-none'}`} onClick={() => setIsMobilePanelOpen(false)}>
@@ -197,11 +189,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         
         <div className={`fixed top-0 left-0 h-full bg-black bg-opacity-50 z-40 transition-opacity ${activeBlockType ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setActiveBlockType(null)}>
           <div className={`absolute top-0 bg-white h-full shadow-2xl transition-transform duration-300 ease-in-out w-96 ${activeBlockType ? 'translate-x-0' : '-translate-x-full'} left-0 md:left-72`} onClick={(e) => e.stopPropagation()}>
-            <AddBlockPanel
-              blockType={activeBlockType}
-              onAddBlock={addBlock}
-              onClose={() => setActiveBlockType(null)}
-            />
+            <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />
           </div>
         </div>
         
@@ -220,13 +208,7 @@ function AddBlockPanel({ blockType, onAddBlock, onClose }: { blockType: BlockTyp
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-slate-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{blockConfig.icon}</span>
-            <h3 className="text-lg font-semibold text-slate-800">Elige un diseño de {blockConfig.name}</h3>
-          </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-800 text-2xl">×</button>
-        </div>
+        <div className="flex items-center justify-between"> <div className="flex items-center gap-2"> <span className="text-2xl">{blockConfig.icon}</span> <h3 className="text-lg font-semibold text-slate-800">Elige un diseño de {blockConfig.name}</h3> </div> <button onClick={onClose} className="text-slate-500 hover:text-slate-800 text-2xl">×</button> </div>
       </div>
       <div className="p-4 space-y-4 overflow-y-auto flex-1 bg-slate-50">
         {blockConfig.variants.map((variant, index) => {
@@ -235,15 +217,8 @@ function AddBlockPanel({ blockType, onAddBlock, onClose }: { blockType: BlockTyp
             <div key={index} className="bg-white border border-slate-200 rounded-lg p-3">
               <h4 className="font-medium text-sm mb-2">{variant.name}</h4>
               <p className="text-xs text-slate-500 mb-3">{variant.description}</p>
-              <div className="w-full border border-dashed border-slate-300 rounded-md mb-3 p-4 flex items-center justify-center bg-slate-50">
-                <PreviewComponent data={variant.defaultData} />
-              </div>
-              <button
-                onClick={() => onAddBlock(blockType, variant.defaultData)}
-                className="w-full bg-blue-600 text-white text-sm font-medium py-2 rounded-md hover:bg-blue-700"
-              >
-                Agregar
-              </button>
+              <div className="w-full border border-dashed border-slate-300 rounded-md mb-3 p-4 flex items-center justify-center bg-slate-50"> <PreviewComponent data={variant.defaultData} /> </div>
+              <button onClick={() => onAddBlock(blockType, variant.defaultData)} className="w-full bg-blue-600 text-white text-sm font-medium py-2 rounded-md hover:bg-blue-700"> Agregar </button>
             </div>
           );
         })}
@@ -255,20 +230,22 @@ function AddBlockPanel({ blockType, onAddBlock, onClose }: { blockType: BlockTyp
 function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
   if (!block) return null;
 
+  // ESTA FUNCIÓN AHORA RECIBE UN OBJETO DE CAMBIOS Y FUNCIONA CORRECTAMENTE
+  const updateData = (updates: Partial<BlockData>) => {
+    onUpdate(updates);
+  };
+
   const renderEditorContent = () => {
     const blockConfig = BLOCKS[block.type as BlockType];
-    const EditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }>;
-    return <EditorComponent data={block.data} updateData={onUpdate} />;
+    const EditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (updates: Partial<BlockData>) => void }>;
+    return <EditorComponent data={block.data} updateData={updateData} />;
   };
 
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-slate-200">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <EditIcon/>
-            <h3 className="text-lg font-semibold text-slate-800">Editar {BLOCKS[block.type as BlockType].name}</h3>
-          </div>
+          <div className="flex items-center gap-2"> <EditIcon/> <h3 className="text-lg font-semibold text-slate-800">Editar {BLOCKS[block.type as BlockType].name}</h3> </div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-800 text-2xl">×</button>
         </div>
       </div>
