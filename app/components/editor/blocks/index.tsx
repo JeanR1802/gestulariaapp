@@ -1,4 +1,4 @@
-// Archivo: app/components/editor/blocks/index.tsx (VERSIÓN FINAL CON TODAS LAS PREVIEWS)
+// Archivo: app/components/editor/blocks/index.tsx (VERSIÓN CORREGIDA Y COMPLETA)
 import React from 'react';
 
 // Importaciones de componentes principales
@@ -11,6 +11,7 @@ import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 
 // Importaciones de las nuevas previsualizaciones
+// CORRECCIÓN: Se añade la importación que faltaba aquí
 import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview } from './Header/HeaderPreviews';
 import { HeroPreview } from './Hero/HeroPreviews';
 import { TextPreview } from './Text/TextPreviews';
@@ -25,7 +26,7 @@ export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData
 
 // Define el registro de bloques completo
 export const BLOCKS = {
-header: {
+  header: {
     name: 'Encabezado', icon: '🔝', description: 'Barra de navegación principal.', renderer: HeaderBlock, editor: HeaderEditor,
     variants: [
       { 

@@ -1,8 +1,8 @@
-// Archivo: app/components/editor/blocks/HeroBlock.tsx (CORREGIDO)
+// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO CORREGIDO Y LIMPIO)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 
-// Se ha eliminado la importación innecesaria de 'HeaderData' que causaba el error.
+// Se ha eliminado la importación innecesaria de 'HeaderData' que causaba el error de compilación.
 
 export interface HeroData { 
   variant?: 'default'; // Añadido para futura consistencia
@@ -15,8 +15,6 @@ export interface HeroData {
 
 // Cómo se ve el bloque en la página
 export function HeroBlock({ data }: { data: HeroData }) {
-  // Por ahora, este componente solo renderiza un diseño.
-  // Más adelante lo haremos "inteligente" como el HeaderBlock.
   return (
     <div className={`${data.backgroundColor} p-12 md:p-20 text-center`}>
       <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">{data.title}</h1>
