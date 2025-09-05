@@ -242,7 +242,7 @@ function AddBlockPanel({ blockType, onAddBlock, onClose }: { blockType: BlockTyp
             <div key={index} className="bg-white border border-slate-200 rounded-lg p-3">
               <h4 className="font-medium text-sm mb-2">{variant.name}</h4>
               <p className="text-xs text-slate-500 mb-3">{variant.description}</p>
-              <div className="h-32 w-full overflow-hidden border border-dashed border-slate-300 rounded-md mb-3 flex items-center justify-center">
+              <div className="w-full border border-dashed border-slate-300 rounded-md mb-3 p-4 flex items-center justify-center bg-slate-50">
                 <PreviewComponent data={variant.defaultData} />
               </div>
               <button
