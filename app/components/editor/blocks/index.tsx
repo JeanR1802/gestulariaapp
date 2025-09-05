@@ -11,7 +11,7 @@ import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
 
 // Importaciones de las nuevas previsualizaciones
-import { HeaderVariantDefault, HeaderVariantCentered } from './Header/HeaderPreviews';
+import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview } from './Header/HeaderPreviews';
 import { HeroPreview } from './Hero/HeroPreviews';
 import { TextPreview } from './Text/TextPreviews';
 import { ImagePreview } from './Image/ImagePreviews';
@@ -25,11 +25,27 @@ export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData
 
 // Define el registro de bloques completo
 export const BLOCKS = {
-  header: {
+header: {
     name: 'Encabezado', icon: '🔝', description: 'Barra de navegación principal.', renderer: HeaderBlock, editor: HeaderEditor,
     variants: [
-      { name: 'Clásico', description: 'Logo a la izquierda, enlaces a la derecha.', preview: HeaderVariantDefault, defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData },
-      { name: 'Centrado', description: 'Logo y enlaces centrados.', preview: HeaderVariantCentered, defaultData: { logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData }
+      { 
+        name: 'Clásico', 
+        description: 'Logo a la izquierda, enlaces a la derecha.', 
+        preview: HeaderVariantDefault, 
+        defaultData: { variant: 'default', logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData 
+      },
+      { 
+        name: 'Centrado', 
+        description: 'Logo y enlaces centrados.', 
+        preview: HeaderVariantCentered, 
+        defaultData: { variant: 'centered', logoText: 'Mi Negocio', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto' } as HeaderData 
+      },
+      { 
+        name: 'Con Botón CTA', 
+        description: 'Ideal para dirigir a una acción principal.', 
+        preview: HeaderVariantButtonPreview, 
+        defaultData: { variant: 'withButton', logoText: 'Mi Negocio', link1: 'Producto', link2: 'Precios', link3: '', buttonText: 'Registrarse' } as HeaderData
+      }
     ]
   },
   hero: {

@@ -1,8 +1,16 @@
+// Archivo: app/components/editor/blocks/HeroBlock.tsx (CORREGIDO)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
-import { HeaderData } from './Header/HeaderVariantDefault'; // Importamos la interfaz desde una de las variantes
 
-export interface HeroData { title: string; subtitle: string; buttonText: string; backgroundColor: string; buttonLink?: string; }
+// Se ha eliminado la importación innecesaria de 'HeaderData' que causaba el error.
+
+export interface HeroData { 
+  title: string; 
+  subtitle: string; 
+  buttonText: string; 
+  backgroundColor: string; 
+  buttonLink?: string; 
+}
 
 // Cómo se ve el bloque en la página
 export function HeroBlock({ data }: { data: HeroData }) {
