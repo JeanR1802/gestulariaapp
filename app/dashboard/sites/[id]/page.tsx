@@ -1,4 +1,4 @@
-// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO COMPLETO Y CORREGIDO)
+// Archivo: app/dashboard/sites/[id]/page.tsx (CÓDIGO FINAL Y LIMPIO)
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,7 +10,7 @@ import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 // Se corrige la firma de onUpdate para que sea específica y no use 'any'
-interface EditPanelProps { block: Block | undefined; onUpdate: (key: string, value: any) => void; onClose: () => void; }
+interface EditPanelProps { block: Block | undefined; onUpdate: (key: string, value: unknown) => void; onClose: () => void; }
 
 // --- Iconos ---
 const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
@@ -38,6 +38,14 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     }
   }, [editingBlockId]);
 
+  const showNotification = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    const el = document.createElement('div');
+    el.className = `fixed top-5 right-5 px-4 py-2 rounded-lg text-white text-sm shadow-lg z-50 ${ type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }, []);
+
   const loadTenant = useCallback(async () => {
     if (!params.id) return;
     setLoading(true);
@@ -50,7 +58,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         const content = data.tenant.pages[0]?.content || '[]';
         let initialBlocks: Block[] = [];
         try { const parsed = JSON.parse(content); if (Array.isArray(parsed)) initialBlocks = parsed; }
-        catch (e) { console.warn("Contenido inválido, iniciando lienzo en blanco."); }
+        catch { console.warn("Contenido inválido, iniciando lienzo en blanco."); }
         setBlocks(initialBlocks);
       } else { router.push('/dashboard'); }
     } catch (error) { console.error('Error al cargar:', error); router.push('/dashboard'); }
@@ -63,7 +71,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     }
   }, [isMounted, loadTenant]);
 
-  const saveTenant = async () => {
+  const saveTenant = useCallback(async () => {
     if (!tenant) return;
     setSaving(true);
     try {
@@ -81,7 +89,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     } finally {
       setSaving(false);
     }
-  };
+  }, [blocks, params.id, showNotification, tenant]);
   
   const addBlock = (blockType: BlockType, data: BlockData) => {
     const newBlock: Block = { id: Date.now() + Math.random(), type: blockType, data, };
@@ -90,7 +98,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
     setActiveBlockType(null);
   };
 
-  const updateBlock = (blockId: number, key: string, value: any) => {
+  const updateBlock = (blockId: number, key: string, value: unknown) => {
     setBlocks(prevBlocks =>
       prevBlocks.map(block =>
         block.id === blockId
@@ -103,14 +111,6 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
   const deleteBlock = (blockId: number) => { setBlocks(blocks.filter(block => block.id !== blockId)); setEditingBlockId(null); setMobileToolbarBlockId(null); };
   const moveBlock = (fromIndex: number, toIndex: number) => { const newBlocks = [...blocks]; const [movedBlock] = newBlocks.splice(fromIndex, 1); newBlocks.splice(toIndex, 0, movedBlock); setBlocks(newBlocks); };
   
-  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
-    const el = document.createElement('div');
-    el.className = `fixed top-5 right-5 px-4 py-2 rounded-lg text-white text-sm shadow-lg z-50 ${ type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-    el.textContent = message;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
-  };
-
   const editingBlock = blocks.find(b => b.id === editingBlockId);
   
   const handleToggleMobileToolbar = useCallback((blockId: number | null) => {
@@ -178,7 +178,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         </div>
         
         <div className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${isMobilePanelOpen ? 'bg-black bg-opacity-50' : 'bg-opacity-0 pointer-events-none'}`} onClick={() => setIsMobilePanelOpen(false)}>
-          <div className={`absolute bottom-0 left-0 right-0 bg-white p-4 rounded-t-2xl shadow-2xl transition-transform duration-300 ease-in-out ${isMobilePanelOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+          <div className={`absolute bottom-0 left-0 right-0 bg-white p-4 rounded-t-2xl shadow-2xl transition-transform duration-300 ease-in-out ${isMobilePanelOpen ? 'translate-y-0' : 'translate-y-full'}`} onClick={(e) => e.stopPropagation()}>
             <h2 className="font-semibold text-slate-800 text-center mb-4">Agregar Bloque</h2>
             <div className="space-y-2">
               {Object.keys(BLOCKS).map((key) => {
@@ -195,7 +195,7 @@ export default function VisualEditor({ params }: { params: { id: string } }) {
         </div>
         
         <div className={`fixed top-0 left-0 h-full bg-black bg-opacity-50 z-40 transition-opacity ${activeBlockType ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setActiveBlockType(null)}>
-          <div className={`absolute top-0 bg-white h-full shadow-2xl transition-transform duration-300 ease-in-out w-96 ${activeBlockType ? 'translate-x-0' : '-translate-x-full'} left-0 md:left-72`} onClick={e => e.stopPropagation()}>
+          <div className={`absolute top-0 bg-white h-full shadow-2xl transition-transform duration-300 ease-in-out w-96 ${activeBlockType ? 'translate-x-0' : '-translate-x-full'} left-0 md:left-72`} onClick={(e) => e.stopPropagation()}>
             <AddBlockPanel
               blockType={activeBlockType}
               onAddBlock={addBlock}
@@ -256,7 +256,7 @@ function EditPanel({ block, onUpdate, onClose }: EditPanelProps) {
 
   const renderEditorContent = () => {
     const blockConfig = BLOCKS[block.type as BlockType];
-    const EditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (key: string, value: any) => void }>;
+    const EditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }>;
     return <EditorComponent data={block.data} updateData={onUpdate} />;
   };
 
