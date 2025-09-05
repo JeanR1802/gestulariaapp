@@ -1,11 +1,11 @@
-// Archivo: app/components/editor/blocks/HeroBlock.tsx (ACTUALIZADO CON COLOR DE BOTÓN)
+// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO COMPLETO Y FINAL)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
-import { ButtonColorPalette } from '../controls/ButtonColorPalette'; // Importamos la nueva paleta
+import { ButtonColorPalette } from '../controls/ButtonColorPalette';
 
-// 1. Actualizamos la interfaz para incluir colores de botón
+// 1. Interfaz de datos completa
 export interface HeroData {
   variant: 'default' | 'leftImage' | 'darkMinimal';
   title: string;
@@ -20,16 +20,20 @@ export interface HeroData {
   imageUrl?: string;
 }
 
-// --- Componente "Director" ---
+// 2. Componente "director" que elige qué diseño renderizar
 export function HeroBlock({ data }: { data: HeroData }) {
   switch (data.variant) {
-    case 'leftImage': return <HeroLeftImage data={data} />;
-    case 'darkMinimal': return <HeroDarkMinimal data={data} />;
-    default: return <HeroDefault data={data} />;
+    case 'leftImage':
+      return <HeroLeftImage data={data} />;
+    case 'darkMinimal':
+      return <HeroDarkMinimal data={data} />;
+    case 'default':
+    default:
+      return <HeroDefault data={data} />;
   }
 }
 
-// 2. Componentes internos ahora usan los colores de botón dinámicos
+// 3. Componentes internos para cada variante (AHORA COMPLETOS)
 const buttonBaseClasses = "inline-block px-6 py-2.5 rounded-md text-base font-semibold transition-transform hover:scale-105";
 
 const HeroDefault = ({ data }: { data: HeroData }) => (
@@ -62,30 +66,29 @@ const HeroDarkMinimal = ({ data }: { data: HeroData }) => (
     </div>
 );
 
-// 3. Editor ahora incluye la paleta de colores de botón
-export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
+// 4. Editor con todas las paletas de colores
+export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (updates: Partial<HeroData>) => void }) {
   return (
     <div className="space-y-4">
       <div className="space-y-4">
         <h4 className="font-medium text-sm text-slate-600">Contenido</h4>
-        <InputField label="Título Principal" value={data.title} onChange={(e) => updateData('title', e.target.value)} />
-        {data.variant !== 'darkMinimal' && (<TextareaField label="Subtítulo" value={data.subtitle} onChange={(e) => updateData('subtitle', e.target.value)} />)}
-        <InputField label="Texto del Botón" value={data.buttonText} onChange={(e) => updateData('buttonText', e.target.value)} />
-        {data.variant === 'leftImage' && (<InputField label="URL de la Imagen" value={data.imageUrl || ''} onChange={(e) => updateData('imageUrl', e.target.value)} />)}
+        <InputField label="Título Principal" value={data.title} onChange={(e) => updateData({ title: e.target.value })} />
+        {data.variant !== 'darkMinimal' && (<TextareaField label="Subtítulo" value={data.subtitle} onChange={(e) => updateData({ subtitle: e.target.value })} />)}
+        <InputField label="Texto del Botón" value={data.buttonText} onChange={(e) => updateData({ buttonText: e.target.value })} />
+        {data.variant === 'leftImage' && (<InputField label="URL de la Imagen" value={data.imageUrl || ''} onChange={(e) => updateData({ imageUrl: e.target.value })} />)}
       </div>
       <div className="border-t border-slate-200 pt-4 space-y-4">
         <h4 className="font-medium text-sm text-slate-600 mb-3">Diseño</h4>
-        <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
-        <TextColorPalette label="Color de Texto del Título" selectedColor={data.titleColor} onChange={(color) => updateData('titleColor', color)} />
+        <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData({ backgroundColor: color })} />
+        <TextColorPalette label="Color de Texto del Título" selectedColor={data.titleColor} onChange={(color) => updateData({ titleColor: color })} />
         {data.variant !== 'darkMinimal' && (
-          <TextColorPalette label="Color de Texto del Subtítulo" selectedColor={data.subtitleColor} onChange={(color) => updateData('subtitleColor', color)} />
+          <TextColorPalette label="Color de Texto del Subtítulo" selectedColor={data.subtitleColor} onChange={(color) => updateData({ subtitleColor: color })} />
         )}
         <ButtonColorPalette 
           label="Estilo del Botón"
           selectedBgColor={data.buttonBgColor}
           onChange={(bg, text) => {
-            updateData('buttonBgColor', bg);
-            updateData('buttonTextColor', text);
+            updateData({ buttonBgColor: bg, buttonTextColor: text });
           }}
         />
       </div>

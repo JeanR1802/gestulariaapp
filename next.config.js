@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['bcryptjs']
-  },
+  // CORRECCIÓN: 'experimental.serverComponentsExternalPackages' se ha renombrado a 'serverExternalPackages'
+  serverExternalPackages: ['bcryptjs'],
+  
   async rewrites() {
     return [
       {
