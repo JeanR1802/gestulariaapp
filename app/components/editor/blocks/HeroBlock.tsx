@@ -1,11 +1,10 @@
-// Archivo: app/components/editor/blocks/HeroBlock.tsx (CÓDIGO CORREGIDO Y FUNCIONAL)
+// app/components/editor/blocks/HeroBlock.tsx (RESTAURADO)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { ButtonColorPalette } from '../controls/ButtonColorPalette';
 
-// 1. Interfaz de datos completa (sin cambios)
 export interface HeroData {
   variant: 'default' | 'leftImage' | 'darkMinimal';
   title: string;
@@ -20,16 +19,11 @@ export interface HeroData {
   imageUrl?: string;
 }
 
-// 2. Componentes de renderizado (ya aplican los colores dinámicos)
 export function HeroBlock({ data }: { data: HeroData }) {
   switch (data.variant) {
-    case 'leftImage':
-      return <HeroLeftImage data={data} />;
-    case 'darkMinimal':
-      return <HeroDarkMinimal data={data} />;
-    case 'default':
-    default:
-      return <HeroDefault data={data} />;
+    case 'leftImage': return <HeroLeftImage data={data} />;
+    case 'darkMinimal': return <HeroDarkMinimal data={data} />;
+    default: return <HeroDefault data={data} />;
   }
 }
 
@@ -65,7 +59,6 @@ const HeroDarkMinimal = ({ data }: { data: HeroData }) => (
     </div>
 );
 
-// 3. Editor con la lógica de actualización corregida
 export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
   return (
     <div className="space-y-4">
@@ -87,8 +80,6 @@ export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (
         <ButtonColorPalette 
           label="Estilo del Botón"
           selectedBgColor={data.buttonBgColor}
-          // CORRECCIÓN CLAVE: Hacemos dos llamadas a updateData, una para cada propiedad.
-          // Esto es compatible con la lógica que ya tienes en page.tsx.
           onChange={(bg, text) => {
             updateData('buttonBgColor', bg);
             updateData('buttonTextColor', text);

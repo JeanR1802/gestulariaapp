@@ -1,3 +1,4 @@
+// app/components/editor/blocks/CardsBlock.tsx
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
@@ -44,6 +45,7 @@ const CardsDefault = ({ data }: { data: CardsData }) => (
     </div>
   </div>
 );
+
 const CardsList = ({ data }: { data: CardsData }) => (
   <div className={`${data.sectionBackgroundColor || 'bg-white'} py-12 px-4`}>
       <div className="max-w-3xl mx-auto">
@@ -62,6 +64,7 @@ const CardsList = ({ data }: { data: CardsData }) => (
       </div>
   </div>
 );
+
 const CardsImageTop = ({ data }: { data: CardsData }) => (
   <div className={`${data.sectionBackgroundColor || 'bg-slate-50'} py-12 px-4`}>
       <div className="max-w-5xl mx-auto">
@@ -91,8 +94,9 @@ export function CardsEditor({ data, updateData }: { data: CardsData, updateData:
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="font-medium text-sm text-slate-600">Contenido</h4>
+        <h4 className="font-medium text-sm text-slate-600">Contenido General</h4>
         <InputField label="Título de la Sección" value={data.title} onChange={(e) => updateData('title', e.target.value)} />
+      </div>
         {(data.cards || []).map((card, index) => (
           <div key={index} className="border border-slate-200 p-3 rounded-lg space-y-3 bg-slate-50 mt-4">
             <h4 className="font-medium text-sm text-slate-600">Tarjeta {index + 1}</h4>
@@ -102,9 +106,8 @@ export function CardsEditor({ data, updateData }: { data: CardsData, updateData:
             <TextareaField label="Descripción" value={card.description} onChange={(e) => updateCardData(index, 'description', e.target.value)} />
           </div>
         ))}
-      </div>
        <div className="border-t border-slate-200 pt-4 space-y-4">
-        <h4 className="font-medium text-sm text-slate-600 mb-3">Diseño</h4>
+        <h4 className="font-medium text-sm text-slate-600 mb-3">Diseño General</h4>
         <ColorPalette label="Color de Fondo de Sección" selectedColor={data.sectionBackgroundColor} onChange={(color) => updateData('sectionBackgroundColor', color)} />
         {data.variant !== 'list' && <ColorPalette label="Color de Fondo de Tarjeta" selectedColor={data.cardBackgroundColor} onChange={(color) => updateData('cardBackgroundColor', color)} />}
         <TextColorPalette label="Color de Títulos" selectedColor={data.titleColor} onChange={(color) => updateData('titleColor', color)} />

@@ -1,9 +1,8 @@
-// Archivo: app/components/editor/blocks/PricingBlock.tsx (CORREGIDO)
+// app/components/editor/blocks/PricingBlock.tsx
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 
-// --- Interfaces de Datos ---
 interface PricePlan {
   name: string;
   price: string;
@@ -23,7 +22,6 @@ export interface PricingData {
   highlightColor: string;
 }
 
-// --- Componente "Director" ---
 export function PricingBlock({ data }: { data: PricingData }) {
   switch (data.variant) {
     case 'list': return <PricingList data={data} />;
@@ -32,7 +30,6 @@ export function PricingBlock({ data }: { data: PricingData }) {
   }
 }
 
-// --- Componentes para cada Variante ---
 const PricingColumns = ({ data }: { data: PricingData }) => (
     <div className={`${data.backgroundColor || 'bg-white'} py-12 px-4`}>
         <div className="max-w-5xl mx-auto text-center">
@@ -40,7 +37,7 @@ const PricingColumns = ({ data }: { data: PricingData }) => (
             <p className="text-lg text-slate-600 mb-12 max-w-2xl mx-auto">{data.subtitle}</p>
             <div className="grid md:grid-cols-3 gap-8">
                 {(data.plans || []).map((plan, i) => (
-                    <div key={i} className={`p-6 border rounded-lg text-left flex flex-col ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}`}>
+                    <div key={i} className={`p-6 border rounded-lg text-left flex flex-col ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'} `}>
                         <h3 className="text-xl font-semibold mb-1">{plan.name}</h3>
                         <p className="text-slate-500 mb-4">{plan.description}</p>
                         <p className="text-4xl font-bold mb-1">${plan.price}<span className="text-base font-normal text-slate-500">{plan.frequency}</span></p>
@@ -101,20 +98,16 @@ const PricingSimple = ({ data }: { data: PricingData }) => (
     </div>
 );
 
-
-// --- Editor del Bloque ---
 export function PricingEditor({ data, updateData }: { data: PricingData, updateData: (key: keyof PricingData, value: string | PricePlan[]) => void }) {
 
     const updatePlanData = (planIndex: number, key: keyof PricePlan, value: string | boolean | string[]) => {
         const newPlans = [...(data.plans || [])];
 
         if (key === 'highlighted' && typeof value === 'boolean') {
-            // Desmarcar todos y marcar solo el actual si se está activando
             newPlans.forEach((p, i) => {
                 p.highlighted = i === planIndex ? value : false;
             });
         } else {
-            // Actualizar la propiedad específica del plan
             const planToUpdate = { ...newPlans[planIndex], [key]: value };
             newPlans[planIndex] = planToUpdate;
         }

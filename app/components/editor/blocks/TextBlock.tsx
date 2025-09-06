@@ -1,3 +1,4 @@
+// app/components/editor/blocks/TextBlock.tsx (RESTAURADO)
 import React from 'react';
 import { TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';

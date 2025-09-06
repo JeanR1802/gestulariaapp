@@ -1,8 +1,9 @@
-// app/api/tenants/[id]/route.js
+// app/api/tenants/[id]/route.js (CORREGIDO)
 import { connectToDatabase } from '@/lib/database'
 import { verifyToken } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
+//                                    👇 La corrección está aquí
 export async function GET(request, { params }) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -18,8 +19,10 @@ export async function GET(request, { params }) {
     }
 
     const db = await connectToDatabase()
+    // Se utiliza el 'id' desestructurado de 'params'
+    const { id } = params;
     const tenant = await db.collection('tenants').findOne({ 
-      id: params.id, 
+      id: id, 
       userKey: payload.key 
     })
     
@@ -34,6 +37,7 @@ export async function GET(request, { params }) {
   }
 }
 
+//                                    👇 La corrección está aquí
 export async function PUT(request, { params }) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -59,8 +63,10 @@ export async function PUT(request, { params }) {
     updates.updatedAt = new Date()
 
     const db = await connectToDatabase()
+    // Se utiliza el 'id' desestructurado de 'params'
+    const { id } = params;
     const result = await db.collection('tenants').updateOne(
-      { id: params.id, userKey: payload.key },
+      { id: id, userKey: payload.key },
       { $set: updates }
     )
     
@@ -75,6 +81,7 @@ export async function PUT(request, { params }) {
   }
 }
 
+//                                    👇 La corrección está aquí
 export async function DELETE(request, { params }) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -90,8 +97,10 @@ export async function DELETE(request, { params }) {
     }
 
     const db = await connectToDatabase()
+    // Se utiliza el 'id' desestructurado de 'params'
+    const { id } = params;
     const result = await db.collection('tenants').deleteOne({ 
-      id: params.id, 
+      id: id, 
       userKey: payload.key 
     })
     

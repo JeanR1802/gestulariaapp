@@ -1,3 +1,4 @@
+// app/components/editor/blocks/HeaderBlock.tsx
 'use client';
 import React, { useState } from 'react';
 import { InputField } from './InputField';
@@ -12,7 +13,6 @@ export interface HeaderData {
   link2: string;
   link3: string;
   buttonText?: string;
-  // Propiedades de diseño
   backgroundColor: string;
   textColor: string;
   buttonBgColor?: string;
@@ -47,7 +47,6 @@ const HeaderDefault = ({ data, isMenuOpen, toggleMenu }: HeaderVariantProps) => 
       </nav>
       <div className="md:hidden"><button onClick={toggleMenu} aria-label="Toggle Menu" className={data.textColor || 'text-slate-800'}>{isMenuOpen ? <CloseIcon /> : <MenuIcon />}</button></div>
     </div>
-    {isMenuOpen && <nav className={`md:hidden absolute top-full left-0 w-full bg-white border-b flex flex-col items-center gap-4 py-4 ${data.textColor || 'text-slate-800'}`}><a href="#" className="hover:text-blue-600">{data.link1 || 'Inicio'}</a><a href="#" className="hover:text-blue-600">{data.link2 || 'Servicios'}</a><a href="#" className="hover:text-blue-600">{data.link3 || 'Contacto'}</a></nav>}
   </header>
 );
 
@@ -58,7 +57,6 @@ const HeaderCentered = ({ data, isMenuOpen, toggleMenu }: HeaderVariantProps) =>
       <nav className={`hidden md:flex items-center space-x-6 text-sm ${data.textColor ? 'opacity-80' : 'text-slate-600'}`}><a href="#" className={`hover:opacity-100 ${data.textColor || ''}`}>{data.link1 || 'Inicio'}</a><a href="#" className={`hover:opacity-100 ${data.textColor || ''}`}>{data.link2 || 'Servicios'}</a><a href="#" className={`hover:opacity-100 ${data.textColor || ''}`}>{data.link3 || 'Contacto'}</a></nav>
       <div className="md:hidden"><button onClick={toggleMenu} aria-label="Toggle Menu" className={data.textColor || 'text-slate-800'}>{isMenuOpen ? <CloseIcon /> : <MenuIcon />}</button></div>
     </div>
-    {isMenuOpen && <nav className={`md:hidden absolute top-full left-0 w-full bg-white border-b flex flex-col items-center gap-4 py-4 ${data.textColor || 'text-slate-800'}`}><a href="#" className="hover:text-blue-600">{data.link1 || 'Inicio'}</a><a href="#" className="hover:text-blue-600">{data.link2 || 'Servicios'}</a><a href="#" className="hover:text-blue-600">{data.link3 || 'Contacto'}</a></nav>}
   </header>
 );
 
@@ -72,7 +70,6 @@ const HeaderWithButton = ({ data, isMenuOpen, toggleMenu }: HeaderVariantProps) 
       </div>
       <div className="md:hidden"><button onClick={toggleMenu} aria-label="Toggle Menu" className={data.textColor || 'text-slate-800'}>{isMenuOpen ? <CloseIcon /> : <MenuIcon />}</button></div>
     </div>
-    {isMenuOpen && <nav className={`md:hidden absolute top-full left-0 w-full bg-white border-b flex flex-col items-center gap-4 py-4 ${data.textColor || 'text-slate-800'}`}><a href="#" className="hover:text-blue-600">{data.link1 || 'Producto'}</a><a href="#" className="hover:text-blue-600">{data.link2 || 'Precios'}</a><a href="#" className={`mt-2 px-4 py-1.5 rounded-md text-sm font-semibold w-fit ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`}>{data.buttonText || 'Acción'}</a></nav>}
   </header>
 );
 
