@@ -4,6 +4,7 @@ import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
+import { cn } from '@/lib/utils';
 
 interface Card {
   icon: string;
@@ -30,60 +31,294 @@ export function CardsBlock({ data }: { data: CardsData }) {
   }
 }
 
-const CardsDefault = ({ data }: { data: CardsData }) => (
-  <div className={`${data.sectionBackgroundColor || 'bg-slate-50'} py-12 px-4`}>
-    <div className="max-w-5xl mx-auto">
-      <h2 className={`text-3xl font-bold text-center mb-12 ${data.titleColor || 'text-slate-800'}`}>{data.title}</h2>
-      <div className="grid md:grid-cols-3 gap-8">
-        {(data.cards || []).map((card, index) => (
-          <div key={index} className={`text-center p-6 rounded-lg shadow-sm ring-1 ring-slate-100 ${data.cardBackgroundColor || 'bg-white'}`}>
-            <div className="text-4xl mb-4">{card.icon}</div>
-            <h3 className={`text-xl font-semibold mb-2 ${data.titleColor || 'text-slate-800'}`}>{card.title}</h3>
-            <p className={`${data.textColor || 'text-slate-600'} text-sm`}>{card.description}</p>
-          </div>
-        ))}
+const CardsDefault = ({ data }: { data: CardsData }) => {
+  const { isMobile, isTablet, isDesktop } = usePreviewMode();
+  
+  return (
+    <div className={cn(
+      `${data.sectionBackgroundColor || 'bg-slate-50'}`,
+      {
+        'py-16 px-8': isDesktop,
+        'py-12 px-6': isTablet,
+        'py-8 px-4': isMobile,
+      }
+    )}>
+      <div className={cn(
+        "mx-auto",
+        {
+          'max-w-6xl': isDesktop,
+          'max-w-4xl': isTablet,
+          'max-w-full': isMobile,
+        }
+      )}>
+        <h2 className={cn(
+          `text-center font-bold ${data.titleColor || 'text-slate-800'}`,
+          {
+            'text-4xl mb-16': isDesktop,
+            'text-3xl mb-12': isTablet,
+            'text-2xl mb-8': isMobile,
+          }
+        )}>
+          {data.title}
+        </h2>
+        
+        <div className={cn(
+          "gap-8",
+          {
+            'grid md:grid-cols-3': isDesktop,
+            'grid sm:grid-cols-2 md:grid-cols-3': isTablet,
+            'flex flex-col space-y-6': isMobile,
+          }
+        )}>
+          {(data.cards || []).map((card, index) => (
+            <div 
+              key={index} 
+              className={cn(
+                `text-center rounded-lg shadow-sm ring-1 ring-slate-100 ${data.cardBackgroundColor || 'bg-white'}`,
+                {
+                  'p-8': isDesktop,
+                 
+                  'p-6': isMobile,
+                }
+              )}
+            >
+              <div className={cn(
+                "mb-6",
+                {
+                  'text-5xl': isDesktop,
+                  'text-4xl': isTablet,
+                  'text-3xl': isMobile,
+                }
+              )}>
+                {card.icon}
+              </div>
+              
+              <h3 className={cn(
+                `font-semibold mb-4 ${data.titleColor || 'text-slate-800'}`,
+                {
+                  'text-2xl': isDesktop,
+                  'text-xl': isTablet,
+                  'text-lg': isMobile,
+                }
+              )}>
+                {card.title}
+              </h3>
+              
+              <p className={cn(
+                `${data.textColor || 'text-slate-600'}`,
+                {
+                  'text-base leading-relaxed': isDesktop,
+                  
+                  'text-sm leading-relaxed': isMobile,
+                }
+              )}>
+                {card.description}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-const CardsList = ({ data }: { data: CardsData }) => (
-  <div className={`${data.sectionBackgroundColor || 'bg-white'} py-12 px-4`}>
-      <div className="max-w-3xl mx-auto">
-          <h2 className={`text-3xl font-bold text-center mb-12 ${data.titleColor || 'text-slate-800'}`}>{data.title}</h2>
-          <div className="space-y-8">
-              {(data.cards || []).map((card, index) => (
-                  <div key={index} className="flex items-start gap-6">
-                      <div className="text-3xl mt-1">{card.icon}</div>
-                      <div>
-                          <h3 className={`text-xl font-semibold mb-2 ${data.titleColor || 'text-slate-800'}`}>{card.title}</h3>
-                          <p className={`${data.textColor || 'text-slate-600'}`}>{card.description}</p>
-                      </div>
-                  </div>
-              ))}
-          </div>
+const CardsList = ({ data }: { data: CardsData }) => {
+  const { isMobile, isTablet, isDesktop } = usePreviewMode();
+  
+  return (
+    <div className={cn(
+      `${data.sectionBackgroundColor || 'bg-white'}`,
+      {
+        'py-16 px-8': isDesktop,
+        'py-12 px-6': isTablet,
+        'py-8 px-4': isMobile,
+      }
+    )}>
+      <div className={cn(
+        "mx-auto",
+        {
+          'max-w-4xl': isDesktop,
+          'max-w-3xl': isTablet,
+          'max-w-full': isMobile,
+        }
+      )}>
+        <h2 className={cn(
+          `text-center font-bold ${data.titleColor || 'text-slate-800'}`,
+          {
+            'text-4xl mb-16': isDesktop,
+            'text-3xl mb-12': isTablet,
+            'text-2xl mb-8': isMobile,
+          }
+        )}>
+          {data.title}
+        </h2>
+        
+        <div className={cn(
+          {
+            'space-y-10': isDesktop,
+            'space-y-8': isTablet,
+            'space-y-6': isMobile,
+          }
+        )}>
+          {(data.cards || []).map((card, index) => (
+            <div 
+              key={index} 
+              className={cn(
+                "flex items-start",
+                {
+                  'gap-8': isDesktop,
+                  'gap-6': isTablet,
+                  'gap-4 flex-col text-center': isMobile,
+                }
+              )}
+            >
+              <div className={cn(
+                "mt-1",
+                {
+                  'text-4xl': isDesktop,
+                 
+                  'text-3xl': isMobile,
+                }
+              )}>
+                {card.icon}
+              </div>
+              
+              <div className={cn(
+                {
+                  'flex-1': isDesktop || isTablet,
+                  'w-full': isMobile,
+                }
+              )}>
+                <h3 className={cn(
+                  `font-semibold mb-3 ${data.titleColor || 'text-slate-800'}`,
+                  {
+                    'text-2xl': isDesktop,
+                    'text-xl': isTablet,
+                    'text-lg': isMobile,
+                  }
+                )}>
+                  {card.title}
+                </h3>
+                
+                <p className={cn(
+                  `${data.textColor || 'text-slate-600'}`,
+                  {
+                    'text-lg leading-relaxed': isDesktop,
+                    'text-base leading-relaxed': isTablet,
+                    'text-sm leading-relaxed': isMobile,
+                  }
+                )}>
+                  {card.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-  </div>
-);
+    </div>
+  );
+};
 
-const CardsImageTop = ({ data }: { data: CardsData }) => (
-  <div className={`${data.sectionBackgroundColor || 'bg-slate-50'} py-12 px-4`}>
-      <div className="max-w-5xl mx-auto">
-          <h2 className={`text-3xl font-bold text-center mb-12 ${data.titleColor || 'text-slate-800'}`}>{data.title}</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-              {(data.cards || []).map((card, index) => (
-                  <div key={index} className={`${data.cardBackgroundColor || 'bg-white'} rounded-lg shadow-sm ring-1 ring-slate-100 overflow-hidden`}>
-                      <img src={card.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'} alt={card.title} className="w-full h-40 object-cover" />
-                      <div className="p-6 text-center">
-                          <h3 className={`text-xl font-semibold mb-2 ${data.titleColor || 'text-slate-800'}`}>{card.title}</h3>
-                          <p className={`${data.textColor || 'text-slate-600'} text-sm`}>{card.description}</p>
-                      </div>
-                  </div>
-              ))}
-          </div>
+const CardsImageTop = ({ data }: { data: CardsData }) => {
+  const { isMobile, isTablet, isDesktop } = usePreviewMode();
+  
+  return (
+    <div className={cn(
+      `${data.sectionBackgroundColor || 'bg-slate-50'}`,
+      {
+        'py-16 px-8': isDesktop,
+        'py-12 px-6': isTablet,
+        'py-8 px-4': isMobile,
+      }
+    )}>
+      <div className={cn(
+        "mx-auto",
+        {
+          'max-w-6xl': isDesktop,
+          'max-w-4xl': isTablet,
+          'max-w-full': isMobile,
+        }
+      )}>
+        <h2 className={cn(
+          `text-center font-bold ${data.titleColor || 'text-slate-800'}`,
+          {
+            'text-4xl mb-16': isDesktop,
+            'text-3xl mb-12': isTablet,
+            'text-2xl mb-8': isMobile,
+          }
+        )}>
+          {data.title}
+        </h2>
+        
+        <div className={cn(
+          "gap-8",
+          {
+            'grid md:grid-cols-3': isDesktop,
+            'grid sm:grid-cols-2 md:grid-cols-3': isTablet,
+            'flex flex-col space-y-6': isMobile,
+          }
+        )}>
+          {(data.cards || []).map((card, index) => (
+            <div 
+              key={index} 
+              className={cn(
+                `${data.cardBackgroundColor || 'bg-white'} rounded-lg shadow-sm ring-1 ring-slate-100 overflow-hidden`,
+                {
+                  '': isDesktop || isTablet,
+                  'max-w-sm mx-auto': isMobile,
+                }
+              )}
+            >
+              <img 
+                src={card.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'} 
+                alt={card.title} 
+                className={cn(
+                  "w-full object-cover",
+                  {
+                    'h-48': isDesktop,
+                    'h-40': isTablet,
+                    'h-32': isMobile,
+                  }
+                )}
+              />
+              
+              <div className={cn(
+                "text-center",
+                {
+                  'p-8': isDesktop,
+                  'p-6': isTablet,
+                  'p-4': isMobile,
+                }
+              )}>
+                <h3 className={cn(
+                  `font-semibold mb-3 ${data.titleColor || 'text-slate-800'}`,
+                  {
+                    'text-2xl': isDesktop,
+                    'text-xl': isTablet,
+                    'text-lg': isMobile,
+                  }
+                )}>
+                  {card.title}
+                </h3>
+                
+                <p className={cn(
+                  `${data.textColor || 'text-slate-600'}`,
+                  {
+                    'text-base leading-relaxed': isDesktop,
+                   
+                    'text-sm leading-relaxed': isMobile,
+                  }
+                )}>
+                  {card.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-  </div>
-);
+    </div>
+  );
+};
 
 export function CardsEditor({ data, updateData }: { data: CardsData, updateData: (key: keyof CardsData, value: string | Card[]) => void }) {
   const updateCardData = (cardIndex: number, key: keyof Card, value: string) => {
