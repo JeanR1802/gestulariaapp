@@ -1,4 +1,4 @@
-// app/dashboard/sites/[id]/page.tsx
+// app/dashboard/sites/[id]/page.tsx (CÓDIGO COMPLETO Y CORREGIDO)
 'use client';
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,9 @@ import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 interface EditPanelProps { block: Block | undefined; onUpdate: (key: string, value: unknown) => void; onClose: () => void; }
+
+// --- Iconos ---
+const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 
 export default function VisualEditor({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -90,7 +93,9 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
 
   const deleteBlock = (blockId: number) => {
     setBlocks(blocks.filter(block => block.id !== blockId));
-    setEditingBlockId(null);
+    if (editingBlockId === blockId) {
+      setEditingBlockId(null);
+    }
   };
   
   const moveBlock = (fromIndex: number, toIndex: number) => {
@@ -143,8 +148,8 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
             })}
         </aside>
 
-        <div className="flex-1 overflow-y-auto" onClick={() => setEditingBlockId(null)}>
-          <div className="max-w-3xl mx-auto my-6 p-2" onClick={e => e.stopPropagation()}>
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto my-6 p-2">
             <div className="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-full p-4">
               {blocks.map((block, index) => (
                 <BlockRenderer 
@@ -155,7 +160,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
                   onEdit={() => setEditingBlockId(block.id)} 
                   onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} 
                   onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined}
-                  onUpdate={updateBlock}
                 />
               ))}
               {blocks.length === 0 && (

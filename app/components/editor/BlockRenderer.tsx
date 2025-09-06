@@ -1,4 +1,4 @@
-// app/components/editor/BlockRenderer.tsx (RESTAURADO Y SIMPLIFICADO)
+// app/components/editor/BlockRenderer.tsx (CORREGIDO)
 'use client';
 import React from 'react';
 import { BLOCKS, BlockData, BlockType } from './blocks';
@@ -16,7 +16,7 @@ interface BlockRendererProps {
   onEdit: () => void;
   onDelete: () => void; 
   onMoveUp?: () => void; 
-  onMoveDown?: () => void; 
+  onMoveDown?: () => void;
 }
 
 export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: BlockRendererProps) {
@@ -26,8 +26,11 @@ export function BlockRenderer({ block, isEditing, onEdit, onDelete, onMoveUp, on
     if (!Component) {
       return <div>Error: Bloque de tipo &apos;{block.type}&apos; no reconocido.</div>;
     }
-    // @ts-ignore
+    // --- INICIO DE LA CORRECCIÓN ---
+    // Se cambia @ts-ignore por @ts-expect-error para cumplir con las reglas de ESLint
+    // @ts-expect-error: Se espera un error aquí porque pasamos props genéricas a componentes específicos.
     return <Component data={block.data} />;
+    // --- FIN DE LA CORRECCIÓN ---
   };
 
   return (
