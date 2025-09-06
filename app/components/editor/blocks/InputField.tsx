@@ -1,5 +1,5 @@
 // app/components/editor/blocks/InputField.tsx (ACTUALIZADO)
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, KeyboardEvent } from 'react';
 
 // Importamos los nuevos componentes profesionales desde la carpeta 'ui' que creó Shadcn
 import { Input } from '@/components/ui/input';
@@ -15,13 +15,14 @@ export const InputField = ({ label, value, onChange }: { label: string, value: s
             type="text" 
             value={value || ''} 
             onChange={onChange} 
-            className="w-full" // La clase base de Shadcn ya le da un estilo profesional
+            className="w-full"
         />
     </div>
 );
 
 // Componente para un área de texto de múltiples líneas
-export const TextareaField = ({ label, value, rows = 3, onChange }: { label: string, value: string, rows?: number, onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void }) => (
+// Ahora acepta la propiedad onKeyPress
+export const TextareaField = ({ label, value, rows = 3, onChange, onKeyPress }: { label: string, value: string, rows?: number, onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void, onKeyPress?: (e: KeyboardEvent<HTMLTextAreaElement>) => void }) => (
     <div className="grid w-full gap-1.5">
         <Label htmlFor={label}>{label}</Label>
         <Textarea 
@@ -29,7 +30,8 @@ export const TextareaField = ({ label, value, rows = 3, onChange }: { label: str
             value={value || ''} 
             onChange={onChange} 
             rows={rows} 
-            className="w-full" // Estilo profesional y consistente
+            className="w-full"
+            onKeyPress={onKeyPress}
         />
     </div>
 );

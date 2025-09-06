@@ -1,8 +1,10 @@
-// app/components/editor/blocks/TextBlock.tsx (RESTAURADO)
-import React from 'react';
-import { TextareaField } from './InputField';
+// app/components/editor/blocks/TextBlock.tsx
+'use client';
+import React, { useState, KeyboardEvent } from 'react';
+import { TextareaField, InputField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
+import { SparklesIcon } from '@heroicons/react/24/outline';
 
 export interface TextData {
   variant: 'default' | 'quote' | 'highlighted';
@@ -40,12 +42,75 @@ const TextHighlighted = ({ data }: { data: TextData }) => (
 );
 
 export function TextEditor({ data, updateData }: { data: TextData, updateData: (key: keyof TextData, value: string) => void }) {
+  const [prompt, setPrompt] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGenerate = async () => {
+    if (!prompt) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/ai/generate-block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blockType: 'text',
+          userDescription: prompt,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        updateData('content', result.content);
+      } else {
+        alert('Error al generar texto con IA.');
+      }
+    } catch (e) {
+      alert('Error de conexión con la IA.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Maneja el evento de teclado para generar al presionar Enter
+  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !isLoading) {
+      e.preventDefault(); // Evita un salto de línea
+      handleGenerate();
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div>
+      {/* Nuevo control para la generación con IA */}
+      <div className="border border-blue-200 p-3 rounded-lg space-y-3 bg-blue-50">
+        <h4 className="font-semibold text-sm text-blue-800">Generación con IA</h4>
+        <TextareaField
+          label="Describe el texto que necesitas"
+          value={prompt}
+          rows={3}
+          onChange={(e) => setPrompt(e.target.value)}
+          onKeyPress={handleKeyPress}
+        />
+        <button
+          onClick={handleGenerate}
+          disabled={isLoading || !prompt}
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {isLoading ? (
+            'Generando...'
+          ) : (
+            <>
+              <SparklesIcon className="w-5 h-5" />
+              Generar texto
+            </>
+          )}
+        </button>
+      </div>
+
+      <div className="space-y-4">
         <h4 className="font-medium text-sm text-slate-600">Contenido</h4>
         <TextareaField label="Contenido" value={data.content} rows={8} onChange={(e) => updateData('content', e.target.value)} />
       </div>
+
       <div className="border-t border-slate-200 pt-4 space-y-4">
         <h4 className="font-medium text-sm text-slate-600 mb-3">Diseño</h4>
         <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />

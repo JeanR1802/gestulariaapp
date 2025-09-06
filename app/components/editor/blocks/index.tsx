@@ -1,4 +1,5 @@
 // app/components/editor/blocks/index.tsx (VERSIÓN CORREGIDA Y COMPLETA)
+'use client';
 import React from 'react';
 
 // Importamos los iconos profesionales que vamos a usar

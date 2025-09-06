@@ -1,11 +1,14 @@
-// app/components/editor/blocks/HeroBlock.tsx (RESPONSIVO)
-import React from 'react';
+// app/components/editor/blocks/HeroBlock.tsx
+'use client';
+import React, { useState } from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { ButtonColorPalette } from '../controls/ButtonColorPalette';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
 import { cn } from '@/lib/utils';
+import { SparklesIcon } from '@heroicons/react/24/outline';
+
 
 export interface HeroData {
   variant: 'default' | 'leftImage' | 'darkMinimal';
@@ -201,8 +204,62 @@ const HeroDarkMinimal = ({ data }: { data: HeroData }) => {
 };
 
 export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
+  const [userDescription, setUserDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGenerate = async () => {
+    if (!userDescription) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/ai/generate-block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blockType: 'hero',
+          userDescription: userDescription,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok && result.title && result.subtitle) {
+        updateData('title', result.title);
+        updateData('subtitle', result.subtitle);
+      } else {
+        alert('Error al generar contenido con IA para el bloque Hero.');
+      }
+    } catch (e) {
+      alert('Error de conexión con la IA.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <div className="space-y-4">
+      {/* Nuevo control para la generación con IA */}
+      <div className="border border-blue-200 p-3 rounded-lg space-y-3 bg-blue-50">
+        <h4 className="font-semibold text-sm text-blue-800">Generación Inteligente</h4>
+        <TextareaField
+          label="Describe tu negocio o idea principal"
+          value={userDescription}
+          rows={3}
+          onChange={(e) => setUserDescription(e.target.value)}
+        />
+        <button
+          onClick={handleGenerate}
+          disabled={isLoading || !userDescription}
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {isLoading ? (
+            'Generando...'
+          ) : (
+            <>
+              <SparklesIcon className="w-5 h-5" />
+              Generar contenido
+            </>
+          )}
+        </button>
+      </div>
+
       <div className="space-y-4">
         <h4 className="font-medium text-sm text-slate-600">Contenido</h4>
         <InputField label="Título Principal" value={data.title} onChange={(e) => updateData('title', e.target.value)} />
