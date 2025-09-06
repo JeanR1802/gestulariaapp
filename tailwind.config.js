@@ -9,13 +9,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'amor-bg': '#0b1020',
-        'amor-card': '#101732',
-        'amor-muted': '#9aa3b2',
-        'amor-text': '#eef2ff',
-        'amor-brand': '#7c5cff',
-        'amor-brand-2': '#10e7ff',
-        'amor-success': '#16db65',
+        'gestularia-bg': '#0D1222',       // Un azul noche más profundo y corporativo
+        'gestularia-card': '#111933',     // Tarjetas con un tono ligeramente más claro
+        'gestularia-muted': '#8A94A6',    // Texto secundario con buena legibilidad
+        'gestularia-text': '#EAF0FF',      // Texto principal casi blanco para alto contraste
+        'gestularia-brand': '#4A90E2',   // Azul principal (profesional y confiable)
+        'gestularia-brand-2': '#50E3C2',  // Acento Teal/Verde (para crecimiento e innovación)
+        'gestularia-success': '#16db65',
       },
       borderRadius: {
         '2xl': '24px',
@@ -33,17 +33,7 @@ module.exports = {
       animation: {
         'dot-bounce': 'dot-bounce 1.2s infinite ease-in-out',
       },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-      },
     },
   },
   plugins: [],
-  safelist: [
-    {
-      pattern: /./
-    }
-  ]
 }
