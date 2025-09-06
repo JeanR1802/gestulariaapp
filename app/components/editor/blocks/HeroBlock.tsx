@@ -1,9 +1,11 @@
-// app/components/editor/blocks/HeroBlock.tsx (RESTAURADO)
+// app/components/editor/blocks/HeroBlock.tsx (RESPONSIVO)
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { ButtonColorPalette } from '../controls/ButtonColorPalette';
+import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
+import { cn } from '@/lib/utils';
 
 export interface HeroData {
   variant: 'default' | 'leftImage' | 'darkMinimal';
@@ -27,37 +29,176 @@ export function HeroBlock({ data }: { data: HeroData }) {
   }
 }
 
-const buttonBaseClasses = "inline-block px-6 py-2.5 rounded-md text-base font-semibold transition-transform hover:scale-105";
+const HeroDefault = ({ data }: { data: HeroData }) => {
+  const { isMobile, isTablet, isDesktop } = usePreviewMode();
+  
+  return (
+    <div className={cn(
+      `${data.backgroundColor || 'bg-slate-100'} text-center`,
+      {
+        'p-16 md:p-24': isDesktop,
+        'p-12 md:p-20': isTablet,
+        'p-8': isMobile,
+      }
+    )}>
+      <h1 className={cn(
+        `font-bold mb-6 ${data.titleColor || 'text-slate-800'}`,
+        {
+          'text-4xl md:text-5xl': isDesktop,
+          'text-3xl md:text-4xl': isTablet,
+          'text-2xl leading-tight': isMobile,
+        }
+      )}>
+        {data.title}
+      </h1>
+      
+      <p className={cn(
+        `mb-8 mx-auto ${data.subtitleColor || 'text-slate-600'}`,
+        {
+          'text-xl leading-relaxed max-w-3xl': isDesktop,
+          'text-lg leading-relaxed max-w-2xl': isTablet,
+          'text-base leading-relaxed max-w-sm': isMobile,
+        }
+      )}>
+        {data.subtitle}
+      </p>
+      
+      <a 
+        href={data.buttonLink || '#'} 
+        className={cn(
+          `inline-block font-semibold rounded-md transition-transform hover:scale-105 ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`,
+          {
+            'px-8 py-4 text-lg': isDesktop,
+            'px-6 py-3 text-base': isTablet,
+            'px-6 py-3 text-sm w-full max-w-xs': isMobile,
+          }
+        )}
+      >
+        {data.buttonText}
+      </a>
+    </div>
+  );
+};
 
-const HeroDefault = ({ data }: { data: HeroData }) => (
-  <div className={`${data.backgroundColor || 'bg-slate-100'} p-12 md:p-20 text-center`}>
-    <h1 className={`text-3xl md:text-4xl font-bold mb-4 ${data.titleColor || 'text-slate-800'}`}>{data.title}</h1>
-    <p className={`text-lg mb-8 max-w-2xl mx-auto ${data.subtitleColor || 'text-slate-600'}`}>{data.subtitle}</p>
-    <a href={data.buttonLink || '#'} className={`${buttonBaseClasses} ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`}>{data.buttonText}</a>
-  </div>
-);
+const HeroLeftImage = ({ data }: { data: HeroData }) => {
+  const { isMobile, isTablet, isDesktop } = usePreviewMode();
+  
+  return (
+    <div className={`${data.backgroundColor || 'bg-white'}`}>
+      <div className={cn(
+        "mx-auto items-center gap-8",
+        {
+          'max-w-6xl grid md:grid-cols-2 p-12 md:p-16': isDesktop,
+          'max-w-4xl grid md:grid-cols-2 p-8 md:p-12': isTablet,
+          'max-w-full flex flex-col p-6': isMobile,
+        }
+      )}>
+        {/* Text Content */}
+        <div className={cn(
+          {
+            'text-center md:text-left': isDesktop || isTablet,
+            'text-center order-2': isMobile,
+          }
+        )}>
+          <h1 className={cn(
+            `font-bold mb-6 ${data.titleColor || 'text-slate-800'}`,
+            {
+              'text-4xl md:text-5xl': isDesktop,
+              'text-3xl md:text-4xl': isTablet,
+              'text-2xl': isMobile,
+            }
+          )}>
+            {data.title}
+          </h1>
+          
+          <p className={cn(
+            `mb-8 ${data.subtitleColor || 'text-slate-600'}`,
+            {
+              'text-xl leading-relaxed': isDesktop,
+              'text-lg leading-relaxed': isTablet,
+              'text-base leading-relaxed': isMobile,
+            }
+          )}>
+            {data.subtitle}
+          </p>
+          
+          <a 
+            href={data.buttonLink || '#'} 
+            className={cn(
+              `inline-block font-semibold rounded-md transition-transform hover:scale-105 ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`,
+              {
+                'px-8 py-4 text-lg': isDesktop,
+                'px-6 py-3 text-base': isTablet,
+                'px-6 py-3 text-sm w-full max-w-xs': isMobile,
+              }
+            )}
+          >
+            {data.buttonText}
+          </a>
+        </div>
 
-const HeroLeftImage = ({ data }: { data: HeroData }) => (
-  <div className={`${data.backgroundColor || 'bg-white'}`}>
-    <div className="max-w-5xl mx-auto grid md:grid-cols-2 items-center gap-8 p-8 md:p-12">
-      <div className="text-center md:text-left">
-        <h1 className={`text-3xl md:text-4xl font-bold mb-4 ${data.titleColor || 'text-slate-800'}`}>{data.title}</h1>
-        <p className={`text-lg mb-8 ${data.subtitleColor || 'text-slate-600'}`}>{data.subtitle}</p>
-        <a href={data.buttonLink || '#'} className={`${buttonBaseClasses} ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`}>{data.buttonText}</a>
-      </div>
-      <div>
-        <img src={data.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'} alt={data.title} className="rounded-lg shadow-lg mx-auto" />
+        {/* Image */}
+        <div className={cn(
+          {
+            'order-1': isMobile,
+          }
+        )}>
+          <img 
+            src={data.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'} 
+            alt={data.title} 
+            className={cn(
+              "rounded-lg shadow-lg mx-auto",
+              {
+                'max-w-full h-auto': isDesktop || isTablet,
+                'w-full max-w-sm h-48 object-cover': isMobile,
+              }
+            )} 
+          />
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-const HeroDarkMinimal = ({ data }: { data: HeroData }) => (
-    <div className={`${data.backgroundColor || 'bg-slate-900'} p-12 md:p-24 text-center`}>
-        <h1 className={`text-4xl md:text-5xl font-bold mb-8 ${data.titleColor || 'text-white'}`}>{data.title}</h1>
-        <a href={data.buttonLink || '#'} className={`${buttonBaseClasses} ${data.buttonBgColor || 'bg-white'} ${data.buttonTextColor || 'text-slate-800'}`}>{data.buttonText}</a>
+const HeroDarkMinimal = ({ data }: { data: HeroData }) => {
+  const { isMobile, isTablet, isDesktop } = usePreviewMode();
+  
+  return (
+    <div className={cn(
+      `${data.backgroundColor || 'bg-slate-900'} text-center`,
+      {
+        'p-20 md:p-32': isDesktop,
+        'p-16 md:p-24': isTablet,
+        'p-12': isMobile,
+      }
+    )}>
+      <h1 className={cn(
+        `font-bold mb-12 ${data.titleColor || 'text-white'}`,
+        {
+          'text-5xl md:text-6xl': isDesktop,
+          'text-4xl md:text-5xl': isTablet,
+          'text-3xl leading-tight': isMobile,
+        }
+      )}>
+        {data.title}
+      </h1>
+      
+      <a 
+        href={data.buttonLink || '#'} 
+        className={cn(
+          `inline-block font-semibold rounded-md transition-transform hover:scale-105 ${data.buttonBgColor || 'bg-white'} ${data.buttonTextColor || 'text-slate-800'}`,
+          {
+            'px-10 py-5 text-xl': isDesktop,
+            'px-8 py-4 text-lg': isTablet,
+            'px-6 py-3 text-base w-full max-w-xs': isMobile,
+          }
+        )}
+      >
+        {data.buttonText}
+      </a>
     </div>
-);
+  );
+};
 
 export function HeroEditor({ data, updateData }: { data: HeroData, updateData: (key: keyof HeroData, value: string) => void }) {
   return (

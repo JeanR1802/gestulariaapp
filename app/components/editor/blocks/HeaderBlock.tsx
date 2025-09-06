@@ -1,4 +1,5 @@
 // app/components/editor/blocks/HeaderBlock.tsx
+
 'use client';
 import React, { useState } from 'react';
 import { InputField } from './InputField';
@@ -36,8 +37,10 @@ const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" heigh
 
 interface HeaderVariantProps { data: HeaderData; isMenuOpen: boolean; toggleMenu: () => void; }
 
+// --- INICIO DE LA CORRECCIÓN ---
+// Se eliminaron las clases: sticky top-0 z-30 de los tres componentes de abajo
 const HeaderDefault = ({ data, isMenuOpen, toggleMenu }: HeaderVariantProps) => (
-  <header className={`${data.backgroundColor || 'bg-white'} p-4 border-b border-slate-200 w-full sticky top-0 z-30`}>
+  <header className={`${data.backgroundColor || 'bg-white'} p-4 border-b border-slate-200 w-full`}>
     <div className="max-w-5xl mx-auto flex justify-between items-center">
       <h1 className={`text-xl font-bold ${data.textColor || 'text-slate-800'}`}>{data.logoText || 'Mi Negocio'}</h1>
       <nav className={`hidden md:flex items-center space-x-6 text-sm ${data.textColor ? 'opacity-80' : 'text-slate-600'}`}>
@@ -51,7 +54,7 @@ const HeaderDefault = ({ data, isMenuOpen, toggleMenu }: HeaderVariantProps) => 
 );
 
 const HeaderCentered = ({ data, isMenuOpen, toggleMenu }: HeaderVariantProps) => (
-  <header className={`${data.backgroundColor || 'bg-white'} p-4 border-b border-slate-200 w-full sticky top-0 z-30`}>
+  <header className={`${data.backgroundColor || 'bg-white'} p-4 border-b border-slate-200 w-full`}>
     <div className="max-w-5xl mx-auto flex justify-between items-center md:flex-col md:gap-3">
       <h1 className={`text-xl md:text-2xl font-bold ${data.textColor || 'text-slate-800'}`}>{data.logoText || 'Mi Negocio'}</h1>
       <nav className={`hidden md:flex items-center space-x-6 text-sm ${data.textColor ? 'opacity-80' : 'text-slate-600'}`}><a href="#" className={`hover:opacity-100 ${data.textColor || ''}`}>{data.link1 || 'Inicio'}</a><a href="#" className={`hover:opacity-100 ${data.textColor || ''}`}>{data.link2 || 'Servicios'}</a><a href="#" className={`hover:opacity-100 ${data.textColor || ''}`}>{data.link3 || 'Contacto'}</a></nav>
@@ -61,7 +64,7 @@ const HeaderCentered = ({ data, isMenuOpen, toggleMenu }: HeaderVariantProps) =>
 );
 
 const HeaderWithButton = ({ data, isMenuOpen, toggleMenu }: HeaderVariantProps) => (
-  <header className={`${data.backgroundColor || 'bg-white'} p-4 border-b border-slate-200 w-full sticky top-0 z-30`}>
+  <header className={`${data.backgroundColor || 'bg-white'} p-4 border-b border-slate-200 w-full`}>
     <div className="max-w-5xl mx-auto flex justify-between items-center">
       <h1 className={`text-xl font-bold ${data.textColor || 'text-slate-800'}`}>{data.logoText || 'Mi Negocio'}</h1>
       <div className="hidden md:flex items-center gap-6">
@@ -72,16 +75,18 @@ const HeaderWithButton = ({ data, isMenuOpen, toggleMenu }: HeaderVariantProps) 
     </div>
   </header>
 );
+// --- FIN DE LA CORRECCIÓN ---
+
 
 export function HeaderEditor({ data, updateData }: { data: HeaderData, updateData: (key: keyof HeaderData, value: string) => void }) {
   return (
     <div className="space-y-4">
       <div className="space-y-4">
         <h4 className="font-medium text-sm text-slate-600">Contenido</h4>
-        <InputField label="Texto del Logo" value={data.logoText} onChange={(e) => updateData('logoText', e.target.value)} />
-        <InputField label="Enlace 1" value={data.link1} onChange={(e) => updateData('link1', e.target.value)} />
-        <InputField label="Enlace 2" value={data.link2} onChange={(e) => updateData('link2', e.target.value)} />
-        {data.variant !== 'withButton' && (<InputField label="Enlace 3" value={data.link3} onChange={(e) => updateData('link3', e.target.value)} />)}
+        <InputField label="Texto del Logo" value={data.logoText || ''} onChange={(e) => updateData('logoText', e.target.value)} />
+        <InputField label="Enlace 1" value={data.link1 || ''} onChange={(e) => updateData('link1', e.target.value)} />
+        <InputField label="Enlace 2" value={data.link2 || ''} onChange={(e) => updateData('link2', e.target.value)} />
+        {data.variant !== 'withButton' && (<InputField label="Enlace 3" value={data.link3 || ''} onChange={(e) => updateData('link3', e.target.value)} />)}
         {data.variant === 'withButton' && (<InputField label="Texto del Botón" value={data.buttonText || ''} onChange={(e) => updateData('buttonText', e.target.value)} />)}
       </div>
       <div className="border-t border-slate-200 pt-4 space-y-4">

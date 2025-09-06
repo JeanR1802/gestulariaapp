@@ -3,6 +3,7 @@ import React from 'react';
 import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
+import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
 
 interface Card {
   icon: string;
