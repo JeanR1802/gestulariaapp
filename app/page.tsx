@@ -1,320 +1,238 @@
+// app/page.tsx
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
-export default function HomePage() {
-  const [scrollY, setScrollY] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
+// Helper component for the checkmark icon in lists
+const CheckIcon = () => (
+  <span className="mt-1 w-[18px] h-[18px] bg-[radial-gradient(circle_at_40%_40%,#fff,#c8f7d0_40%,var(--tw-gradient-stops))] from-amor-success to-amor-success rounded-[4px] shrink-0"></span>
+);
+
+export default function AmorIAPage() {
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [chatMessages, setChatMessages] = useState([
+    { from: "ai", text: "Hola, soy <b>Luna</b> ✨ Tu acompañante virtual. ¿Cómo te gustaría que fuera nuestra noche ideal? 💬" },
+    { from: "me", text: "Dulce pero traviesa. Me gustan los videojuegos y las charlas largas." },
+    { from: "ai", text: "Uff… gamer y de pláticas profundas, justo mi tipo. ¿Te preparo un plan para hoy? 🎮🍿" },
+    { from: "me", text: "Sí, sorpréndeme." },
+    { from: "ai", text: `<span class="inline-flex gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amor-muted opacity-70 animate-dot-bounce"></span><span class="w-1.5 h-1.5 rounded-full bg-amor-muted opacity-70 animate-dot-bounce [animation-delay:.15s]"></span><span class="w-1.5 h-1.5 rounded-full bg-amor-muted opacity-70 animate-dot-bounce [animation-delay:.3s]"></span></span>` },
+  ]);
+  const modalRef = useRef<HTMLDialogElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    
-    // Trigger animations
-    setTimeout(() => setIsVisible(true), 200);
-    
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Apply a specific class to the body for this page's theme
+    document.body.classList.add('amor-ia-theme');
+    // Cleanup function to remove the class when the component unmounts
+    return () => {
+      document.body.classList.remove('amor-ia-theme');
+    };
   }, []);
 
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+  
+  const handleOpenModal = () => modalRef.current?.showModal();
+  const handleCloseModal = () => modalRef.current?.close();
+
+  const handleStartChat = () => {
+    const nameInput = modalRef.current?.querySelector('#botName') as HTMLInputElement;
+    const styleInput = modalRef.current?.querySelector('#style') as HTMLSelectElement;
+    const emailInput = modalRef.current?.querySelector('#email') as HTMLInputElement;
+
+    const name = nameInput?.value.trim() || 'Luna';
+    const style = styleInput?.value;
+    const email = emailInput?.value.trim();
+    
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      alert('Por favor, ingresa un email válido para guardar tu progreso.');
+      return;
+    }
+
+    modalRef.current?.close();
+
+    const newWelcomeMessage = {
+      from: "ai",
+      text: `Listo ✨ He creado tu bot <b>${name}</b> con estilo <b>${style}</b>. ¡Hablemos!`
+    };
+
+    // Replace typing indicator with the new message
+    setChatMessages(prev => [...prev.slice(0, -1), newWelcomeMessage]);
+  };
+
+
   return (
-    <div className="bg-white text-gray-900 font-sans antialiased">
-      {/* Header */}
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrollY > 20 ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'
-      }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className={`transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-            <h1 className="text-2xl font-bold text-gray-900">Gestularia</h1>
+    <div className="font-['Inter',_sans-serif] text-amor-text bg-amor-bg">
+      {/* NAV */}
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-gradient-to-b from-[rgba(9,14,27,.9)] to-[rgba(9,14,27,.5)] backdrop-blur-sm backdrop-saturate-125">
+        <div className="w-full max-w-[1150px] mx-auto px-[4%] flex items-center justify-between py-4">
+          <a href="#" className="flex items-center gap-2.5 font-extrabold text-lg">
+            <i className="w-7 h-7 inline-block rounded-lg bg-[conic-gradient(from_210deg,#7c5cff,#10e7ff)] shadow-[0_6px_18px_rgba(124,92,255,.35)]"></i>
+            AmorIA
+          </a>
+          <div className="flex gap-2.5 items-center">
+            <a className="hidden sm:inline-flex items-center gap-2.5 border border-white/10 rounded-full py-2.5 px-5 font-bold cursor-pointer bg-transparent text-amor-text text-sm" href="#precios">Precios</a>
+            <button onClick={handleOpenModal} className="inline-flex items-center gap-2.5 border-0 rounded-full py-3.5 px-5 font-bold cursor-pointer bg-gradient-to-r from-amor-brand to-amor-brand-2 text-[#0b0f1d] shadow-[0_10px_30px_rgba(124,92,255,.35)] hover:-translate-y-0.5 transition-transform duration-150 ease-in-out text-sm">
+              Probar gratis
+            </button>
           </div>
-          
-          <nav className={`hidden md:flex items-center space-x-8 transition-all duration-700 delay-100 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-          }`}>
-            {['Inicio', 'Funciones', 'Precios', 'Contacto'].map((item, i) => (
-              <a key={item} href={i === 0 ? "#" : `#${item.toLowerCase()}`} 
-                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                {item}
-              </a>
-            ))}
-          </nav>
-          
-          <div className={`flex items-center gap-4 transition-all duration-700 delay-200 ${
-            isVisible ? 'opacity-100' : 'opacity-0'
-          }`}>
-            <a href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-              Iniciar sesión
-            </a>
-            <a href="/register" className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-all">
-              Empezar gratis
-            </a>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <header className="py-16 md:py-24">
+        <div className="w-full max-w-[1150px] mx-auto px-[4%] grid md:grid-cols-[1.1fr,0.9fr] gap-10 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 py-1.5 px-3 mb-4 rounded-full text-sm border border-white/15 bg-[rgba(124,92,255,.14)]">Privado · Personalizado · 24/7</div>
+            <h1 className="text-[clamp(2rem,4.5vw,3.4rem)] leading-tight font-extrabold my-2">Crea tu <span className="bg-gradient-to-r from-white via-[#c6d4ff] to-[#8acfff] bg-clip-text text-transparent">pareja virtual con IA</span> en 60 segundos</h1>
+            <p className="text-[#cbd5e1] text-[clamp(1rem,1.5vw,1.15rem)] my-4">Diseña su apariencia y personalidad. Chatea sin límites, con voz realista y total privacidad. Empieza gratis y mejora a Premium cuando quieras.</p>
+            <div className="flex gap-3 flex-wrap mt-5">
+              <button onClick={handleOpenModal} className="inline-flex items-center gap-2.5 border-0 rounded-full py-3.5 px-5 font-bold cursor-pointer bg-gradient-to-r from-amor-brand to-amor-brand-2 text-[#0b0f1d] shadow-[0_10px_30px_rgba(124,92,255,.35)] hover:-translate-y-0.5 transition-transform duration-150 ease-in-out">Crear mi bot</button>
+              <a className="inline-flex items-center gap-2.5 border border-white/15 rounded-full py-3.5 px-5 font-bold cursor-pointer bg-transparent text-amor-text" href="#como-funciona">¿Cómo funciona?</a>
+            </div>
+            <div className="flex items-center gap-3 mt-5 text-amor-muted text-sm">
+              <span>⚡ Respuestas instantáneas</span>
+              <span>🔒 Cifrado en tránsito</span>
+              <span>🙈 Anónimo por defecto</span>
+            </div>
+          </div>
+          <div>
+            <div className="w-full max-w-[380px] mx-auto bg-white/10 border border-white/10 p-3.5 rounded-[36px] shadow-custom relative">
+              <div className="h-8 w-[46%] bg-black/50 rounded-full mx-auto mb-3"></div>
+              <div ref={chatContainerRef} className="bg-[rgba(8,13,27,.8)] border border-white/10 rounded-2xl p-3 h-[480px] overflow-auto">
+                {chatMessages.map((msg, i) => (
+                  <div key={i} className={`max-w-[80%] py-3 px-4 rounded-2xl my-2.5 text-sm ${msg.from === 'ai' ? 'bg-[rgba(124,92,255,.18)] border border-[rgba(124,92,255,.35)]' : 'bg-white/5 border border-white/10 ml-auto'}`} dangerouslySetInnerHTML={{ __html: msg.text }} />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
       <main>
-        {/* Hero */}
-        <section className="pt-24 pb-16 md:pt-32 md:pb-24">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center max-w-4xl mx-auto">
-              <div className={`transition-all duration-1000 delay-300 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}>
-                <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm font-medium text-gray-600 mb-8">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  Nuevo: Módulos de IA disponibles
-                </div>
-                
-                <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6">
-                  Gestiona tu negocio
-                  <br />
-                  <span className="text-blue-600">sin complicaciones</span>
-                </h1>
-                
-                <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto">
-                  La plataforma SaaS modular que crece contigo. Solo paga por lo que necesitas, 
-                  cuando lo necesitas.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <a href="/register" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all hover:scale-105 shadow-lg">
-                    Prueba gratuita de 14 días
-                  </a>
-                  <a href="#demo" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                    </svg>
-                    Ver demo
-                  </a>
+        {/* FEATURES */}
+        <section className="py-14" id="como-funciona">
+          <div className="w-full max-w-[1150px] mx-auto px-[4%]">
+            <h2 className="text-[clamp(1.6rem,3vw,2.2rem)] m-0 mb-3.5">Hecho para sentirte <span className="bg-gradient-to-r from-white via-[#c6d4ff] to-[#8acfff] bg-clip-text text-transparent">acompañado</span></h2>
+            <p className="text-[#cbd5e1] m-0 mb-6">Personaliza tu bot, conversa por texto y voz, y mantén tu privacidad bajo control.</p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="bg-gradient-to-b from-white/5 to-white/5 border border-white/10 rounded-xl p-6 shadow-custom">
+                <h3 className="m-0 mb-1.5 text-lg font-semibold">🎭 Personalidad a tu medida</h3>
+                <p className="text-amor-muted text-sm">Define tono, límites, gustos y estilo de conversación. Guarda múltiples perfiles.</p>
+              </div>
+              <div className="bg-gradient-to-b from-white/5 to-white/5 border border-white/10 rounded-xl p-6 shadow-custom">
+                <h3 className="m-0 mb-1.5 text-lg font-semibold">🗣️ Voz realista</h3>
+                <p className="text-amor-muted text-sm">Activa el modo voz para escuchar respuestas naturales (función Premium).</p>
+              </div>
+              <div className="bg-gradient-to-b from-white/5 to-white/5 border border-white/10 rounded-xl p-6 shadow-custom">
+                <h3 className="m-0 mb-1.5 text-lg font-semibold">🛡️ Privacidad primero</h3>
+                <p className="text-amor-muted text-sm">Sesiones anónimas, sin datos reales. Control para borrar historial en 1 clic.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* PRICING */}
+        <section className="py-14" id="precios">
+          <div className="w-full max-w-[1150px] mx-auto px-[4%]">
+            <h2 className="text-[clamp(1.6rem,3vw,2.2rem)] m-0 mb-4">Precios simples</h2>
+            <p className="text-[#cbd5e1] m-0 mb-6">Empieza gratis. Mejora cuando quieras para más mensajes y voz.</p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-b from-white/5 to-white/5 border border-white/10 rounded-xl p-6 shadow-custom relative">
+                <div className="absolute top-3.5 right-3.5 bg-gradient-to-r from-amor-brand to-amor-brand-2 text-[#071226] font-extrabold py-1 px-2.5 rounded-full text-[0.7rem]">Gratis</div>
+                <h3 className="text-xl font-bold">Básico</h3>
+                <div className="text-4xl font-extrabold my-2">$0</div>
+                <ul className="m-0 p-0 list-none grid gap-2.5 my-4 text-sm">
+                  <li className="flex gap-2.5 items-start"><CheckIcon /> 30 mensajes/día</li>
+                  <li className="flex gap-2.5 items-start"><CheckIcon /> 1 bot personal</li>
+                  <li className="flex gap-2.5 items-start"><CheckIcon /> Borrado de historial</li>
+                </ul>
+                <div className="mt-4">
+                  <button onClick={handleOpenModal} className="w-full justify-center inline-flex items-center gap-2.5 border border-white/15 rounded-full py-3.5 px-5 font-bold cursor-pointer bg-transparent text-amor-text">Probar ahora</button>
                 </div>
               </div>
-              
-              {/* Dashboard Preview */}
-              <div className={`mt-16 transition-all duration-1000 delay-700 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10"></div>
-                  <div className="bg-gray-50 rounded-2xl p-6 shadow-2xl border">
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                        <div className="flex items-center gap-3">
-                          <div className="flex gap-2">
-                            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                          </div>
-                          <div className="text-sm font-medium text-gray-600">Dashboard - Gestularia</div>
-                        </div>
-                      </div>
-                      <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          {[
-                            { title: "Ingresos", value: "$24,580", change: "+12.5%", color: "green" },
-                            { title: "Clientes", value: "1,248", change: "+8.2%", color: "blue" },
-                            { title: "Proyectos", value: "64", change: "+15.3%", color: "purple" }
-                          ].map((stat, i) => (
-                            <div key={i} className="bg-gray-50 rounded-lg p-4">
-                              <div className="text-sm font-medium text-gray-600 mb-1">{stat.title}</div>
-                              <div className="flex items-end justify-between">
-                                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                                <div className={`text-sm font-medium text-${stat.color}-600`}>{stat.change}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <div className="bg-gradient-to-b from-white/5 to-white/5 border-2 border-amor-brand rounded-xl p-6 shadow-custom relative">
+                <div className="absolute top-3.5 right-3.5 bg-gradient-to-r from-amor-brand to-amor-brand-2 text-[#071226] font-extrabold py-1 px-2.5 rounded-full text-[0.7rem]">Más popular</div>
+                <h3 className="text-xl font-bold">Premium</h3>
+                <div className="text-4xl font-extrabold my-2">$9.99 <span className="text-base text-amor-muted font-semibold">/mes</span></div>
+                <ul className="m-0 p-0 list-none grid gap-2.5 my-4 text-sm">
+                  <li className="flex gap-2.5 items-start"><CheckIcon /> Mensajes ilimitados</li>
+                  <li className="flex gap-2.5 items-start"><CheckIcon /> 5 bots personales</li>
+                  <li className="flex gap-2.5 items-start"><CheckIcon /> Respuestas más largas</li>
+                  <li className="flex gap-2.5 items-start"><CheckIcon /> Voz realista</li>
+                  <li className="flex gap-2.5 items-start"><CheckIcon /> Prioridad de soporte</li>
+                </ul>
+                <div className="mt-4">
+                  <button onClick={() => alert('Redirigiendo a pasarela de pago...')} className="w-full justify-center inline-flex items-center gap-2.5 border-0 rounded-full py-3.5 px-5 font-bold cursor-pointer bg-gradient-to-r from-amor-brand to-amor-brand-2 text-[#0b0f1d] shadow-[0_10px_30px_rgba(124,92,255,.35)] hover:-translate-y-0.5 transition-transform duration-150 ease-in-out">Elegir Premium</button>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Features */}
-        <section className="py-24 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Todo lo que necesitas, nada que no
-              </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Módulos independientes que se integran perfectamente
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: "👥",
-                  title: "CRM Inteligente",
-                  desc: "Gestiona clientes, leads y ventas desde un solo lugar"
-                },
-                {
-                  icon: "📊",
-                  title: "Analytics en Tiempo Real",
-                  desc: "Métricas y reportes que importan para tu negocio"
-                },
-                {
-                  icon: "💰",
-                  title: "Facturación Automática",
-                  desc: "Genera facturas, controla pagos y gestiona finanzas"
-                },
-                {
-                  icon: "📋",
-                  title: "Gestión de Proyectos",
-                  desc: "Organiza tareas, tiempos y recursos eficientemente"
-                },
-                {
-                  icon: "🔒",
-                  title: "Seguridad Bancaria",
-                  desc: "Encriptación de grado militar para tus datos"
-                },
-                {
-                  icon: "🚀",
-                  title: "API Abierta",
-                  desc: "Integra con tus herramientas favoritas fácilmente"
-                }
-              ].map((feature, i) => (
-                <div key={i} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl mb-4">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Social Proof */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-500 mb-8">
-                Más de 2,500 empresas confían en Gestularia
-              </p>
-              <div className="flex items-center justify-center gap-12 opacity-40">
-                {['Empresa A', 'Startup B', 'Corp C', 'Tech D', 'Biz E'].map((company, i) => (
-                  <div key={i} className="text-lg font-bold text-gray-400">{company}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonial */}
-        <section className="py-24 bg-blue-600">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-          <blockquote className="text-3xl font-medium text-white mb-8 leading-relaxed">
-          &quot;Gestularia eliminó el caos de nuestras operaciones. 
-          Ahora nos enfocamos en crecer, no en administrar herramientas.&quot;
-          </blockquote>
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white font-bold">
-                M
-              </div>
-              <div className="text-left text-white">
-                <div className="font-semibold">María Fernández</div>
-                <div className="text-blue-200 text-sm">CEO, TechStart</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing CTA */}
-        <section className="py-24">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Comienza hoy mismo
-            </h2>
-            <p className="text-xl text-gray-600 mb-10">
-              14 días gratis. Sin tarjeta de crédito. Cancela cuando quieras.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <a href="/register" className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-all hover:scale-105">
-                Empezar prueba gratuita
-              </a>
-              <a href="/precios" className="text-gray-600 hover:text-gray-900 font-medium">
-                Ver planes y precios →
-              </a>
-            </div>
-            
-            <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Sin compromisos
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Soporte incluido
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Migración gratuita
-              </div>
+        {/* FAQ */}
+        <section className="py-14">
+          <div className="w-full max-w-[900px] mx-auto px-[4%]">
+            <h2 className="text-[clamp(1.6rem,3vw,2.2rem)] m-0 mb-4 text-center">Preguntas frecuentes</h2>
+            <div className="grid gap-2.5">
+              <details className="border border-white/10 bg-white/5 rounded-xl overflow-hidden" open>
+                <summary className="cursor-pointer p-4 font-semibold list-none">¿Es privado y anónimo?</summary>
+                <p className="p-4 pt-0 text-[#cdd6e4] text-sm">Sí. No necesitas nombre real. Todo viaja cifrado y puedes borrar el historial cuando quieras.</p>
+              </details>
+              <details className="border border-white/10 bg-white/5 rounded-xl overflow-hidden">
+                <summary className="cursor-pointer p-4 font-semibold list-none">¿Hay límites en el plan gratis?</summary>
+                <p className="p-4 pt-0 text-[#cdd6e4] text-sm">El plan gratis permite 30 mensajes por día con 1 bot. Premium desbloquea mensajes ilimitados y voz.</p>
+              </details>
+               <details className="border border-white/10 bg-white/5 rounded-xl overflow-hidden">
+                <summary className="cursor-pointer p-4 font-semibold list-none">¿Puedo personalizar la personalidad del bot?</summary>
+                <p className="p-4 pt-0 text-[#cdd6e4] text-sm">Claro. Elige tono, gustos, límites y estilo de conversación. Puedes guardar varios perfiles en Premium.</p>
+              </details>
             </div>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 border-t">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Gestularia</h3>
-              <p className="text-gray-600 text-sm">
-                La plataforma SaaS que simplifica la gestión empresarial
-              </p>
-            </div>
-            
-            {[
-              {
-                title: "Producto",
-                links: ["Funciones", "Precios", "Integraciones", "API"]
-              },
-              {
-                title: "Empresa",
-                links: ["Sobre nosotros", "Blog", "Carreras", "Contacto"]
-              },
-              {
-                title: "Soporte",
-                links: ["Ayuda", "Documentación", "Estado", "Comunidad"]
-              }
-            ].map((section, i) => (
-              <div key={i}>
-                <h4 className="font-semibold text-gray-900 mb-4">{section.title}</h4>
-                <ul className="space-y-2">
-                  {section.links.map((link, j) => (
-                    <li key={j}>
-                      <a href="#" className="text-sm text-gray-600 hover:text-gray-900">{link}</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          
-          <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-500">
-              © 2025 Gestularia. Todos los derechos reservados.
-            </p>
-            <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="text-sm text-gray-500 hover:text-gray-900">Privacidad</a>
-              <a href="#" className="text-sm text-gray-500 hover:text-gray-900">Términos</a>
-              <a href="#" className="text-sm text-gray-500 hover:text-gray-900">Cookies</a>
-            </div>
+      <footer className="border-t border-white/10 text-amor-muted py-9 text-sm">
+        <div className="w-full max-w-[1150px] mx-auto px-[4%] flex justify-between gap-4 flex-wrap">
+          <div>© {year} AmorIA — Todos los derechos reservados</div>
+          <div className="flex gap-4">
+            <a href="#">Términos</a>
+            <a href="#">Privacidad</a>
+            <a href="#">Contacto</a>
           </div>
         </div>
       </footer>
+
+      {/* MODAL */}
+      <dialog ref={modalRef} className="p-0 bg-transparent backdrop:bg-black/50">
+        <div className="w-full max-w-[560px] bg-amor-card border border-white/10 rounded-2xl shadow-custom overflow-hidden">
+          <div className="flex justify-between items-center p-5 border-b border-white/10">
+            <strong>Crea tu bot en 60 segundos</strong>
+            <button onClick={handleCloseModal} className="inline-flex items-center gap-2.5 border border-white/15 rounded-full py-2 px-4 text-sm font-bold cursor-pointer bg-transparent text-amor-text">Cerrar</button>
+          </div>
+          <div className="p-5 grid gap-3">
+            <label className="grid gap-1.5 text-sm">
+              <span>Nombre del bot</span>
+              <input id="botName" placeholder="Ej: Luna" className="bg-white/5 border border-white/20 text-amor-text p-3 rounded-xl" />
+            </label>
+            <label className="grid gap-1.5 text-sm">
+              <span>Estilo</span>
+              <select id="style" className="bg-white/5 border border-white/20 text-amor-text p-3 rounded-xl appearance-none">
+                <option>Romántico</option><option>Atrevido</option><option>Gamer</option><option>Tierna</option><option>Dominante</option>
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-sm">
+              <span>Email (para guardar tu progreso)</span>
+              <input id="email" type="email" placeholder="tu@email.com" className="bg-white/5 border border-white/20 text-amor-text p-3 rounded-xl" />
+            </label>
+            <button onClick={handleStartChat} className="justify-center mt-2 inline-flex items-center gap-2.5 border-0 rounded-full py-3.5 px-5 font-bold cursor-pointer bg-gradient-to-r from-amor-brand to-amor-brand-2 text-[#0b0f1d] shadow-[0_10px_30px_rgba(124,92,255,.35)] hover:-translate-y-0.5 transition-transform duration-150 ease-in-out">Crear y empezar gratis</button>
+            <p className="text-amor-muted text-xs mt-1.5">Al continuar aceptas nuestros Términos y Política de Privacidad. Contenido sólo para mayores de 18 años.</p>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 }
