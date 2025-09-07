@@ -1,4 +1,4 @@
-// Archivo: app/lib/render-blocks-to-html.js (ACTUALIZADO)
+// Archivo: app/lib/render-blocks-to-html.js (ACTUALIZADO CON EL DISEÑO FINAL)
 export function renderBlocksToHTML(blocks) {
   if (!Array.isArray(blocks)) return '';
 
@@ -50,19 +50,20 @@ export function renderBlocksToHTML(blocks) {
         }
       }
       case 'catalog': {
-        const titleHtml = `<div class="text-center mb-12"><h2 class="text-4xl font-bold ${data.titleColor || 'text-slate-800'} mb-4">${data.title}</h2><p class="text-xl max-w-3xl mx-auto ${data.subtitleColor || 'text-slate-600'}">${data.subtitle}</p></div>`;
+        const headerHtml = `<div class="text-center mb-8 md:mb-12 lg:mb-16"><h2 class="text-2xl md:text-3xl lg:text-4xl font-bold ${data.titleColor || 'text-slate-800'} mb-3 md:mb-4 lg:mb-6">${data.title}</h2><p class="text-base md:text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed ${data.subtitleColor || 'text-slate-600'}">${data.subtitle}</p></div>`;
         const products = data.products || [];
+        
         switch(data.variant) {
             case 'minimalGrid':
-                return `<div class="${data.backgroundColor || 'bg-white'} py-20 px-4"><div class="max-w-7xl mx-auto">${titleHtml}<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">${products.map(product => `
-                    <a href="#" class="group text-left cursor-pointer">
+                return `<div class="${data.backgroundColor || 'bg-white'} py-12 md:py-16 lg:py-20 px-4"><div class="max-w-7xl mx-auto">${headerHtml}<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8">${products.map(product => `
+                    <a href="#" class="group cursor-pointer">
                         <div class="relative overflow-hidden rounded-lg bg-slate-50 mb-4">
                             <img class="w-full aspect-square object-cover transition-all duration-500 group-hover:scale-110" src="${product.imageUrl || 'https://placehold.co/400x400/e2e8f0/64748b?text=Producto'}" alt="${product.name}" loading="lazy"/>
                             <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
                         </div>
                         <div class="space-y-1">
-                            <h3 class="font-semibold text-lg line-clamp-2 group-hover:text-blue-600 transition-colors ${data.productNameColor || 'text-slate-800'}">${product.name}</h3>
-                            <p class="font-semibold text-base ${data.productPriceColor || 'text-slate-600'}">${product.price}</p>
+                            <h3 class="text-sm md:text-base lg:text-lg font-semibold line-clamp-2 group-hover:text-blue-600 transition-colors ${data.productNameColor || 'text-slate-800'}">${product.name}</h3>
+                            <p class="text-xs md:text-sm lg:text-base font-medium ${data.productPriceColor || 'text-slate-600'}">${product.price}</p>
                         </div>
                     </a>
                 `).join('')}</div></div></div>`;
@@ -75,27 +76,27 @@ export function renderBlocksToHTML(blocks) {
                         #${scrollContainerId}::-webkit-scrollbar { display: none; }
                         #${scrollContainerId} { -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; }
                     </style>
-                    <div class="${data.backgroundColor || 'bg-white'} py-20">
+                    <div class="${data.backgroundColor || 'bg-white'} py-12 md:py-16 lg:py-20">
                         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-                            <div class="flex justify-between items-end mb-12">
+                            <div class="flex justify-between items-end mb-8 md:mb-10 lg:mb-12">
                                 <div class="text-left flex-1">
-                                    <h2 class="text-4xl font-bold ${data.titleColor || 'text-slate-800'} mb-4">${data.title}</h2>
-                                    <p class="text-xl max-w-3xl ${data.subtitleColor || 'text-slate-600'}">${data.subtitle}</p>
+                                    <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold ${data.titleColor || 'text-slate-800'} mb-2 md:mb-3 lg:mb-4">${data.title}</h2>
+                                    <p class="text-base md:text-lg lg:text-xl max-w-3xl ${data.subtitleColor || 'text-slate-600'}">${data.subtitle}</p>
                                 </div>
                                 <div class="hidden md:flex gap-2 ml-8">
                                     <button id="${prevButtonId}" aria-label="Anterior" class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
                                     <button id="${nextButtonId}" aria-label="Siguiente" class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
                                 </div>
                             </div>
-                            <div id="${scrollContainerId}" class="flex overflow-x-auto snap-x snap-mandatory space-x-8 pb-4">
-                                ${products.map(product => `<a href="#" class="group text-left flex-shrink-0 w-80 snap-center">
+                            <div id="${scrollContainerId}" class="flex overflow-x-auto snap-x snap-mandatory space-x-4 md:space-x-6 lg:space-x-8 pb-4">
+                                ${products.map(product => `<a href="#" class="group text-left flex-shrink-0 w-64 sm:w-72 lg:w-80 snap-center">
                                     <div class="relative overflow-hidden rounded-xl bg-slate-50 mb-4">
                                         <img class="w-full aspect-square object-cover transition-all duration-500 group-hover:scale-110" src="${product.imageUrl || 'https://placehold.co/400x400/e2e8f0/64748b?text=Producto'}" alt="${product.name}" loading="lazy"/>
                                         <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
                                     </div>
-                                    <div class="space-y-2">
-                                        <h3 class="font-semibold text-xl line-clamp-2 group-hover:text-blue-600 transition-colors ${data.productNameColor || 'text-slate-800'}">${product.name}</h3>
-                                        <p class="font-semibold text-lg ${data.productPriceColor || 'text-slate-600'}">${product.price}</p>
+                                    <div class="space-y-1 md:space-y-2">
+                                        <h3 class="font-semibold text-base md:text-lg lg:text-xl line-clamp-2 group-hover:text-blue-600 transition-colors ${data.productNameColor || 'text-slate-800'}">${product.name}</h3>
+                                        <p class="font-semibold text-sm md:text-base lg:text-lg ${data.productPriceColor || 'text-slate-600'}">${product.price}</p>
                                     </div>
                                 </a>`).join('')}
                             </div>
@@ -130,17 +131,17 @@ export function renderBlocksToHTML(blocks) {
             }
             case 'grid':
             default:
-                return `<div class="${data.backgroundColor || 'bg-white'} py-20 px-4"><div class="max-w-7xl mx-auto">${titleHtml}<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 text-left">${products.map(product => `
+                return `<div class="${data.backgroundColor || 'bg-white'} py-20 px-4"><div class="max-w-7xl mx-auto">${headerHtml}<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 text-left">${products.map(product => `
                     <div class="group rounded-xl overflow-hidden shadow-sm border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col ${data.cardColor || 'bg-white border-slate-200'}">
                         <div class="relative overflow-hidden bg-slate-50">
-                            <img class="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-110" src="${product.imageUrl || 'https://placehold.co/400x300/e2e8f0/64748b?text=Producto'}" alt="${product.name}" loading="lazy"/>
+                            <img class="w-full h-48 sm:h-56 lg:h-64 object-cover transition-transform duration-500 group-hover:scale-110" src="${product.imageUrl || 'https://placehold.co/400x300/e2e8f0/64748b?text=Producto'}" alt="${product.name}" loading="lazy"/>
                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </div>
-                        <div class="p-6 flex flex-col flex-grow">
-                            <h3 class="font-semibold text-xl line-clamp-2 mb-3 ${data.productNameColor || 'text-slate-900'}">${product.name}</h3>
-                            <p class="font-bold text-2xl mb-4 ${data.productPriceColor || 'text-blue-600'}">${product.price}</p>
-                            <p class="flex-grow text-base line-clamp-3 mb-6 ${data.productDescriptionColor || 'text-slate-600'}">${product.description}</p>
-                            <button class="w-full text-center rounded-lg font-semibold transition-all duration-200 hover:scale-105 active:scale-95 mt-auto py-3 text-base ${data.buttonBgColor || 'bg-slate-800 hover:bg-slate-700'} ${data.buttonTextColor || 'text-white'}">${product.buttonText}</button>
+                        <div class="p-4 md:p-6 flex flex-col flex-grow">
+                            <h3 class="font-semibold text-base md:text-lg lg:text-xl line-clamp-2 mb-2 md:mb-3 ${data.productNameColor || 'text-slate-900'}">${product.name}</h3>
+                            <p class="font-bold text-lg md:text-xl lg:text-2xl mb-3 md:mb-4 ${data.productPriceColor || 'text-blue-600'}">${product.price}</p>
+                            <p class="flex-grow text-sm md:text-base line-clamp-3 mb-4 md:mb-6 ${data.productDescriptionColor || 'text-slate-600'}">${product.description}</p>
+                            <button class="w-full text-center rounded-lg font-semibold transition-all duration-200 hover:scale-105 active:scale-95 mt-auto py-2 md:py-2.5 lg:py-3 text-sm md:text-base ${data.buttonBgColor || 'bg-slate-800 hover:bg-slate-700'} ${data.buttonTextColor || 'text-white'}">${product.buttonText}</button>
                         </div>
                     </div>
                 `).join('')}</div></div></div>`;
@@ -238,9 +239,23 @@ export function renderBlocksToHTML(blocks) {
           default: return `<footer class="${data.backgroundColor || 'bg-slate-800'} ${data.textColor || 'text-slate-400'} text-sm text-center p-8"><p class="mb-4">${data.copyrightText || ''}</p><div class="flex justify-center space-x-4">${(data.socialLinks || []).map(link => link.url ? `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="hover:text-white">${link.platform}</a>` : '').join('')}</div></footer>`;
         }
       }
+      case 'featuredProduct': {
+        const rating = data.rating || 0;
+        const starsHtml = [...Array(5)].map((_, i) => 
+            `<svg class="w-5 h-5 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-slate-300'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>`
+        ).join('');
+        switch(data.variant) {
+            case 'background':
+                return `<div class="relative text-white min-h-[500px] flex items-center"><img src="${data.imageUrl || 'https://placehold.co/1200x800/e2e8f0/64748b?text=Producto'}" alt="${data.title}" class="absolute inset-0 w-full h-full object-cover" /><div class="absolute inset-0 bg-black/60"></div><div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="max-w-lg"><span class="text-sm font-bold uppercase tracking-widest text-blue-400">${data.tag}</span><h2 class="font-bold my-4 text-4xl md:text-5xl">${data.title}</h2><p class="mb-6 text-slate-200 text-lg leading-relaxed">${data.description}</p><div class="flex items-center gap-8 mb-8"><p class="font-bold text-3xl md:text-4xl">${data.price}</p><div class="flex items-center gap-1">${starsHtml}</div></div><a href="#" class="inline-block text-center rounded-lg font-semibold transition-transform hover:scale-105 py-4 px-12 text-lg ${data.buttonBgColor || 'bg-white'} ${data.buttonTextColor || 'text-slate-900'}">${data.buttonText}</a></div></div></div>`;
+            case 'imageLeft':
+            default:
+                return `<div class="${data.backgroundColor || 'bg-white'} py-20 px-4"><div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-12"><div class="rounded-lg overflow-hidden bg-slate-100"><img src="${data.imageUrl || 'https://placehold.co/600x600/e2e8f0/64748b?text=Producto'}" alt="${data.title}" class="w-full h-full object-cover aspect-square" /></div><div class="text-left"><span class="text-sm font-bold uppercase tracking-widest ${data.textColor || 'text-blue-600'}">${data.tag}</span><h2 class="font-bold my-4 text-4xl md:text-5xl ${data.textColor || 'text-slate-800'}">${data.title}</h2><p class="mb-6 text-lg leading-relaxed ${data.textColor || 'text-slate-600'}">${data.description}</p><div class="flex items-center justify-between mb-8"><p class="font-bold text-4xl ${data.textColor || 'text-slate-900'}">${data.price}</p><div class="flex items-center gap-1">${starsHtml}</div></div><a href="#" class="w-full block text-center rounded-lg font-semibold transition-transform hover:scale-105 py-4 text-lg ${data.buttonBgColor || 'bg-slate-900'} ${data.buttonTextColor || 'text-white'}">${data.buttonText}</a></div></div></div>`;
+        }
+      }
       default:
         console.warn(`AVISO: El tipo de bloque "${type}" no está registrado y no será renderizado.`);
         return '';
     }
   }).join('');
 }
+

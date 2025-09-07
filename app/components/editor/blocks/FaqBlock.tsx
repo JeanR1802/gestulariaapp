@@ -50,9 +50,11 @@ const FaqList = ({ data }: { data: FaqData }) => {
               <h3 className={cn("font-semibold", data.questionColor || 'text-slate-900', { "text-2xl mb-3": isDesktop, "text-xl mb-2": isTablet, "text-lg mb-2": isMobile })}>
                 {item.question}
               </h3>
+              {/* --- INICIO DE LA CORRECCIÓN --- */}
               <p className={cn(data.answerColor || 'text-slate-600', { "text-lg": isDesktop, "text-base": isTablet || isMobile })}>
                 {item.answer}
               </p>
+              {/* --- FIN DE LA CORRECCIÓN --- */}
             </div>
           ))}
         </div>
