@@ -4,70 +4,113 @@ import { BlockData, BLOCKS, BlockType } from '../blocks';
 import { PaintBrushIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
-// --- Interfaces y Componentes de UI ---
+// --- Interfaces ---
 type PanelType = 'content' | 'style' | null;
-interface PopoverPanelProps { title: string; onClose: () => void; children: React.ReactNode; }
-interface ToolbarButtonProps { label: string; isActive: boolean; onClick: () => void; children: React.ReactNode; className?: string; }
-interface FloatingToolbarProps { block: { id: number; type: string; data: BlockData }; onUpdate: (key: string, value: any) => void; onClose: () => void; }
 
+interface PopoverPanelProps {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+interface ToolbarButtonProps {
+    label: string;
+    isActive: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+    className?: string;
+}
+
+interface FloatingToolbarProps {
+  block: { id: number; type: string; data: BlockData };
+  onUpdate: (key: string, value: unknown) => void; // <-- CORRECCIÓN AQUÍ
+  onClose: () => void;
+}
+
+// --- Componente de Botón con Tooltip ---
 const ToolbarButton = ({ label, isActive, onClick, children, className }: ToolbarButtonProps) => (
     <div className="relative group">
-        <button onClick={onClick} className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110", isActive ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600', className)}>
+        <button 
+            onClick={onClick}
+            className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110",
+                isActive ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600',
+                className
+            )}
+        >
             {children}
         </button>
-        <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 px-2 py-1 bg-slate-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">{label}</div>
+        <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 px-2 py-1 bg-slate-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            {label}
+        </div>
     </div>
 );
 
-const PopoverPanel = ({ title, onClose, children }: PopoverPanelProps) => (
-    <div className="absolute right-full top-0 mr-3 w-80 bg-white rounded-lg shadow-2xl border border-slate-200 flex flex-col animate-fadeIn">
-        <div className="p-3 border-b flex justify-between items-center bg-slate-50">
-            <h3 className="font-semibold text-sm text-slate-700">{title}</h3>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><XMarkIcon className="w-4 h-4" /></button>
+// --- Panel Desplegable ---
+const PopoverPanel = ({ title, onClose, children }: PopoverPanelProps) => {
+    return (
+        <div className="absolute right-full top-0 mr-3 w-80 bg-white rounded-lg shadow-2xl border border-slate-200 flex flex-col animate-fadeIn">
+            <div className="p-3 border-b flex justify-between items-center bg-slate-50">
+                <h3 className="font-semibold text-sm text-slate-700">{title}</h3>
+                <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><XMarkIcon className="w-4 h-4" /></button>
+            </div>
+            <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+                {children}
+            </div>
         </div>
-        <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
-            {children}
-        </div>
-    </div>
-);
+    );
+};
 
 // --- Barra de Herramientas Principal ---
 export function FloatingToolbar({ block, onUpdate, onClose }: FloatingToolbarProps) {
     const [activePanel, setActivePanel] = useState<PanelType>(null);
     const toolbarRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState(() => ({ top: window.innerHeight / 2 - 100, left: window.innerWidth - 80 }));
+    
+    const [position, setPosition] = useState(() => ({
+        top: window.innerHeight / 2 - 100,
+        left: window.innerWidth - 80
+    }));
 
     useEffect(() => {
         const toolbar = toolbarRef.current;
         if (!toolbar) return;
+
         const handleMouseDown = (e: MouseEvent) => {
             if (e.target instanceof HTMLElement && e.target.closest('button')) return;
+            
             toolbar.style.transition = 'none';
             const startX = e.clientX - position.left;
             const startY = e.clientY - position.top;
+
             const handleMouseMove = (moveEvent: MouseEvent) => {
                 let newLeft = moveEvent.clientX - startX;
                 let newTop = moveEvent.clientY - startY;
+
                 const rect = toolbar.getBoundingClientRect();
                 newLeft = Math.max(20, Math.min(window.innerWidth - rect.width - 20, newLeft));
                 newTop = Math.max(20, Math.min(window.innerHeight - rect.height - 20, newTop));
+
                 setPosition({ left: newLeft, top: newTop });
             };
+
             const handleMouseUp = () => {
                 toolbar.style.transition = 'top 0.2s ease, left 0.2s ease';
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
             };
+
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
         };
+
         toolbar.addEventListener('mousedown', handleMouseDown);
         return () => toolbar.removeEventListener('mousedown', handleMouseDown);
     }, [position]);
 
     const blockConfig = BLOCKS[block.type as BlockType];
-    const ContentEditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (key: string, value: any) => void }>;
-    const StyleEditorComponent = blockConfig.styleEditor as React.FC<{ data: BlockData, updateData: (key: string, value: any) => void }> | undefined;
+    // --- CORRECCIÓN AQUÍ ---
+    const ContentEditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }>;
+    const StyleEditorComponent = blockConfig.styleEditor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }> | undefined;
 
     return (
         <div 
@@ -105,16 +148,17 @@ export function FloatingToolbar({ block, onUpdate, onClose }: FloatingToolbarPro
             </ToolbarButton>
             
             {activePanel === 'content' && ContentEditorComponent && (
-                <PopoverPanel title={`Contenido: ${blockConfig.name}`} onClose={() => setActivePanel(null)}>
+                <PopoverPanel title={`Editando Contenido: ${blockConfig.name}`} onClose={() => setActivePanel(null)}>
                     <ContentEditorComponent data={block.data} updateData={onUpdate} />
                 </PopoverPanel>
             )}
 
             {activePanel === 'style' && StyleEditorComponent && (
-                <PopoverPanel title={`Estilo: ${blockConfig.name}`} onClose={() => setActivePanel(null)}>
+                <PopoverPanel title={`Editando Estilo: ${blockConfig.name}`} onClose={() => setActivePanel(null)}>
                     <StyleEditorComponent data={block.data} updateData={onUpdate} />
                 </PopoverPanel>
             )}
         </div>
     );
 }
+
