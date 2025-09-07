@@ -1,30 +1,25 @@
-// Archivo: app/lib/render-blocks-to-html.js (CORREGIDO)
-import { BLOCKS } from '@/app/components/editor/blocks';
-
+// Archivo: app/lib/render-blocks-to-html.js (ACTUALIZADO)
 export function renderBlocksToHTML(blocks) {
   if (!Array.isArray(blocks)) return '';
 
   return blocks.map(block => {
     const { data, type } = block;
-    
-    const blockConfig = BLOCKS[type];
-    if (!blockConfig) {
-      console.warn(`AVISO: El tipo de bloque "${type}" no está registrado y no será renderizado.`);
-      return ``;
-    }
 
+    if (!data) {
+      console.warn(`AVISO: Bloque de tipo "${type}" no tiene datos y no será renderizado.`);
+      return '';
+    }
+    
     switch (type) {
       case 'header': {
         const headerId = `header-${block.id}`;
         const mobileMenuId = `mobile-menu-${block.id}`;
         const toggleButtonId = `toggle-button-${block.id}`;
         let headerHtml = '';
-
         const bgColor = data.backgroundColor || 'bg-white';
         const textColor = data.textColor || 'text-slate-800';
         const navTextColor = data.textColor ? 'opacity-80' : 'text-slate-600';
         const buttonClasses = `${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`;
-
         switch (data.variant) {
           case 'centered':
             headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center md:flex-col md:gap-3"><h1 class="text-xl md:text-2xl font-bold ${textColor}">${data.logoText || 'Mi Negocio'}</h1><nav class="hidden md:flex items-center space-x-6 text-sm ${navTextColor}"><a href="#" class="hover:opacity-100 ${textColor}">${data.link1 || 'Inicio'}</a><a href="#" class="hover:opacity-100 ${textColor}">${data.link2 || 'Servicios'}</a><a href="#" class="hover:opacity-100 ${textColor}">${data.link3 || 'Contacto'}</a></nav><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${textColor}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a></nav>`;
@@ -38,12 +33,10 @@ export function renderBlocksToHTML(blocks) {
         }
         return `<header id="${headerId}" class="${bgColor} p-4 border-b border-slate-200 w-full sticky top-0 z-30">${headerHtml}</header><script>(function(){var button=document.getElementById('${toggleButtonId}');var menu=document.getElementById('${mobileMenuId}');if(button&&menu){button.addEventListener('click',function(){menu.classList.toggle('hidden');});}})();</script>`;
       }
-      
       case 'hero': {
         const titleClass = data.titleColor || 'text-slate-800';
         const subtitleClass = data.subtitleColor || 'text-slate-600';
         const buttonBaseClasses = "inline-block px-6 py-2.5 rounded-md text-base font-semibold transition-transform hover:scale-105";
-        
         switch (data.variant) {
           case 'leftImage':
             const btnClassesLeft = `${buttonBaseClasses} ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`;
@@ -56,7 +49,143 @@ export function renderBlocksToHTML(blocks) {
             return `<div class="${data.backgroundColor || 'bg-slate-100'} p-12 md:p-20 text-center"><h1 class="text-3xl md:text-4xl font-bold mb-4 ${titleClass}">${data.title}</h1><p class="text-lg max-w-2xl mx-auto mb-8 ${subtitleClass}">${data.subtitle}</p><a href="${data.buttonLink || '#'}" class="${btnClassesDefault}">${data.buttonText}</a></div>`;
         }
       }
-
+      case 'catalog': {
+        const titleHtml = `<div class="text-center mb-12"><h2 class="text-4xl font-bold ${data.titleColor || 'text-slate-800'} mb-4">${data.title}</h2><p class="text-xl max-w-3xl mx-auto ${data.subtitleColor || 'text-slate-600'}">${data.subtitle}</p></div>`;
+        const products = data.products || [];
+        switch(data.variant) {
+            case 'minimalGrid':
+                return `<div class="${data.backgroundColor || 'bg-white'} py-20 px-4"><div class="max-w-7xl mx-auto">${titleHtml}<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">${products.map(product => `
+                    <a href="#" class="group text-left cursor-pointer">
+                        <div class="relative overflow-hidden rounded-lg bg-slate-50 mb-4">
+                            <img class="w-full aspect-square object-cover transition-all duration-500 group-hover:scale-110" src="${product.imageUrl || 'https://placehold.co/400x400/e2e8f0/64748b?text=Producto'}" alt="${product.name}" loading="lazy"/>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="font-semibold text-lg line-clamp-2 group-hover:text-blue-600 transition-colors ${data.productNameColor || 'text-slate-800'}">${product.name}</h3>
+                            <p class="font-semibold text-base ${data.productPriceColor || 'text-slate-600'}">${product.price}</p>
+                        </div>
+                    </a>
+                `).join('')}</div></div></div>`;
+            case 'carousel': {
+                const scrollContainerId = `scroll-${block.id}`;
+                const prevButtonId = `prev-${block.id}`;
+                const nextButtonId = `next-${block.id}`;
+                return `
+                    <style>
+                        #${scrollContainerId}::-webkit-scrollbar { display: none; }
+                        #${scrollContainerId} { -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; }
+                    </style>
+                    <div class="${data.backgroundColor || 'bg-white'} py-20">
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+                            <div class="flex justify-between items-end mb-12">
+                                <div class="text-left flex-1">
+                                    <h2 class="text-4xl font-bold ${data.titleColor || 'text-slate-800'} mb-4">${data.title}</h2>
+                                    <p class="text-xl max-w-3xl ${data.subtitleColor || 'text-slate-600'}">${data.subtitle}</p>
+                                </div>
+                                <div class="hidden md:flex gap-2 ml-8">
+                                    <button id="${prevButtonId}" aria-label="Anterior" class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+                                    <button id="${nextButtonId}" aria-label="Siguiente" class="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+                                </div>
+                            </div>
+                            <div id="${scrollContainerId}" class="flex overflow-x-auto snap-x snap-mandatory space-x-8 pb-4">
+                                ${products.map(product => `<a href="#" class="group text-left flex-shrink-0 w-80 snap-center">
+                                    <div class="relative overflow-hidden rounded-xl bg-slate-50 mb-4">
+                                        <img class="w-full aspect-square object-cover transition-all duration-500 group-hover:scale-110" src="${product.imageUrl || 'https://placehold.co/400x400/e2e8f0/64748b?text=Producto'}" alt="${product.name}" loading="lazy"/>
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <h3 class="font-semibold text-xl line-clamp-2 group-hover:text-blue-600 transition-colors ${data.productNameColor || 'text-slate-800'}">${product.name}</h3>
+                                        <p class="font-semibold text-lg ${data.productPriceColor || 'text-slate-600'}">${product.price}</p>
+                                    </div>
+                                </a>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        (function() {
+                            var container = document.getElementById('${scrollContainerId}');
+                            var prevBtn = document.getElementById('${prevButtonId}');
+                            var nextBtn = document.getElementById('${nextButtonId}');
+                            if (!container || !prevBtn || !nextBtn) return;
+                            var scrollAmount = container.querySelector('a')?.offsetWidth + 32 || 352;
+                            function updateButtons() {
+                                if (!container) return;
+                                var scrollLeft = container.scrollLeft;
+                                var scrollWidth = container.scrollWidth;
+                                var clientWidth = container.clientWidth;
+                                prevBtn.disabled = scrollLeft <= 0;
+                                nextBtn.disabled = scrollLeft >= scrollWidth - clientWidth - 1;
+                            }
+                            prevBtn.addEventListener('click', function() { container.scrollBy({ left: -scrollAmount, behavior: 'smooth' }); });
+                            nextBtn.addEventListener('click', function() { container.scrollBy({ left: scrollAmount, behavior: 'smooth' }); });
+                            container.addEventListener('scroll', updateButtons, { passive: true });
+                            var resizeObserver = new ResizeObserver(updateButtons);
+                            resizeObserver.observe(container);
+                            var mutationObserver = new MutationObserver(updateButtons);
+                            mutationObserver.observe(container, { childList: true });
+                            setTimeout(updateButtons, 100);
+                        })();
+                    </script>
+                `;
+            }
+            case 'grid':
+            default:
+                return `<div class="${data.backgroundColor || 'bg-white'} py-20 px-4"><div class="max-w-7xl mx-auto">${titleHtml}<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 text-left">${products.map(product => `
+                    <div class="group rounded-xl overflow-hidden shadow-sm border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col ${data.cardColor || 'bg-white border-slate-200'}">
+                        <div class="relative overflow-hidden bg-slate-50">
+                            <img class="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-110" src="${product.imageUrl || 'https://placehold.co/400x300/e2e8f0/64748b?text=Producto'}" alt="${product.name}" loading="lazy"/>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                        <div class="p-6 flex flex-col flex-grow">
+                            <h3 class="font-semibold text-xl line-clamp-2 mb-3 ${data.productNameColor || 'text-slate-900'}">${product.name}</h3>
+                            <p class="font-bold text-2xl mb-4 ${data.productPriceColor || 'text-blue-600'}">${product.price}</p>
+                            <p class="flex-grow text-base line-clamp-3 mb-6 ${data.productDescriptionColor || 'text-slate-600'}">${product.description}</p>
+                            <button class="w-full text-center rounded-lg font-semibold transition-all duration-200 hover:scale-105 active:scale-95 mt-auto py-3 text-base ${data.buttonBgColor || 'bg-slate-800 hover:bg-slate-700'} ${data.buttonTextColor || 'text-white'}">${product.buttonText}</button>
+                        </div>
+                    </div>
+                `).join('')}</div></div></div>`;
+        }
+      }
+      case 'team': {
+        const titleHtml = `<h2 class="text-3xl font-bold text-center ${data.titleColor || 'text-slate-800'}">${data.title}</h2>`;
+        const subtitleHtml = `<p class="text-lg text-center mt-2 mb-12 max-w-2xl mx-auto ${data.subtitleColor || 'text-slate-600'}">${data.subtitle}</p>`;
+        const members = data.members || [];
+        switch(data.variant) {
+            case 'list':
+                return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-3xl mx-auto">${titleHtml}${subtitleHtml}<div class="space-y-8">${members.map(member => `<div class="flex items-center gap-6"><img class="w-20 h-20 rounded-full object-cover shadow-sm" src="${member.imageUrl || 'https://placehold.co/100x100/e2e8f0/64748b?text=Foto'}" alt="${member.name}" /><div><h3 class="font-semibold text-xl ${data.nameColor || 'text-slate-900'}">${member.name}</h3><p class="${data.roleColor || 'text-slate-500'}">${member.role}</p></div></div>`).join('')}</div></div></div>`;
+            case 'grid':
+            default:
+                return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-6xl mx-auto text-center">${titleHtml}${subtitleHtml}<div class="grid grid-cols-2 md:grid-cols-4 gap-8">${members.map(member => `<div><img class="w-32 h-32 rounded-full object-cover mx-auto mb-4 shadow-md" src="${member.imageUrl || 'https://placehold.co/200x200/e2e8f0/64748b?text=Foto'}" alt="${member.name}" /><h3 class="font-semibold text-lg ${data.nameColor || 'text-slate-900'}">${member.name}</h3><p class="${data.roleColor || 'text-slate-500'} text-sm">${member.role}</p></div>`).join('')}</div></div></div>`;
+        }
+      }
+      case 'testimonial': {
+        const titleHtml = data.title ? `<h2 class="text-3xl font-bold text-center mb-12 text-slate-800">${data.title}</h2>` : '';
+        const testimonials = data.testimonials || [];
+        switch(data.variant) {
+            case 'singleWithImage':
+                const singleWithImage = testimonials[0];
+                if (!singleWithImage) return '';
+                return `<div class="bg-white py-16"><div class="max-w-2xl mx-auto text-center"><img class="w-24 h-24 mx-auto rounded-full object-cover" src="${singleWithImage.imageUrl || 'https://placehold.co/100x100/e2e8f0/64748b?text=Foto'}" alt="${singleWithImage.author}" /><blockquote class="mt-8 text-2xl font-medium text-slate-700"><p>&ldquo;${singleWithImage.quote}&rdquo;</p></blockquote><footer class="mt-6"><div class="font-semibold text-slate-900">${singleWithImage.author}</div><div class="text-slate-500">${singleWithImage.role}</div></footer></div></div>`;
+            case 'grid':
+                return `<div class="bg-white py-16 px-4"><div class="max-w-6xl mx-auto">${titleHtml}<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">${testimonials.map(t => `<figure class="bg-slate-50 p-8 rounded-lg"><blockquote class="text-slate-700"><p>&ldquo;${t.quote}&rdquo;</p></blockquote><figcaption class="flex items-center gap-4 mt-6"><img class="w-12 h-12 rounded-full object-cover" src="${t.imageUrl || 'https://placehold.co/50x50/e2e8f0/64748b?text=Foto'}" alt="${t.author}" /><div><div class="font-semibold text-slate-900">${t.author}</div><div class="text-slate-500 text-sm">${t.role}</div></div></figcaption></figure>`).join('')}</div></div></div>`;
+            case 'single':
+            default:
+                const single = testimonials[0];
+                if (!single) return '';
+                return `<div class="bg-slate-50 p-16"><div class="max-w-4xl mx-auto text-center"><blockquote class="text-3xl font-medium text-slate-700"><p>&ldquo;${single.quote}&rdquo;</p></blockquote><footer class="mt-8 text-lg"><div class="font-semibold text-slate-900">${single.author}</div><div class="text-slate-500">${single.role}</div></footer></div></div>`;
+        }
+      }
+      case 'faq': {
+        const titleHtml = `<h2 class="text-3xl font-bold text-center mb-12 ${data.titleColor || 'text-slate-800'}">${data.title}</h2>`;
+        const items = data.items || [];
+        switch(data.variant) {
+            case 'accordion':
+                return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-3xl mx-auto">${titleHtml}<div class="divide-y divide-slate-200">${items.map((item) => `<details class="group py-4"><summary class="flex justify-between items-center font-medium cursor-pointer list-none"><span class="font-semibold text-lg ${data.questionColor || 'text-slate-900'}">${item.question}</span><span class="transition group-open:rotate-180 text-slate-500"><svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg></span></summary><p class="text-slate-600 mt-3 ${data.answerColor || 'text-slate-600'}">${item.answer}</p></details>`).join('')}</div></div></div>`;
+            case 'list':
+            default:
+                return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-3xl mx-auto">${titleHtml}<div class="space-y-8">${items.map(item => `<div><h3 class="font-semibold text-xl mb-2 ${data.questionColor || 'text-slate-900'}">${item.question}</h3><p class="${data.answerColor || 'text-slate-600'}">${item.answer}</p></div>`).join('')}</div></div></div>`;
+        }
+      }
       case 'text': {
         const formattedContent = (data.content || '').replace(/\n/g, '<br />');
         switch (data.variant) {
@@ -65,7 +194,6 @@ export function renderBlocksToHTML(blocks) {
           default: return `<div class="${data.backgroundColor || ''}"><div class="max-w-4xl mx-auto py-8 px-4 prose prose-slate"><p class="${data.textColor || 'text-slate-800'}">${formattedContent}</p></div></div>`;
         }
       }
-
       case 'image': {
         const captionHtml = data.caption ? `<p class="text-sm text-slate-600 mt-2 italic">${data.caption}</p>` : '';
         switch (data.variant) {
@@ -74,7 +202,6 @@ export function renderBlocksToHTML(blocks) {
           default: return `<div class="max-w-4xl mx-auto p-4 text-center"><img src="${data.imageUrl}" alt="${data.alt}" class="rounded-lg mx-auto max-w-full h-auto" />${captionHtml}</div>`;
         }
       }
-
       case 'cards': {
         const cardsTitleHtml = `<h2 class="text-3xl font-bold text-center mb-12 ${data.titleColor || 'text-slate-800'}">${data.title}</h2>`;
         switch (data.variant) {
@@ -83,7 +210,6 @@ export function renderBlocksToHTML(blocks) {
           default: return `<div class="${data.sectionBackgroundColor || 'bg-slate-50'} py-12 px-4"><div class="max-w-5xl mx-auto">${cardsTitleHtml}<div class="grid md:grid-cols-3 gap-8">${(data.cards || []).map(card => `<div class="text-center p-6 rounded-lg shadow-sm ring-1 ring-slate-100 ${data.cardBackgroundColor || 'bg-white'}"><div class="text-4xl mb-4">${card.icon}</div><h3 class="text-xl font-semibold mb-2 ${data.titleColor || 'text-slate-800'}">${card.title}</h3><p class="${data.textColor || 'text-slate-600'} text-sm">${card.description}</p></div>`).join('')}</div></div></div>`;
         }
       }
-
       case 'cta': {
         const ctaButtonClasses = `inline-block px-6 py-2.5 rounded-md text-base font-semibold transition-transform hover:scale-105 ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`;
         switch (data.variant) {
@@ -93,49 +219,18 @@ export function renderBlocksToHTML(blocks) {
             const darkButtonClasses = `inline-block px-6 py-2.5 rounded-md text-base font-semibold transition-transform hover:scale-105 ${data.buttonBgColor || 'bg-white'} ${data.buttonTextColor || 'text-slate-800'}`;
             return `<div class="${data.backgroundColor || 'bg-slate-800'} p-12 text-center"><h2 class="text-3xl font-bold mb-2 ${data.titleColor || 'text-white'}">${data.title}</h2><p class="text-lg opacity-90 mb-6 max-w-xl mx-auto ${data.subtitleColor || 'text-slate-300'}">${data.subtitle}</p><a href="#" class="${darkButtonClasses}">${data.buttonText}</a></div>`;
         }
-      } // <-- ESTA ES LA LLAVE QUE FALTABA
-
+      }
       case 'pricing': {
         const titleHtml = `<h2 class="text-3xl font-bold text-center mb-2 ${data.titleColor || 'text-slate-800'}">${data.title}</h2><p class="text-lg text-slate-600 text-center mb-12 max-w-2xl mx-auto">${data.subtitle}</p>`;
-        
         switch (data.variant) {
           case 'list':
-            return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-4xl mx-auto">${titleHtml}<div class="space-y-4">${(data.plans || []).map(plan => `
-              <div class="p-4 border rounded-lg grid md:grid-cols-3 items-center gap-4 ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}">
-                <div class="md:col-span-2">
-                  <h3 class="text-xl font-semibold mb-1">${plan.name}</h3>
-                  <p class="text-sm text-slate-500">${plan.description}</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-3xl font-bold">$${plan.price}<span class="text-sm font-normal text-slate-500">${plan.frequency}</span></p>
-                  <a href="#" class="mt-2 inline-block w-full text-center py-2 rounded-md font-semibold bg-slate-800 text-white hover:bg-slate-700">${plan.buttonText}</a>
-                </div>
-              </div>`).join('')}</div></div></div>`;
+            return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-4xl mx-auto">${titleHtml}<div class="space-y-4">${(data.plans || []).map(plan => `<div class="p-4 border rounded-lg grid md:grid-cols-3 items-center gap-4 ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}"><div class="md:col-span-2"><h3 class="text-xl font-semibold mb-1">${plan.name}</h3><p class="text-sm text-slate-500">${plan.description}</p></div><div class="text-right"><p class="text-3xl font-bold">$${plan.price}<span class="text-sm font-normal text-slate-500">${plan.frequency}</span></p><a href="#" class="mt-2 inline-block w-full text-center py-2 rounded-md font-semibold bg-slate-800 text-white hover:bg-slate-700">${plan.buttonText}</a></div></div>`).join('')}</div></div></div>`;
           case 'simple':
-            return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-4xl mx-auto">${titleHtml}<div class="grid md:grid-cols-2 gap-8">${(data.plans || []).map(plan => `
-              <div class="p-6 border rounded-lg ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}">
-                <h3 class="text-xl font-semibold mb-2">${plan.name}</h3>
-                <p class="text-4xl font-bold mb-4">$${plan.price}<span class="text-base font-normal text-slate-500">${plan.frequency}</span></p>
-                <p class="text-slate-500 text-sm mb-4">${plan.description}</p>
-                <a href="#" class="w-full block text-center py-2 rounded-md font-semibold bg-slate-800 text-white hover:bg-slate-700">${plan.buttonText}</a>
-              </div>`).join('')}</div></div></div>`;
+            return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-4xl mx-auto">${titleHtml}<div class="grid md:grid-cols-2 gap-8">${(data.plans || []).map(plan => `<div class="p-6 border rounded-lg ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}"><h3 class="text-xl font-semibold mb-2">${plan.name}</h3><p class="text-4xl font-bold mb-4">$${plan.price}<span class="text-base font-normal text-slate-500">${plan.frequency}</span></p><p class="text-slate-500 text-sm mb-4">${plan.description}</p><a href="#" class="w-full block text-center py-2 rounded-md font-semibold bg-slate-800 text-white hover:bg-slate-700">${plan.buttonText}</a></div>`).join('')}</div></div></div>`;
           default: // columns
-            return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-5xl mx-auto">${titleHtml}<div class="grid md:grid-cols-3 gap-8">${(data.plans || []).map(plan => `
-              <div class="p-6 border rounded-lg text-left flex flex-col ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}">
-                <h3 class="text-xl font-semibold mb-1">${plan.name}</h3>
-                <p class="text-slate-500 mb-4">${plan.description}</p>
-                <p class="text-4xl font-bold mb-1">$${plan.price}<span class="text-base font-normal text-slate-500">${plan.frequency}</span></p>
-                <ul class="text-sm text-slate-600 space-y-2 my-6 flex-grow">
-                  ${(plan.features || []).map(feat => `<li class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green-500"><path d="M20 6 9 17l-5-5"/></svg>
-                    <span>${feat}</span>
-                  </li>`).join('')}
-                </ul>
-                <a href="#" class="w-full text-center py-2 rounded-md font-semibold ${plan.highlighted ? `${data.highlightColor ? data.highlightColor.replace('border-', 'bg-') : 'bg-blue-600'} text-white` : 'bg-slate-100 text-slate-800 hover:bg-slate-200'}">${plan.buttonText}</a>
-              </div>`).join('')}</div></div></div>`;
+            return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-5xl mx-auto">${titleHtml}<div class="grid md:grid-cols-3 gap-8">${(data.plans || []).map(plan => `<div class="p-6 border rounded-lg text-left flex flex-col ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}"><h3 class="text-xl font-semibold mb-1">${plan.name}</h3><p class="text-slate-500 mb-4">${plan.description}</p><p class="text-4xl font-bold mb-1">$${plan.price}<span class="text-base font-normal text-slate-500">${plan.frequency}</span></p><ul class="text-sm text-slate-600 space-y-2 my-6 flex-grow">${(plan.features || []).map(feat => `<li class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green-500"><path d="M20 6 9 17l-5-5"/></svg><span>${feat}</span></li>`).join('')}</ul><a href="#" class="w-full text-center py-2 rounded-md font-semibold ${plan.highlighted ? `${data.highlightColor ? data.highlightColor.replace('border-', 'bg-') : 'bg-blue-600'} text-white` : 'bg-slate-100 text-slate-800 hover:bg-slate-200'}">${plan.buttonText}</a></div>`).join('')}</div></div></div>`;
         }
       }
-
       case 'footer': {
         switch (data.variant) {
           case 'multiColumn': return `<footer class="${data.backgroundColor || 'bg-slate-800'} ${data.textColor || 'text-slate-400'} text-sm p-8"><div class="max-w-5xl mx-auto grid md:grid-cols-4 gap-8">${(data.columns || []).map(col => `<div><h4 class="font-semibold text-white mb-3">${col.title}</h4><ul class="space-y-2">${(col.links || []).map(link => `<li><a href="#" class="hover:text-white">${link}</a></li>`).join('')}</ul></div>`).join('')}</div><div class="mt-8 border-t border-slate-700 pt-4 text-center"><p>${data.copyrightText || ''}</p></div></footer>`;
@@ -143,8 +238,8 @@ export function renderBlocksToHTML(blocks) {
           default: return `<footer class="${data.backgroundColor || 'bg-slate-800'} ${data.textColor || 'text-slate-400'} text-sm text-center p-8"><p class="mb-4">${data.copyrightText || ''}</p><div class="flex justify-center space-x-4">${(data.socialLinks || []).map(link => link.url ? `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="hover:text-white">${link.platform}</a>` : '').join('')}</div></footer>`;
         }
       }
-        
       default:
+        console.warn(`AVISO: El tipo de bloque "${type}" no está registrado y no será renderizado.`);
         return '';
     }
   }).join('');

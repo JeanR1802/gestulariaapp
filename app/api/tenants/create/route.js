@@ -30,18 +30,40 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Esta URL ya está en uso' }, { status: 400 })
     }
 
+    // --- INICIO DE LA CORRECCIÓN ---
+    // Se cambia el contenido inicial a un JSON de bloques por defecto
     const tenant = await createTenant(payload.key, {
       name,
       slug,
-      initialContent: `<div class="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-        <div class="container mx-auto px-4 py-16">
-          <div class="text-center">
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">Bienvenido a ${name}</h1>
-            <p class="text-xl text-gray-600">Tu sitio web está listo para ser personalizado</p>
-          </div>
-        </div>
-      </div>`
+      initialContent: JSON.stringify([
+        {
+          "id": Date.now() + 1,
+          "type": "hero",
+          "data": {
+            "variant": "default",
+            "title": `Bienvenido a ${name}`,
+            "subtitle": "Tu sitio web está listo para ser personalizado. Edita este texto para empezar.",
+            "buttonText": "Comenzar",
+            "backgroundColor": "bg-slate-100",
+            "titleColor": "text-slate-800",
+            "subtitleColor": "text-slate-600",
+            "buttonBgColor": "bg-blue-600",
+            "buttonTextColor": "text-white"
+          }
+        },
+        {
+          "id": Date.now() + 2,
+          "type": "text",
+          "data": {
+            "variant": "default",
+            "content": "Este es un bloque de texto inicial. Puedes hacer clic en él para editarlo o añadir nuevos bloques desde el panel de componentes para construir tu página.",
+            "backgroundColor": "bg-white",
+            "textColor": "text-slate-800"
+          }
+        }
+      ])
     })
+    // --- FIN DE LA CORRECCIÓN ---
     
     return NextResponse.json({ tenant })
   } catch (error) {

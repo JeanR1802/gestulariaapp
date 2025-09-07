@@ -20,13 +20,16 @@ export async function GET(request, { params }) {
 
     let finalContent = '';
     try {
+      // CORRECCIÓN: Aseguramos que se intente parsear el JSON
       const blocks = JSON.parse(page.content);
       if (Array.isArray(blocks)) {
         finalContent = renderBlocksToHTML(blocks);
       } else {
+        // Si no es un array, tratamos el contenido como una cadena de texto HTML simple
         finalContent = page.content;
       }
     } catch (e) {
+      // Si el parseo JSON falla, asumimos que el contenido es texto simple
       finalContent = page.content;
     }
 

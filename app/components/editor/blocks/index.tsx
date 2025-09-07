@@ -1,20 +1,14 @@
-// app/components/editor/blocks/index.tsx (VERSIÓN CORREGIDA Y COMPLETA)
+// app/components/editor/blocks/index.tsx
 'use client';
 import React from 'react';
 
-// Importamos los iconos profesionales que vamos a usar
 import {
-  ViewfinderCircleIcon, // Hero
-  PhotoIcon, // Image
-  QueueListIcon, // Header
-  RectangleGroupIcon, // Cards
-  MegaphoneIcon, // CTA
-  CurrencyDollarIcon, // Pricing
-  ChatBubbleBottomCenterTextIcon, // Text
-  CodeBracketIcon, // Footer
+  ViewfinderCircleIcon, PhotoIcon, QueueListIcon, RectangleGroupIcon, MegaphoneIcon,
+  CurrencyDollarIcon, ChatBubbleBottomCenterTextIcon, CodeBracketIcon, UserCircleIcon,
+  QuestionMarkCircleIcon, UserGroupIcon, ShoppingBagIcon
 } from '@heroicons/react/24/outline';
 
-// Importaciones de componentes (sin cambios en la lógica)
+// Importaciones de todos los componentes de bloques
 import { HeaderBlock, HeaderEditor, HeaderData } from './HeaderBlock';
 import { HeroBlock, HeroEditor, HeroData } from './HeroBlock';
 import { TextBlock, TextEditor, TextData } from './TextBlock';
@@ -23,6 +17,12 @@ import { CardsBlock, CardsEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaEditor, CtaData } from './CtaBlock';
 import { PricingBlock, PricingEditor, PricingData } from './PricingBlock';
 import { FooterBlock, FooterEditor, FooterData } from './FooterBlock';
+import { TestimonialBlock, TestimonialEditor, TestimonialData } from './TestimonialBlock';
+import { FaqBlock, FaqEditor, FaqData } from './FaqBlock';
+import { TeamBlock, TeamEditor, TeamData } from './TeamBlock';
+import { CatalogBlock, CatalogEditor, CatalogData } from './CatalogBlock';
+
+// Importaciones de todas las vistas previas
 import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview } from './Header/HeaderPreviews';
 import { HeroPreviewDefault, HeroPreviewLeftImage, HeroPreviewDarkMinimal } from './Hero/HeroPreviews';
 import { TextPreviewDefault, TextPreviewQuote, TextPreviewHighlighted } from './Text/TextPreviews';
@@ -31,11 +31,15 @@ import { CardsPreviewDefault, CardsPreviewList, CardsPreviewImageTop } from './C
 import { CtaPreviewDark, CtaPreviewLight, CtaPreviewSplit } from './Cta/CtaPreviews';
 import { PricingPreviewColumns, PricingPreviewList, PricingPreviewSimple } from './Pricing/PricingPreviews';
 import { FooterPreviewSimple, FooterPreviewMultiColumn, FooterPreviewMinimal } from './Footer/FooterPreviews';
+import { TestimonialPreviewDefault, TestimonialPreviewWithImage, TestimonialPreviewGrid } from './Testimonial/TestimonialPreviews';
+import { FaqPreviewList, FaqPreviewAccordion } from './Faq/FaqPreviews';
+import { TeamPreviewGrid, TeamPreviewList } from './Team/TeamPreviews';
+import { CatalogPreviewGrid, CatalogPreviewMinimalGrid, CatalogPreviewCarousel } from './Catalog/CatalogPreviews';
 
-export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, PricingData, FooterData };
-export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData;
 
-// --- REGISTRO DE BLOQUES COMPLETO CON IDENTIDAD VISUAL ---
+export type { HeaderData, HeroData, TextData, ImageData, CardsData, CtaData, PricingData, FooterData, TestimonialData, FaqData, TeamData, CatalogData };
+export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData;
+
 export const BLOCKS = {
   header: {
     name: 'Encabezado', 
@@ -61,6 +65,81 @@ export const BLOCKS = {
       { name: 'Centrado Clásico', description: 'Ideal para mensajes directos.', preview: HeroPreviewDefault, defaultData: { variant: 'default', title: 'Tu Título Principal', subtitle: 'Un subtítulo atractivo que describe tu propuesta de valor.', buttonText: 'Comenzar', backgroundColor: 'bg-slate-100' } as HeroData },
       { name: 'Izquierda con Imagen', description: 'Combina texto con un elemento visual.', preview: HeroPreviewLeftImage, defaultData: { variant: 'leftImage', title: 'Describe tu Producto', subtitle: 'Atrae a tus clientes con una descripción clara y una imagen de apoyo.', buttonText: 'Ver Más', backgroundColor: 'bg-white', imageUrl: 'https://placehold.co/600x400/e2e8f0/64748b?text=Tu+Imagen' } as HeroData },
       { name: 'Mínimo Oscuro', description: 'Un diseño elegante y moderno.', preview: HeroPreviewDarkMinimal, defaultData: { variant: 'darkMinimal', title: 'Un Mensaje Impactante', subtitle: '', buttonText: 'Descubrir', backgroundColor: 'bg-slate-900' } as HeroData }
+    ]
+  },
+  catalog: {
+    name: 'Catálogo',
+    icon: ShoppingBagIcon,
+    description: 'Muestra una cuadrícula de productos.',
+    renderer: CatalogBlock,
+    editor: CatalogEditor,
+    theme: { bg: 'bg-green-50', icon: 'text-green-600' },
+    variants: [
+        { 
+          name: 'Cuadrícula Clásica', 
+          description: 'El diseño estándar con botón y descripción.', 
+          preview: CatalogPreviewGrid, 
+          defaultData: { /* ... */ } as CatalogData 
+        },
+        { 
+          name: 'Cuadrícula Minimalista', 
+          description: 'Un diseño limpio centrado en la imagen.', 
+          preview: CatalogPreviewMinimalGrid, 
+          defaultData: { /* ... */ } as CatalogData 
+        },
+        // --- NUEVA VARIANTE DE CARRUSEL ---
+        {
+          name: 'Carrusel Horizontal',
+          description: 'Una fila de productos que se desliza.',
+          preview: CatalogPreviewCarousel,
+          defaultData: {
+            variant: 'carousel',
+            title: 'Novedades',
+            subtitle: 'Lo último en llegar a nuestra tienda.',
+            products: [
+              { name: 'Producto Deslizable 1', price: '$49.00', description: '', imageUrl: '', buttonText: '' },
+              { name: 'Producto Deslizable 2', price: '$59.00', description: '', imageUrl: '', buttonText: '' },
+              { name: 'Producto Deslizable 3', price: '$39.00', description: '', imageUrl: '', buttonText: '' },
+            ]
+          } as CatalogData
+        }
+    ]
+  },
+  team: {
+    name: 'Equipo',
+    icon: UserGroupIcon,
+    description: 'Presenta a los miembros de tu equipo.',
+    renderer: TeamBlock,
+    editor: TeamEditor,
+    theme: { bg: 'bg-pink-50', icon: 'text-pink-600' },
+    variants: [
+        { name: 'Cuadrícula', description: 'Ideal para mostrar fotos en una grilla.', preview: TeamPreviewGrid, defaultData: { variant: 'grid', title: 'Nuestro Equipo', subtitle: 'Conoce a las personas que hacen esto posible.', members: [ { name: 'Juan Pérez', role: 'Desarrollador', imageUrl: '' }, { name: 'María García', role: 'Diseñadora', imageUrl: '' } ] } as TeamData },
+        { name: 'Lista', description: 'Un formato limpio para listar miembros.', preview: TeamPreviewList, defaultData: { variant: 'list', title: 'Colaboradores', subtitle: 'El talento detrás de nuestro éxito.', members: [ { name: 'Carlos Sánchez', role: 'Marketing', imageUrl: '' }, { name: 'Laura Gómez', role: 'Soporte', imageUrl: '' } ] } as TeamData },
+    ]
+  },
+  testimonial: {
+    name: 'Testimonios',
+    icon: UserCircleIcon,
+    description: 'Muestra reseñas de tus clientes.',
+    renderer: TestimonialBlock,
+    editor: TestimonialEditor,
+    theme: { bg: 'bg-yellow-50', icon: 'text-yellow-600' },
+    variants: [
+        { name: 'Cita Simple', description: 'Un solo testimonio centrado.', preview: TestimonialPreviewDefault, defaultData: { variant: 'single', testimonials: [{ quote: 'Este producto cambió mi forma de trabajar. ¡Totalmente recomendado!', author: 'Ana Pérez', role: 'CEO de Empresa' }] } as TestimonialData },
+        { name: 'Cita con Imagen', description: 'Testimonio centrado con foto del autor.', preview: TestimonialPreviewWithImage, defaultData: { variant: 'singleWithImage', testimonials: [{ quote: 'Increíble servicio al cliente y una plataforma muy fácil de usar.', author: 'Juan García', role: 'Director de Marketing' }] } as TestimonialData },
+        { name: 'Cuadrícula', description: 'Muestra varios testimonios en una cuadrícula.', preview: TestimonialPreviewGrid, defaultData: { variant: 'grid', title: 'Lo que dicen nuestros clientes', testimonials: [ { quote: 'Una herramienta indispensable para nuestro equipo.', author: 'Sofía López', role: 'Jefa de Proyecto' }, { quote: 'Los resultados hablan por sí solos. ¡Un 10/10!', author: 'Carlos Martínez', role: 'Fundador de Startup' } ] } as TestimonialData }
+    ]
+  },
+  faq: {
+    name: 'Preguntas Frecuentes',
+    icon: QuestionMarkCircleIcon,
+    description: 'Responde las dudas de tus visitantes.',
+    renderer: FaqBlock,
+    editor: FaqEditor,
+    theme: { bg: 'bg-teal-50', icon: 'text-teal-600' },
+    variants: [
+        { name: 'Lista', description: 'Formato simple de pregunta y respuesta.', preview: FaqPreviewList, defaultData: { variant: 'list', title: 'Preguntas Frecuentes', backgroundColor: 'bg-white', items: [ { question: '¿Cuál es la primera pregunta?', answer: 'Esta es la respuesta a la primera pregunta.' }, { question: '¿Y la segunda?', answer: 'Aquí tienes la detallada respuesta a la segunda pregunta.' } ] } as FaqData },
+        { name: 'Acordeón', description: 'Las respuestas se ocultan y muestran al hacer clic.', preview: FaqPreviewAccordion, defaultData: { variant: 'accordion', title: '¿Tienes Dudas?', backgroundColor: 'bg-white', items: [ { question: '¿Cómo funciona el acordeón?', answer: 'Al hacer clic en la pregunta, la respuesta aparece suavemente debajo.' }, { question: '¿Es fácil de usar?', answer: '¡Sí! Está diseñado para ser intuitivo tanto para ti como para tus visitantes.' } ] } as FaqData }
     ]
   },
   text: {
@@ -122,7 +201,7 @@ export const BLOCKS = {
     renderer: PricingBlock, 
     editor: PricingEditor,
     theme: { bg: 'bg-emerald-50', icon: 'text-emerald-600' },
-    variants: [ // <-- SECCIÓN RESTAURADA
+    variants: [
       { 
         name: 'Columnas Comparativas', 
         description: 'Ideal para comparar 2-3 planes.', 
@@ -172,7 +251,7 @@ export const BLOCKS = {
     renderer: FooterBlock, 
     editor: FooterEditor,
     theme: { bg: 'bg-slate-50', icon: 'text-slate-600' },
-    variants: [ // <-- SECCIÓN RESTAURADA
+    variants: [
       { name: 'Simple', description: 'Copyright y redes sociales.', preview: FooterPreviewSimple, defaultData: { variant: 'simple', copyrightText: `© ${new Date().getFullYear()} Mi Negocio.`, socialLinks: [{ platform: 'Twitter', url: '' }, { platform: 'Instagram', url: '' }] } as FooterData },
       { name: 'Multicolumna', description: 'Organiza enlaces en varias columnas.', preview: FooterPreviewMultiColumn, defaultData: { variant: 'multiColumn', copyrightText: `© ${new Date().getFullYear()} Mi Negocio.`, columns: [ { title: 'Producto', links: ['Características', 'Precios', 'FAQ'] }, { title: 'Compañía', links: ['Sobre nosotros', 'Contacto', 'Blog'] } ] } as FooterData },
       { name: 'Mínimo Centrado', description: 'Un pie de página discreto y centrado.', preview: FooterPreviewMinimal, defaultData: { variant: 'minimal', copyrightText: `© ${new Date().getFullYear()} Mi Negacio. Todos los derechos reservados.` } as FooterData }

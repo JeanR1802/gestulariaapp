@@ -13,7 +13,7 @@ import { TextareaField } from '@/app/components/editor/blocks/InputField';
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 
-// --- Nuevo Modal de Generación Completa (CORREGIDO) ---
+// --- Modal de Generación Completa ---
 interface GenerateAllModalProps {
   onClose: () => void;
   onGenerate: (userDescription: string) => void;
@@ -85,7 +85,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   const [showGenerateAllModal, setShowGenerateAllModal] = useState(false);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
-  // Crear el valor del contexto
   const previewContextValue = {
     mode: previewMode,
     isMobile: previewMode === 'mobile',
@@ -117,6 +116,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
       }
     } catch (error) {
       console.error('Error al cargar:', error);
+      setBlocks([]); // Asegurarse de que 'blocks' sea un array vacío en caso de error de parseo
       router.push('/dashboard/sites');
     } finally {
       setLoading(false);
@@ -202,7 +202,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
       }
   };
 
-
   if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
 
   return (
@@ -227,7 +226,21 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
                  {isGeneratingAll ? 'Generando...' : 'Generar con IA'}
               </button>
 
-              <button onClick={() => window.open(`/site/${tenant?.slug}`, '_blank')} className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200">Vista Previa</button>
+              {/* --- INICIO DE LA CORRECCIÓN --- */}
+              <button 
+                onClick={() => {
+                  if (tenant) {
+                    const protocol = window.location.protocol;
+                    const host = window.location.host.includes('localhost') ? 'localhost:3000' : 'gestularia.com';
+                    window.open(`${protocol}//${tenant.slug}.${host}`, '_blank');
+                  }
+                }} 
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200"
+              >
+                Vista Previa
+              </button>
+              {/* --- FIN DE LA CORRECCIÓN --- */}
+
               <button onClick={saveTenant} disabled={saving} className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">{saving ? 'Guardando...' : 'Guardar'}</button>
             </div>
           </div>
@@ -326,7 +339,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
                             "text-slate-500",
                             {
                               'text-sm': previewMode === 'desktop',
-                              /**'text-xs': previewMode === 'tablet',**/
                               'text-xs': previewMode === 'mobile',
                             }
                           )}>Añade un componente desde la barra lateral para empezar.</p>
