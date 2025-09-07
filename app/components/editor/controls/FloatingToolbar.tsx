@@ -27,6 +27,20 @@ interface FloatingToolbarProps {
   onClose: () => void;
 }
 
+// Interfaces para definir la estructura de un bloque con editores
+interface BlockConfig {
+    name: string;
+    editor: React.FC<{ data: BlockData; updateData: (key: string, value: unknown) => void }>;
+    styleEditor?: React.FC<{ data: BlockData; updateData: (key: string, value: unknown) => void }>;
+}
+
+// Type guard para verificar si un block config tiene styleEditor
+function hasStyleEditor(blockConfig: BlockConfig): blockConfig is BlockConfig & { 
+    styleEditor: React.FC<{ data: BlockData; updateData: (key: string, value: unknown) => void }> 
+} {
+    return blockConfig.styleEditor !== undefined;
+}
+
 // --- Componente de Botón con Tooltip ---
 const ToolbarButton = ({ label, isActive, onClick, children, className }: ToolbarButtonProps) => (
     <div className="relative group">
@@ -107,10 +121,10 @@ export function FloatingToolbar({ block, onUpdate, onClose }: FloatingToolbarPro
         return () => toolbar.removeEventListener('mousedown', handleMouseDown);
     }, [position]);
 
-    const blockConfig = BLOCKS[block.type as BlockType];
+    const blockConfig = BLOCKS[block.type as BlockType] as BlockConfig;
 
-    const ContentEditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }>;
-    const StyleEditorComponent = (blockConfig as any).styleEditor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }> | undefined;
+    const ContentEditorComponent = blockConfig.editor;
+    const StyleEditorComponent = hasStyleEditor(blockConfig) ? blockConfig.styleEditor : undefined;
 
     return (
         <div 
@@ -161,4 +175,3 @@ export function FloatingToolbar({ block, onUpdate, onClose }: FloatingToolbarPro
         </div>
     );
 }
-
