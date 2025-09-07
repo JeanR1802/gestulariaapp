@@ -23,7 +23,7 @@ interface ToolbarButtonProps {
 
 interface FloatingToolbarProps {
   block: { id: number; type: string; data: BlockData };
-  onUpdate: (key: string, value: unknown) => void; // <-- CORRECCIÓN AQUÍ
+  onUpdate: (key: string, value: unknown) => void; 
   onClose: () => void;
 }
 
@@ -108,9 +108,9 @@ export function FloatingToolbar({ block, onUpdate, onClose }: FloatingToolbarPro
     }, [position]);
 
     const blockConfig = BLOCKS[block.type as BlockType];
-    // --- CORRECCIÓN AQUÍ ---
+
     const ContentEditorComponent = blockConfig.editor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }>;
-    const StyleEditorComponent = blockConfig.styleEditor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }> | undefined;
+    const StyleEditorComponent = (blockConfig as any).styleEditor as React.FC<{ data: BlockData, updateData: (key: string, value: unknown) => void }> | undefined;
 
     return (
         <div 
