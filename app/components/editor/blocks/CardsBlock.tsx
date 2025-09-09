@@ -1,354 +1,197 @@
-// app/components/editor/blocks/CardsBlock.tsx
+// Reemplaza el contenido de app/components/editor/blocks/CardsBlock.tsx
+'use client';
 import React from 'react';
 import { InputField, TextareaField } from './InputField';
-import { ColorPalette } from '../controls/ColorPalette';
-import { TextColorPalette } from '../controls/TextColorPalette';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
 import { cn } from '@/lib/utils';
+import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ColorPalette } from '../controls/ColorPalette';
+import { TextColorPalette } from '../controls/TextColorPalette';
 
-interface Card {
+// --- Interfaces de Datos ---
+export interface Card {
   icon: string;
   title: string;
   description: string;
   imageUrl?: string;
 }
-
 export interface CardsData {
   variant: 'default' | 'list' | 'imageTop';
   title: string;
   cards: Card[];
-  sectionBackgroundColor: string;
-  cardBackgroundColor: string;
+  backgroundColor: string;
   titleColor: string;
-  textColor: string;
+  cardBackgroundColor: string;
+  cardTitleColor: string;
+  cardDescriptionColor: string;
 }
 
+// --- Componente "Director" ---
 export function CardsBlock({ data }: { data: CardsData }) {
-  switch (data.variant) {
-    case 'list': return <CardsList data={data} />;
-    case 'imageTop': return <CardsImageTop data={data} />;
-    default: return <CardsDefault data={data} />;
-  }
+    switch(data.variant) {
+        case 'list': return <CardsList data={data} />;
+        case 'imageTop': return <CardsImageTop data={data} />;
+        default: return <CardsDefault data={data} />;
+    }
 }
 
+// --- Lógica para manejar colores personalizados ---
+const getStyles = (colorValue: string | undefined, defaultClass: string) => {
+  if (colorValue?.startsWith('[#')) {
+    return {
+      className: '',
+      style: { color: colorValue.slice(1, -1) }
+    };
+  }
+  return {
+    className: colorValue || defaultClass,
+    style: {}
+  };
+};
+
+const getBackgroundStyles = (colorValue: string | undefined, defaultClass = 'bg-white') => {
+  if (colorValue?.startsWith('[#')) {
+    return {
+      className: '',
+      style: { backgroundColor: colorValue.slice(1, -1) }
+    };
+  }
+  return {
+    className: colorValue || defaultClass,
+    style: {}
+  };
+};
+
+// --- Componentes Visuales ---
 const CardsDefault = ({ data }: { data: CardsData }) => {
-  const { isMobile, isTablet, isDesktop } = usePreviewMode();
-  
-  return (
-    <div className={cn(
-      `${data.sectionBackgroundColor || 'bg-slate-50'}`,
-      {
-        'py-16 px-8': isDesktop,
-        'py-12 px-6': isTablet,
-        'py-8 px-4': isMobile,
-      }
-    )}>
-      <div className={cn(
-        "mx-auto",
-        {
-          'max-w-6xl': isDesktop,
-          'max-w-4xl': isTablet,
-          'max-w-full': isMobile,
-        }
-      )}>
-        <h2 className={cn(
-          `text-center font-bold ${data.titleColor || 'text-slate-800'}`,
-          {
-            'text-4xl mb-16': isDesktop,
-            'text-3xl mb-12': isTablet,
-            'text-2xl mb-8': isMobile,
-          }
-        )}>
-          {data.title}
-        </h2>
-        
-        <div className={cn(
-          "gap-8",
-          {
-            'grid md:grid-cols-3': isDesktop,
-            'grid sm:grid-cols-2 md:grid-cols-3': isTablet,
-            'flex flex-col space-y-6': isMobile,
-          }
-        )}>
-          {(data.cards || []).map((card, index) => (
-            <div 
-              key={index} 
-              className={cn(
-                `text-center rounded-lg shadow-sm ring-1 ring-slate-100 ${data.cardBackgroundColor || 'bg-white'}`,
-                {
-                  'p-8': isDesktop,
-                 
-                  'p-6': isMobile,
-                }
-              )}
-            >
-              <div className={cn(
-                "mb-6",
-                {
-                  'text-5xl': isDesktop,
-                  'text-4xl': isTablet,
-                  'text-3xl': isMobile,
-                }
-              )}>
-                {card.icon}
-              </div>
-              
-              <h3 className={cn(
-                `font-semibold mb-4 ${data.titleColor || 'text-slate-800'}`,
-                {
-                  'text-2xl': isDesktop,
-                  'text-xl': isTablet,
-                  'text-lg': isMobile,
-                }
-              )}>
-                {card.title}
-              </h3>
-              
-              <p className={cn(
-                `${data.textColor || 'text-slate-600'}`,
-                {
-                  'text-base leading-relaxed': isDesktop,
-                  
-                  'text-sm leading-relaxed': isMobile,
-                }
-              )}>
-                {card.description}
-              </p>
+    const { isMobile, isTablet, isDesktop } = usePreviewMode();
+    const bgStyles = getBackgroundStyles(data.backgroundColor, 'bg-slate-50');
+    const titleStyles = getStyles(data.titleColor, 'text-slate-800');
+    const cardBgStyles = getBackgroundStyles(data.cardBackgroundColor, 'bg-white');
+    const cardTitleStyles = getStyles(data.cardTitleColor, 'text-slate-900');
+    const cardDescriptionStyles = getStyles(data.cardDescriptionColor, 'text-slate-600');
+
+    return (
+        <div className={cn("py-16 px-4", bgStyles.className)} style={bgStyles.style}>
+            <div className="max-w-7xl mx-auto">
+                <h2 className={cn("text-center font-bold mb-12", { "text-4xl": isDesktop, "text-3xl": isTablet, "text-2xl": isMobile }, titleStyles.className)} style={titleStyles.style}>{data.title}</h2>
+                <div className={cn("grid gap-8", { "grid-cols-1 md:grid-cols-3": isDesktop || isTablet, "grid-cols-1": isMobile })}>
+                    {(data.cards || []).map((card, index) => (
+                        <div key={index} className={cn("p-8 rounded-lg shadow-md text-center", cardBgStyles.className)} style={cardBgStyles.style}>
+                            <div className="text-4xl mb-4">{card.icon}</div>
+                            <h3 className={cn("font-semibold mb-2", { "text-xl": isDesktop, "text-lg": isTablet || isMobile }, cardTitleStyles.className)} style={cardTitleStyles.style}>{card.title}</h3>
+                            <p className={cn({ "text-base": isDesktop || isTablet, "text-sm": isMobile }, cardDescriptionStyles.className)} style={cardDescriptionStyles.style}>{card.description}</p>
+                        </div>
+                    ))}
+                </div>
             </div>
-          ))}
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 const CardsList = ({ data }: { data: CardsData }) => {
-  const { isMobile, isTablet, isDesktop } = usePreviewMode();
-  
-  return (
-    <div className={cn(
-      `${data.sectionBackgroundColor || 'bg-white'}`,
-      {
-        'py-16 px-8': isDesktop,
-        'py-12 px-6': isTablet,
-        'py-8 px-4': isMobile,
-      }
-    )}>
-      <div className={cn(
-        "mx-auto",
-        {
-          'max-w-4xl': isDesktop,
-          'max-w-3xl': isTablet,
-          'max-w-full': isMobile,
-        }
-      )}>
-        <h2 className={cn(
-          `text-center font-bold ${data.titleColor || 'text-slate-800'}`,
-          {
-            'text-4xl mb-16': isDesktop,
-            'text-3xl mb-12': isTablet,
-            'text-2xl mb-8': isMobile,
-          }
-        )}>
-          {data.title}
-        </h2>
-        
-        <div className={cn(
-          {
-            'space-y-10': isDesktop,
-            'space-y-8': isTablet,
-            'space-y-6': isMobile,
-          }
-        )}>
-          {(data.cards || []).map((card, index) => (
-            <div 
-              key={index} 
-              className={cn(
-                "flex items-start",
-                {
-                  'gap-8': isDesktop,
-                  'gap-6': isTablet,
-                  'gap-4 flex-col text-center': isMobile,
-                }
-              )}
-            >
-              <div className={cn(
-                "mt-1",
-                {
-                  'text-4xl': isDesktop,
-                 
-                  'text-3xl': isMobile,
-                }
-              )}>
-                {card.icon}
-              </div>
-              
-              <div className={cn(
-                {
-                  'flex-1': isDesktop || isTablet,
-                  'w-full': isMobile,
-                }
-              )}>
-                <h3 className={cn(
-                  `font-semibold mb-3 ${data.titleColor || 'text-slate-800'}`,
-                  {
-                    'text-2xl': isDesktop,
-                    'text-xl': isTablet,
-                    'text-lg': isMobile,
-                  }
-                )}>
-                  {card.title}
-                </h3>
-                
-                <p className={cn(
-                  `${data.textColor || 'text-slate-600'}`,
-                  {
-                    'text-lg leading-relaxed': isDesktop,
-                    'text-base leading-relaxed': isTablet,
-                    'text-sm leading-relaxed': isMobile,
-                  }
-                )}>
-                  {card.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
+    const { isMobile, isTablet, isDesktop } = usePreviewMode();
+    const bgStyles = getBackgroundStyles(data.backgroundColor, 'bg-white');
+    const titleStyles = getStyles(data.titleColor, 'text-slate-800');
+    const cardTitleStyles = getStyles(data.cardTitleColor, 'text-slate-900');
+    const cardDescriptionStyles = getStyles(data.cardDescriptionColor, 'text-slate-600');
 
+    return (
+        <div className={cn("py-16 px-4", bgStyles.className)} style={bgStyles.style}>
+            <div className="max-w-4xl mx-auto">
+                <h2 className={cn("text-center font-bold mb-12", { "text-4xl": isDesktop, "text-3xl": isTablet, "text-2xl": isMobile }, titleStyles.className)} style={titleStyles.style}>{data.title}</h2>
+                <div className="space-y-8">
+                    {(data.cards || []).map((card, index) => (
+                        <div key={index} className="flex items-start gap-6">
+                            <div className="text-3xl mt-1">{card.icon}</div>
+                            <div>
+                                <h3 className={cn("font-semibold mb-1", { "text-xl": isDesktop, "text-lg": isTablet || isMobile }, cardTitleStyles.className)} style={cardTitleStyles.style}>{card.title}</h3>
+                                <p className={cn({ "text-base": isDesktop || isTablet, "text-sm": isMobile }, cardDescriptionStyles.className)} style={cardDescriptionStyles.style}>{card.description}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
 const CardsImageTop = ({ data }: { data: CardsData }) => {
-  const { isMobile, isTablet, isDesktop } = usePreviewMode();
-  
-  return (
-    <div className={cn(
-      `${data.sectionBackgroundColor || 'bg-slate-50'}`,
-      {
-        'py-16 px-8': isDesktop,
-        'py-12 px-6': isTablet,
-        'py-8 px-4': isMobile,
-      }
-    )}>
-      <div className={cn(
-        "mx-auto",
-        {
-          'max-w-6xl': isDesktop,
-          'max-w-4xl': isTablet,
-          'max-w-full': isMobile,
-        }
-      )}>
-        <h2 className={cn(
-          `text-center font-bold ${data.titleColor || 'text-slate-800'}`,
-          {
-            'text-4xl mb-16': isDesktop,
-            'text-3xl mb-12': isTablet,
-            'text-2xl mb-8': isMobile,
-          }
-        )}>
-          {data.title}
-        </h2>
-        
-        <div className={cn(
-          "gap-8",
-          {
-            'grid md:grid-cols-3': isDesktop,
-            'grid sm:grid-cols-2 md:grid-cols-3': isTablet,
-            'flex flex-col space-y-6': isMobile,
-          }
-        )}>
-          {(data.cards || []).map((card, index) => (
-            <div 
-              key={index} 
-              className={cn(
-                `${data.cardBackgroundColor || 'bg-white'} rounded-lg shadow-sm ring-1 ring-slate-100 overflow-hidden`,
-                {
-                  '': isDesktop || isTablet,
-                  'max-w-sm mx-auto': isMobile,
-                }
-              )}
-            >
-              <img 
-                src={card.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'} 
-                alt={card.title} 
-                className={cn(
-                  "w-full object-cover",
-                  {
-                    'h-48': isDesktop,
-                    'h-40': isTablet,
-                    'h-32': isMobile,
-                  }
-                )}
-              />
-              
-              <div className={cn(
-                "text-center",
-                {
-                  'p-8': isDesktop,
-                  'p-6': isTablet,
-                  'p-4': isMobile,
-                }
-              )}>
-                <h3 className={cn(
-                  `font-semibold mb-3 ${data.titleColor || 'text-slate-800'}`,
-                  {
-                    'text-2xl': isDesktop,
-                    'text-xl': isTablet,
-                    'text-lg': isMobile,
-                  }
-                )}>
-                  {card.title}
-                </h3>
-                
-                <p className={cn(
-                  `${data.textColor || 'text-slate-600'}`,
-                  {
-                    'text-base leading-relaxed': isDesktop,
-                   
-                    'text-sm leading-relaxed': isMobile,
-                  }
-                )}>
-                  {card.description}
-                </p>
-              </div>
+    const { isMobile, isTablet, isDesktop } = usePreviewMode();
+    const bgStyles = getBackgroundStyles(data.backgroundColor, 'bg-slate-50');
+    const titleStyles = getStyles(data.titleColor, 'text-slate-800');
+    const cardBgStyles = getBackgroundStyles(data.cardBackgroundColor, 'bg-white');
+    const cardTitleStyles = getStyles(data.cardTitleColor, 'text-slate-900');
+    const cardDescriptionStyles = getStyles(data.cardDescriptionColor, 'text-slate-600');
+
+    return (
+        <div className={cn("py-16 px-4", bgStyles.className)} style={bgStyles.style}>
+            <div className="max-w-7xl mx-auto">
+                <h2 className={cn("text-center font-bold mb-12", { "text-4xl": isDesktop, "text-3xl": isTablet, "text-2xl": isMobile }, titleStyles.className)} style={titleStyles.style}>{data.title}</h2>
+                <div className={cn("grid gap-8", { "grid-cols-1 md:grid-cols-3": isDesktop || isTablet, "grid-cols-1": isMobile })}>
+                    {(data.cards || []).map((card, index) => (
+                        <div key={index} className={cn("rounded-lg shadow-md overflow-hidden", cardBgStyles.className)} style={cardBgStyles.style}>
+                            <img src={card.imageUrl || 'https://placehold.co/400x250/e2e8f0/64748b?text=Imagen'} alt={card.title} className="w-full h-48 object-cover" />
+                            <div className="p-6">
+                                <h3 className={cn("font-semibold mb-2", { "text-xl": isDesktop, "text-lg": isTablet || isMobile }, cardTitleStyles.className)} style={cardTitleStyles.style}>{card.title}</h3>
+                                <p className={cn({ "text-base": isDesktop || isTablet, "text-sm": isMobile }, cardDescriptionStyles.className)} style={cardDescriptionStyles.style}>{card.description}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-          ))}
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
-export function CardsEditor({ data, updateData }: { data: CardsData, updateData: (key: keyof CardsData, value: string | Card[]) => void }) {
-  const updateCardData = (cardIndex: number, key: keyof Card, value: string) => {
-    const newCards = [...(data.cards || [])];
-    newCards[cardIndex] = { ...newCards[cardIndex], [key]: value };
-    updateData('cards', newCards);
-  };
 
-  return (
-    <div className="space-y-4">
-      <div>
-        <h4 className="font-medium text-sm text-slate-600">Contenido General</h4>
-        <InputField label="Título de la Sección" value={data.title} onChange={(e) => updateData('title', e.target.value)} />
-      </div>
-        {(data.cards || []).map((card, index) => (
-          <div key={index} className="border border-slate-200 p-3 rounded-lg space-y-3 bg-slate-50 mt-4">
-            <h4 className="font-medium text-sm text-slate-600">Tarjeta {index + 1}</h4>
-            {data.variant !== 'imageTop' && (<InputField label="Icono (Emoji)" value={card.icon} onChange={(e) => updateCardData(index, 'icon', e.target.value)} />)}
-            {data.variant === 'imageTop' && (<InputField label="URL de la Imagen" value={card.imageUrl || ''} onChange={(e) => updateCardData(index, 'imageUrl', e.target.value)} />)}
-            <InputField label="Título de la Tarjeta" value={card.title} onChange={(e) => updateCardData(index, 'title', e.target.value)} />
-            <TextareaField label="Descripción" value={card.description} onChange={(e) => updateCardData(index, 'description', e.target.value)} />
-          </div>
-        ))}
-       <div className="border-t border-slate-200 pt-4 space-y-4">
-        <h4 className="font-medium text-sm text-slate-600 mb-3">Diseño General</h4>
-        <ColorPalette label="Color de Fondo de Sección" selectedColor={data.sectionBackgroundColor} onChange={(color) => updateData('sectionBackgroundColor', color)} />
-        {data.variant !== 'list' && <ColorPalette label="Color de Fondo de Tarjeta" selectedColor={data.cardBackgroundColor} onChange={(color) => updateData('cardBackgroundColor', color)} />}
-        <TextColorPalette label="Color de Títulos" selectedColor={data.titleColor} onChange={(color) => updateData('titleColor', color)} />
-        <TextColorPalette label="Color del Texto" selectedColor={data.textColor} onChange={(color) => updateData('textColor', color)} />
-      </div>
-    </div>
-  );
+// --- Editor de CONTENIDO (SEPARADO) ---
+export function CardsContentEditor({ data, updateData }: { data: CardsData, updateData: (key: keyof CardsData, value: string | Card[]) => void }) {
+    const handleCardChange = (index: number, field: keyof Card, value: string) => {
+        const newCards = [...(data.cards || [])];
+        newCards[index] = { ...newCards[index], [field]: value };
+        updateData('cards', newCards);
+    };
+    const addCard = () => {
+        const newCards = [...(data.cards || []), { icon: '💡', title: 'Nuevo Título', description: 'Nueva descripción.' }];
+        updateData('cards', newCards);
+    };
+    const removeCard = (index: number) => {
+        const newCards = (data.cards || []).filter((_, i) => i !== index);
+        updateData('cards', newCards);
+    };
+
+    return (
+        <div className="space-y-4">
+            <InputField label="Título de la Sección" value={data.title} onChange={(e) => updateData('title', e.target.value)} />
+            {(data.cards || []).map((card, index) => (
+                <div key={index} className="border p-3 rounded-lg bg-slate-50 relative space-y-3">
+                    <button onClick={() => removeCard(index)} className="absolute top-2 right-2 w-6 h-6 bg-slate-200 text-slate-500 rounded-full hover:bg-red-100 hover:text-red-600 flex items-center justify-center" title="Eliminar tarjeta"><XMarkIcon className="w-4 h-4" /></button>
+                    <h4 className="font-medium text-sm text-slate-700">Tarjeta {index + 1}</h4>
+                    {data.variant === 'imageTop' ? 
+                        <InputField label="URL de Imagen" value={card.imageUrl || ''} onChange={(e) => handleCardChange(index, 'imageUrl', e.target.value)} /> : 
+                        <InputField label="Icono (Emoji)" value={card.icon} onChange={(e) => handleCardChange(index, 'icon', e.target.value)} />
+                    }
+                    <InputField label="Título" value={card.title} onChange={(e) => handleCardChange(index, 'title', e.target.value)} />
+                    <TextareaField label="Descripción" value={card.description} rows={3} onChange={(e) => handleCardChange(index, 'description', e.target.value)} />
+                </div>
+            ))}
+            <button onClick={addCard} className="w-full bg-slate-200 text-slate-700 py-2 px-4 rounded-md font-semibold hover:bg-slate-300 flex items-center justify-center gap-2"><PlusIcon className="w-5 h-5" />Añadir Tarjeta</button>
+        </div>
+    );
+}
+
+// --- Editor de ESTILO (SEPARADO) ---
+export function CardsStyleEditor({ data, updateData }: { data: CardsData, updateData: (key: keyof CardsData, value: string) => void }) {
+    return (
+        <div className="space-y-4">
+            <ColorPalette label="Color de Fondo de Sección" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
+            <TextColorPalette label="Color del Título de Sección" selectedColor={data.titleColor} onChange={(color) => updateData('titleColor', color)} />
+            <div className="border-t border-slate-200 pt-4 mt-4">
+                <h4 className="font-medium text-sm text-slate-600 mb-3">Estilo de las Tarjetas</h4>
+                <ColorPalette label="Color de Fondo de Tarjeta" selectedColor={data.cardBackgroundColor} onChange={(color) => updateData('cardBackgroundColor', color)} />
+                <TextColorPalette label="Color de Título de Tarjeta" selectedColor={data.cardTitleColor} onChange={(color) => updateData('cardTitleColor', color)} />
+                <TextColorPalette label="Color de Descripción de Tarjeta" selectedColor={data.cardDescriptionColor} onChange={(color) => updateData('cardDescriptionColor', color)} />
+            </div>
+        </div>
+    );
 }
