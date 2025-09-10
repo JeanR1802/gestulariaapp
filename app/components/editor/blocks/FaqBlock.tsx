@@ -1,19 +1,16 @@
-// Reemplaza el contenido de app/components/editor/blocks/FaqBlock.tsx
 'use client';
-import React, { useState } from 'react';
-import { InputField, TextareaField } from './InputField';
-import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
+import React, { useRef, JSX } from 'react';
+import { useEditable } from 'use-editable';
 import { cn } from '@/lib/utils';
-import { XMarkIcon, PlusIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
+import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
+import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { BlockComponentProps } from './index';
 
-// --- Interfaces de Datos ---
-interface FaqItem {
-  question: string;
-  answer: string;
-}
-
+// --- Tipos de datos ---
+interface FaqItem { question: string; answer: string; }
 export interface FaqData {
   variant: 'list' | 'accordion';
   title: string;
@@ -25,176 +22,164 @@ export interface FaqData {
   iconColor: string;
 }
 
-// --- Componente "Director" ---
-export function FaqBlock({ data }: { data: FaqData }) {
+// --- Helper Editable ---
+const Editable = ({
+  tagName,
+  value,
+  onUpdate,
+  isEditing,
+  className,
+  style,
+}: {
+  tagName: keyof JSX.IntrinsicElements;
+  value: string;
+  onUpdate: (newValue: string) => void;
+  isEditing?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}) => {
+  const ref = useRef<HTMLElement>(null);
+  useEditable(ref, (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')), { disabled: !isEditing });
+  return React.createElement(
+    tagName,
+    {
+      ref,
+      className: cn(className, { 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing }),
+      style,
+    },
+    value
+  );
+};
+
+// --- Helpers de estilos ---
+const getStyles = (colorValue: string | undefined, defaultClass: string) => {
+  if (colorValue?.startsWith('[#')) return { className: '', style: { color: colorValue.slice(1, -1) } } as const;
+  return { className: colorValue || defaultClass, style: {} } as const;
+};
+const getBackgroundStyles = (colorValue: string | undefined, defaultClass = 'bg-white') => {
+  if (colorValue?.startsWith('[#')) return { className: '', style: { backgroundColor: colorValue.slice(1, -1) } } as const;
+  return { className: colorValue || defaultClass, style: {} } as const;
+};
+
+// --- Director ---
+export function FaqBlock({ data, isEditing, onUpdate }: BlockComponentProps<FaqData>) {
+  const props = { data, isEditing, onUpdate };
   switch (data.variant) {
     case 'accordion':
-      return <FaqAccordion data={data} />;
+      return <FaqAccordion {...props} />;
     default:
-      return <FaqList data={data} />;
+      return <FaqList {...props} />;
   }
 }
 
-// --- Lógica para manejar colores personalizados ---
-const getStyles = (colorValue: string | undefined, defaultClass: string) => {
-  if (colorValue?.startsWith('[#')) {
-    return { className: '', style: { color: colorValue.slice(1, -1) } };
-  }
-  return { className: colorValue || defaultClass, style: {} };
-};
+// --- Actualización inmutable de items ---
+function updateItem(items: FaqItem[] = [], index: number, field: keyof FaqItem, value: string): FaqItem[] {
+  const next = [...items];
+  next[index] = { ...next[index], [field]: value } as FaqItem;
+  return next;
+}
 
-const getBackgroundStyles = (colorValue: string | undefined, defaultClass = 'bg-white') => {
-  if (colorValue?.startsWith('[#')) {
-    return { className: '', style: { backgroundColor: colorValue.slice(1, -1) } };
-  }
-  return { className: colorValue || defaultClass, style: {} };
-};
-
-// --- Componentes Internos para Cada Variante ---
-const FaqList = ({ data }: { data: FaqData }) => {
+// --- Variantes ---
+const FaqList = ({ data, isEditing, onUpdate }: BlockComponentProps<FaqData>) => {
   const { isMobile, isTablet, isDesktop } = usePreviewMode();
-  const bgStyles = getBackgroundStyles(data.backgroundColor);
+  const bg = getBackgroundStyles(data.backgroundColor, 'bg-white');
   const titleStyles = getStyles(data.titleColor, 'text-slate-800');
-  const questionStyles = getStyles(data.questionColor, 'text-slate-900');
-  const answerStyles = getStyles(data.answerColor, 'text-slate-600');
-  
+  const qStyles = getStyles(data.questionColor, 'text-slate-900');
+  const aStyles = getStyles(data.answerColor, 'text-slate-600');
+
+  const handleUpdate = (key: keyof FaqData, value: string | FaqItem[]) => { if (onUpdate) onUpdate(key as string, value); };
+  const handleItem = (idx: number, field: keyof FaqItem, value: string) => handleUpdate('items', updateItem(data.items, idx, field, value));
+
   return (
-    <div className={cn({ "py-16 px-8": isDesktop, "py-12 px-6": isTablet, "py-8 px-4": isMobile }, bgStyles.className)} style={bgStyles.style}>
-      <div className={cn("mx-auto", { "max-w-4xl": isDesktop || isTablet, "max-w-full": isMobile })}>
-        <h2 className={cn("font-bold text-center", { "text-4xl mb-12": isDesktop, "text-3xl mb-10": isTablet, "text-2xl mb-8": isMobile }, titleStyles.className)} style={titleStyles.style}>
-          {data.title}
-        </h2>
-        <div className="space-y-8">
-          {(data.items || []).map((item, index) => (
-            <div key={index}>
-              <h3 className={cn("font-semibold", { "text-xl mb-2": isDesktop, "text-lg mb-2": isTablet, "text-base mb-1": isMobile }, questionStyles.className)} style={questionStyles.style}>
-                {item.question}
-              </h3>
-              <p className={cn({ "text-base leading-relaxed": isDesktop || isTablet, "text-sm leading-relaxed": isMobile }, answerStyles.className)} style={answerStyles.style}>
-                {item.answer}
-              </p>
+    <section className={cn({ 'py-16 px-8': isDesktop, 'py-12 px-6': isTablet, 'py-10 px-4': isMobile }, bg.className)} style={bg.style}>
+      <div className={cn('mx-auto', { 'max-w-4xl': isDesktop || isTablet, 'max-w-full': isMobile })}>
+        <Editable tagName="h2" value={data.title} onUpdate={(v) => handleUpdate('title', v)} isEditing={isEditing} className={cn('text-center font-bold mb-10', { 'text-4xl': isDesktop, 'text-3xl': isTablet, 'text-2xl': isMobile }, titleStyles.className)} style={titleStyles.style} />
+        <div className="space-y-6">
+          {(data.items || []).map((item, idx) => (
+            <div key={idx} className="border-b border-slate-200 pb-6">
+              <Editable tagName="h3" value={item.question} onUpdate={(v) => handleItem(idx, 'question', v)} isEditing={isEditing} className={cn('font-semibold mb-2', qStyles.className)} style={qStyles.style} />
+              <Editable tagName="p" value={item.answer} onUpdate={(v) => handleItem(idx, 'answer', v)} isEditing={isEditing} className={cn(aStyles.className)} style={aStyles.style} />
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
-const AccordionItem = ({ item, data }: { item: FaqItem, data: FaqData }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const questionStyles = getStyles(data.questionColor, 'text-slate-900');
-    const answerStyles = getStyles(data.answerColor, 'text-slate-600');
-    const iconStyles = getStyles(data.iconColor, 'text-slate-500');
+const FaqAccordion = ({ data, isEditing, onUpdate }: BlockComponentProps<FaqData>) => {
+  const { isMobile, isTablet, isDesktop } = usePreviewMode();
+  const bg = getBackgroundStyles(data.backgroundColor, 'bg-white');
+  const titleStyles = getStyles(data.titleColor, 'text-slate-800');
+  const qStyles = getStyles(data.questionColor, 'text-slate-900');
+  const aStyles = getStyles(data.answerColor, 'text-slate-600');
 
-    return (
-        <div className="border-b border-slate-200 py-4">
-            <button
-                className="w-full flex justify-between items-center text-left"
-                onClick={() => setIsOpen(!isOpen)}
-            >
-                <h3 className={cn("font-semibold text-lg", questionStyles.className)} style={questionStyles.style}>
-                    {item.question}
-                </h3>
-                <ChevronDownIcon className={cn("w-5 h-5 transition-transform", { "transform rotate-180": isOpen }, iconStyles.className)} style={iconStyles.style} />
-            </button>
-            {isOpen && (
-                <div className={cn("mt-4 text-base leading-relaxed", answerStyles.className)} style={answerStyles.style}>
-                    <p>{item.answer}</p>
-                </div>
-            )}
-        </div>
-    );
-};
+  const handleUpdate = (key: keyof FaqData, value: string | FaqItem[]) => { if (onUpdate) onUpdate(key as string, value); };
+  const handleItem = (idx: number, field: keyof FaqItem, value: string) => handleUpdate('items', updateItem(data.items, idx, field, value));
 
-const FaqAccordion = ({ data }: { data: FaqData }) => {
-    const { isMobile, isTablet, isDesktop } = usePreviewMode();
-    const bgStyles = getBackgroundStyles(data.backgroundColor);
-    const titleStyles = getStyles(data.titleColor, 'text-slate-800');
-    
-    return (
-        <div className={cn({ "py-16 px-8": isDesktop, "py-12 px-6": isTablet, "py-8 px-4": isMobile }, bgStyles.className)} style={bgStyles.style}>
-            <div className={cn("mx-auto", { "max-w-3xl": isDesktop || isTablet, "max-w-full": isMobile })}>
-                <h2 className={cn("font-bold text-center", { "text-4xl mb-12": isDesktop, "text-3xl mb-10": isTablet, "text-2xl mb-8": isMobile }, titleStyles.className)} style={titleStyles.style}>
-                    {data.title}
-                </h2>
-                <div>
-                    {(data.items || []).map((item, index) => (
-                        <AccordionItem key={index} item={item} data={data} />
-                    ))}
-                </div>
+  // Para el modo edición, mantenemos todo expandido para permitir editar respuestas.
+  return (
+    <section className={cn({ 'py-16 px-8': isDesktop, 'py-12 px-6': isTablet, 'py-10 px-4': isMobile }, bg.className)} style={bg.style}>
+      <div className={cn('mx-auto', { 'max-w-3xl': isDesktop || isTablet, 'max-w-full': isMobile })}>
+        <Editable tagName="h2" value={data.title} onUpdate={(v) => handleUpdate('title', v)} isEditing={isEditing} className={cn('text-center font-bold mb-8', { 'text-4xl': isDesktop, 'text-3xl': isTablet, 'text-2xl': isMobile }, titleStyles.className)} style={titleStyles.style} />
+        <div className="divide-y divide-slate-200">
+          {(data.items || []).map((item, idx) => (
+            <div key={idx} className="py-4">
+              <Editable tagName="h3" value={item.question} onUpdate={(v) => handleItem(idx, 'question', v)} isEditing={isEditing} className={cn('font-semibold', qStyles.className)} style={qStyles.style} />
+              <div className="mt-2">
+                <Editable tagName="p" value={item.answer} onUpdate={(v) => handleItem(idx, 'answer', v)} isEditing={isEditing} className={cn(aStyles.className)} style={aStyles.style} />
+              </div>
             </div>
+          ))}
         </div>
-    );
+      </div>
+    </section>
+  );
 };
-  
-// --- Editor de CONTENIDO (SEPARADO) ---
-export function FaqContentEditor({ data, updateData }: { data: FaqData, updateData: (key: keyof FaqData, value: string | FaqItem[]) => void }) {
-    const handleItemChange = (index: number, field: keyof FaqItem, value: string) => {
-        const newItems = [...(data.items || [])];
-        newItems[index] = { ...newItems[index], [field]: value };
-        updateData('items', newItems);
-    };
 
-    const addItem = () => {
-        const newItems = [...(data.items || []), { question: '', answer: '' }];
-        updateData('items', newItems);
-    };
+// --- Editor de CONTENIDO ---
+export function FaqContentEditor({ data, updateData }: { data: FaqData; updateData: (key: keyof FaqData, value: string | FaqItem[]) => void; }) {
+  const onItemChange = (index: number, field: keyof FaqItem, value: string) => {
+    const next = [...(data.items || [])];
+    next[index] = { ...next[index], [field]: value };
+    updateData('items', next);
+  };
+  const addItem = () => {
+    const next = [...(data.items || []), { question: 'Nueva pregunta', answer: 'Nueva respuesta' }];
+    updateData('items', next);
+  };
+  const removeItem = (index: number) => {
+    const next = (data.items || []).filter((_, i) => i !== index);
+    updateData('items', next);
+  };
 
-    const removeItem = (index: number) => {
-        const newItems = (data.items || []).filter((_, i) => i !== index);
-        updateData('items', newItems);
-    };
-
-    return (
-        <div className="space-y-4">
-            <InputField label="Título de la Sección" value={data.title} onChange={(e) => updateData('title', e.target.value)} />
-            
-            {(data.items || []).map((item, index) => (
-                <div key={index} className="border border-slate-200 p-3 rounded-lg space-y-3 bg-slate-50 relative">
-                     <button onClick={() => removeItem(index)} className="absolute top-2 right-2 w-6 h-6 bg-slate-200 rounded-full text-slate-500 hover:bg-red-100 hover:text-red-600" title="Eliminar item"><XMarkIcon className="w-4 h-4 mx-auto" /></button>
-                    <h4 className="font-medium text-sm text-slate-700">Item {index + 1}</h4>
-                    <InputField label="Pregunta" value={item.question} onChange={(e) => handleItemChange(index, 'question', e.target.value)} />
-                    <TextareaField label="Respuesta" value={item.answer} rows={3} onChange={(e) => handleItemChange(index, 'answer', e.target.value)} />
-                </div>
-            ))}
-
-            <button onClick={addItem} className="w-full bg-slate-200 text-slate-700 py-2 px-4 rounded-md font-semibold hover:bg-slate-300 flex items-center justify-center gap-2"><PlusIcon className="w-5 h-5" />Añadir Pregunta</button>
+  return (
+    <div className="space-y-4">
+      <InputField label="Título de la Sección" value={data.title} onChange={(e) => updateData('title', e.target.value)} />
+      {(data.items || []).map((item, idx) => (
+        <div key={idx} className="border p-3 rounded-lg bg-slate-50 relative space-y-3">
+          <button onClick={() => removeItem(idx)} className="absolute top-2 right-2 w-6 h-6 bg-slate-200 text-slate-500 rounded-full hover:bg-red-100 hover:text-red-600 flex items-center justify-center" title="Eliminar">
+            <XMarkIcon className="w-4 h-4" />
+          </button>
+          <InputField label={`Pregunta ${idx + 1}`} value={item.question} onChange={(e) => onItemChange(idx, 'question', e.target.value)} />
+          <TextareaField label="Respuesta" value={item.answer} rows={3} onChange={(e) => onItemChange(idx, 'answer', e.target.value)} />
         </div>
-    );
+      ))}
+      <button onClick={addItem} className="w-full bg-slate-200 text-slate-700 py-2 px-4 rounded-md font-semibold hover:bg-slate-300 flex items-center justify-center gap-2">
+        <PlusIcon className="w-5 h-5" /> Añadir Pregunta
+      </button>
+    </div>
+  );
 }
 
-// --- Editor de ESTILO (SEPARADO) ---
-export function FaqStyleEditor({ data, updateData }: { data: FaqData, updateData: (key: keyof FaqData, value: string) => void }) {
-    const [customBgColor, setCustomBgColor] = React.useState<string>(data.backgroundColor?.startsWith('[#') ? data.backgroundColor.slice(2, -1) : '#ffffff');
-    const [customTitleColor, setCustomTitleColor] = React.useState<string>(data.titleColor?.startsWith('[#') ? data.titleColor.slice(2, -1) : '#000000');
-    const [customQuestionColor, setCustomQuestionColor] = React.useState<string>(data.questionColor?.startsWith('[#') ? data.questionColor.slice(2, -1) : '#000000');
-    const [customAnswerColor, setCustomAnswerColor] = React.useState<string>(data.answerColor?.startsWith('[#') ? data.answerColor.slice(2, -1) : '#000000');
-    const [customIconColor, setCustomIconColor] = React.useState<string>(data.iconColor?.startsWith('[#') ? data.iconColor.slice(2, -1) : '#000000');
-    const isCustomBg = data.backgroundColor?.startsWith('[#');
-    const isCustomTitle = data.titleColor?.startsWith('[#');
-    const isCustomQuestion = data.questionColor?.startsWith('[#');
-    const isCustomAnswer = data.answerColor?.startsWith('[#');
-    const isCustomIcon = data.iconColor?.startsWith('[#');
-    return (
-        <div className="space-y-4">
-            <div>
-                <ColorPalette label="Color de Fondo" selectedColor={isCustomBg ? '' : data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
-            </div>
-            <div>
-                <TextColorPalette label="Color del Título" selectedColor={isCustomTitle ? '' : data.titleColor} onChange={(color) => updateData('titleColor', color)} />
-            </div>
-            <div>
-                <TextColorPalette label="Color de Preguntas" selectedColor={isCustomQuestion ? '' : data.questionColor} onChange={(color) => updateData('questionColor', color)} />
-            </div>
-            <div>
-                <TextColorPalette label="Color de Respuestas" selectedColor={isCustomAnswer ? '' : data.answerColor} onChange={(color) => updateData('answerColor', color)} />
-            </div>
-            {data.variant === 'accordion' && (
-                <div>
-                    <TextColorPalette label="Color del Ícono" selectedColor={isCustomIcon ? '' : data.iconColor} onChange={(color) => updateData('iconColor', color)} />
-                </div>
-            )}
-        </div>
-    );
+// --- Editor de ESTILO ---
+export function FaqStyleEditor({ data, updateData }: { data: FaqData; updateData: (key: keyof FaqData, value: string) => void; }) {
+  return (
+    <div className="space-y-3">
+      <ColorPalette label="Fondo" selectedColor={data.backgroundColor || ''} onChange={(color) => updateData('backgroundColor', color)} />
+      <TextColorPalette label="Título" selectedColor={data.titleColor || ''} onChange={(color) => updateData('titleColor', color)} />
+      <TextColorPalette label="Pregunta" selectedColor={data.questionColor || ''} onChange={(color) => updateData('questionColor', color)} />
+      <TextColorPalette label="Respuesta" selectedColor={data.answerColor || ''} onChange={(color) => updateData('answerColor', color)} />
+    </div>
+  );
 }

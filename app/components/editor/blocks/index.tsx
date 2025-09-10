@@ -68,8 +68,8 @@ export interface BlockConfig<T extends BlockData> {
   icon: React.ElementType;
   description: string;
   renderer: BlockRendererComponent<T>;
-  editor: React.FC<{ data: T; updateData: (key: keyof T, value: any) => void }>;
-  styleEditor?: React.FC<{ data: T; updateData: (key: keyof T, value: any) => void }>;
+  editor: React.FC<{ data: T; updateData: (key: keyof T, value: T[keyof T]) => void }>;
+  styleEditor?: React.FC<{ data: T; updateData: (key: keyof T, value: T[keyof T]) => void }>;
   theme: { bg: string; icon: string };
   variants: {
     name: string;
@@ -79,9 +79,26 @@ export interface BlockConfig<T extends BlockData> {
   }[];
 }
 
+// Mapeo de tipos por clave para evitar incompatibilidades genéricas
+export type BlocksConfig = {
+  header: BlockConfig<HeaderData>;
+  hero: BlockConfig<HeroData>;
+  featuredProduct: BlockConfig<FeaturedProductData>;
+  catalog: BlockConfig<CatalogData>;
+  team: BlockConfig<TeamData>;
+  testimonial: BlockConfig<TestimonialData>;
+  faq: BlockConfig<FaqData>;
+  text: BlockConfig<TextData>;
+  image: BlockConfig<ImageData>;
+  cards: BlockConfig<CardsData>;
+  cta: BlockConfig<CtaData>;
+  pricing: BlockConfig<PricingData>;
+  footer: BlockConfig<FooterData>;
+};
+
 // --- OBJETO DE CONFIGURACIÓN DE BLOQUES ---
 
-export const BLOCKS: { [key: string]: BlockConfig<any> } = {
+export const BLOCKS: BlocksConfig = {
   header: {
     name: 'Encabezado',
     icon: QueueListIcon,
