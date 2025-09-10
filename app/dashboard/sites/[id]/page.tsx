@@ -11,7 +11,7 @@ import { TextareaField } from '@/app/components/editor/blocks/InputField';
 import { FloatingToolbar } from '@/app/components/editor/controls/FloatingToolbar';
 import { Transition } from '@headlessui/react';
 
-// --- Tipos y Modales ---
+// --- Tipos y sModales ---
 interface Block { id: number; type: string; data: BlockData; }
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 
