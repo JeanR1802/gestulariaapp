@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { BLOCKS, BlockData, Block, BlockType } from './blocks';
+import { BLOCKS, Block } from './blocks';
 import { HeaderData } from './blocks/HeaderBlock';
 import { HeroData } from './blocks/HeroBlock';
 import { FeaturedProductData } from './blocks/FeaturedProductBlock';
@@ -95,7 +95,7 @@ export function BlockRenderer({
         return <Component data={block.data as FooterData} isEditing={isEditing} onUpdate={onUpdate} />;
       }
       default:
-        return <div>Error: Bloque de tipo '{block.type}' no reconocido.</div>;
+        return <div>Error: Bloque de tipo &apos;{block.type}&apos; no reconocido.</div>;
     }
   };
 
