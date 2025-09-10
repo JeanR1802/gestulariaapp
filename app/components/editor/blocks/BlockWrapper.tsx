@@ -28,7 +28,7 @@ export const BlockWrapper = ({ children, isEditing, onEdit, onDelete, onMoveUp, 
   // Si no está en modo edición, mostramos el bloque normal
   // con los controles que aparecen al pasar el ratón.
   return (
-    <div className="relative rounded-lg transition-all mb-4 group">
+    <div className="relative rounded-lg transition-all group">
       {/* Controles de Acción (Arriba/Abajo/Eliminar) */}
       <div className="absolute top-2 right-2 z-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
          {onMoveUp && <button onClick={onMoveUp} className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}

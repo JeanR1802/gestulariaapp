@@ -6,41 +6,70 @@ import React from 'react';
 export interface ButtonColorPaletteProps {
   label: string;
   selectedBgColor: string;
-  selectedTextColor: string; // Propiedad que causaba el error, ahora correctamente definida.
+  selectedTextColor: string;
   onChange: (bg: string, text: string) => void;
 }
 
-const CustomColorPicker = ({ label, color, onChange, title }: { label: string, color: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, title: string }) => {
-  const isCustomColor = color?.startsWith('[#');
-  const displayColor = isCustomColor ? color.slice(1, -1) : '#FFFFFF';
+const CustomColorPicker = ({ label, color, onApply, title }: { label: string, color: string, onApply: (color: string) => void, title: string }) => {
+  const [tempColor, setTempColor] = React.useState(
+    color?.startsWith('[#') ? color.slice(1, -1) : '#FFFFFF'
+  );
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    setTempColor(color?.startsWith('[#') ? color.slice(1, -1) : '#FFFFFF');
+  }, [color]);
 
   return (
     <div className="relative" title={title}>
       <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
       <div className="relative w-10 h-10">
-        <input
-          type="color"
-          value={displayColor}
-          onChange={onChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        <button
+          type="button"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          onClick={() => setOpen(true)}
+          aria-label={`Seleccionar color personalizado para ${label}`}
         />
         <div
           className="w-full h-full rounded-full border-2 border-slate-200"
-          style={{ backgroundColor: displayColor }}
+          style={{ backgroundColor: tempColor }}
         />
       </div>
+      {open && (
+        <div className="absolute left-0 mt-2 z-20 bg-white p-3 rounded-lg shadow-lg border flex flex-col items-center gap-2">
+          <input
+            type="color"
+            value={tempColor}
+            onChange={e => setTempColor(e.target.value)}
+            className="w-10 h-10 border rounded-full"
+          />
+          <button
+            className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            onClick={() => {
+              onApply(`[${tempColor}]`);
+              setOpen(false);
+            }}
+          >
+            Aplicar
+          </button>
+          <button
+            className="text-xs text-slate-500 mt-1 hover:underline"
+            onClick={() => setOpen(false)}
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
 export function ButtonColorPalette({ label, selectedBgColor, selectedTextColor, onChange }: ButtonColorPaletteProps) {
-  
-  const handleBgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(`[${e.target.value}]`, selectedTextColor || '[#ffffff]');
+  const handleBgApply = (color: string) => {
+    onChange(color, selectedTextColor || '[#ffffff]');
   };
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(selectedBgColor || '[#0066ff]', `[${e.target.value}]`);
+  const handleTextApply = (color: string) => {
+    onChange(selectedBgColor || '[#0066ff]', color);
   };
 
   return (
@@ -51,13 +80,13 @@ export function ButtonColorPalette({ label, selectedBgColor, selectedTextColor, 
           label="Fondo"
           title="Color de fondo del botón"
           color={selectedBgColor}
-          onChange={handleBgChange}
+          onApply={handleBgApply}
         />
         <CustomColorPicker
           label="Texto"
           title="Color del texto del botón"
           color={selectedTextColor}
-          onChange={handleTextChange}
+          onApply={handleTextApply}
         />
         <div className="flex-1">
             <label className="block text-xs font-medium text-slate-500 mb-1 text-center">Vista Previa</label>

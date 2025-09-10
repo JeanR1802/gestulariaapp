@@ -196,85 +196,20 @@ export function CardsStyleEditor({ data, updateData }: { data: CardsData, update
         <div className="space-y-4">
             <div>
                 <ColorPalette label="Color de Fondo de Sección" selectedColor={isCustomSectionBg ? '' : data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
-                <div className="flex items-center gap-2 mt-2">
-                    <label className="text-sm text-slate-700">Fondo sección personalizado:</label>
-                    <input
-                        type="color"
-                        value={customSectionBgColor}
-                        onChange={e => {
-                            setCustomSectionBgColor(e.target.value);
-                            updateData('backgroundColor', `[${e.target.value}]`);
-                        }}
-                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                        title="Elegir color personalizado de fondo de sección"
-                    />
-                </div>
             </div>
             <div>
                 <TextColorPalette label="Color del Título de Sección" selectedColor={isCustomSectionTitle ? '' : data.titleColor} onChange={(color) => updateData('titleColor', color)} />
-                <div className="flex items-center gap-2 mt-2">
-                    <label className="text-sm text-slate-700">Título sección personalizado:</label>
-                    <input
-                        type="color"
-                        value={customSectionTitleColor}
-                        onChange={e => {
-                            setCustomSectionTitleColor(e.target.value);
-                            updateData('titleColor', `[${e.target.value}]`);
-                        }}
-                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                        title="Elegir color personalizado de título de sección"
-                    />
-                </div>
             </div>
             <div className="border-t border-slate-200 pt-4 mt-4">
                 <h4 className="font-medium text-sm text-slate-600 mb-3">Estilo de las Tarjetas</h4>
                 <div>
                     <ColorPalette label="Color de Fondo de Tarjeta" selectedColor={isCustomCardBg ? '' : data.cardBackgroundColor} onChange={(color) => updateData('cardBackgroundColor', color)} />
-                    <div className="flex items-center gap-2 mt-2">
-                        <label className="text-sm text-slate-700">Fondo tarjeta personalizado:</label>
-                        <input
-                            type="color"
-                            value={customCardBgColor}
-                            onChange={e => {
-                                setCustomCardBgColor(e.target.value);
-                                updateData('cardBackgroundColor', `[${e.target.value}]`);
-                            }}
-                            className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                            title="Elegir color personalizado de fondo de tarjeta"
-                        />
-                    </div>
                 </div>
                 <div>
                     <TextColorPalette label="Color de Título de Tarjeta" selectedColor={isCustomCardTitle ? '' : data.cardTitleColor} onChange={(color) => updateData('cardTitleColor', color)} />
-                    <div className="flex items-center gap-2 mt-2">
-                        <label className="text-sm text-slate-700">Título tarjeta personalizado:</label>
-                        <input
-                            type="color"
-                            value={customCardTitleColor}
-                            onChange={e => {
-                                setCustomCardTitleColor(e.target.value);
-                                updateData('cardTitleColor', `[${e.target.value}]`);
-                            }}
-                            className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                            title="Elegir color personalizado de título de tarjeta"
-                        />
-                    </div>
                 </div>
                 <div>
                     <TextColorPalette label="Color de Descripción de Tarjeta" selectedColor={isCustomCardDesc ? '' : data.cardDescriptionColor} onChange={(color) => updateData('cardDescriptionColor', color)} />
-                    <div className="flex items-center gap-2 mt-2">
-                        <label className="text-sm text-slate-700">Descripción tarjeta personalizada:</label>
-                        <input
-                            type="color"
-                            value={customCardDescColor}
-                            onChange={e => {
-                                setCustomCardDescColor(e.target.value);
-                                updateData('cardDescriptionColor', `[${e.target.value}]`);
-                            }}
-                            className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                            title="Elegir color personalizado de descripción de tarjeta"
-                        />
-                    </div>
                 </div>
             </div>
         </div>

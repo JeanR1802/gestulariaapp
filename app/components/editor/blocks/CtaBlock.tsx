@@ -133,63 +133,32 @@ export function CtaContentEditor({ data, updateData }: { data: CtaData, updateDa
 
 // --- Editor de ESTILO (SEPARADO) ---
 export function CtaStyleEditor({ data, updateData }: { data: CtaData, updateData: (key: keyof CtaData, value: string) => void }) {
-    const [customBgColor, setCustomBgColor] = React.useState<string>(data.backgroundColor?.startsWith('[#') ? data.backgroundColor.slice(2, -1) : '#ffffff');
-    const [customTitleColor, setCustomTitleColor] = React.useState<string>(data.titleColor?.startsWith('[#') ? data.titleColor.slice(2, -1) : '#000000');
-    const [customSubtitleColor, setCustomSubtitleColor] = React.useState<string>(data.subtitleColor?.startsWith('[#') ? data.subtitleColor.slice(2, -1) : '#000000');
-    const isCustomBg = data.backgroundColor?.startsWith('[#');
-    const isCustomTitle = data.titleColor?.startsWith('[#');
-    const isCustomSubtitle = data.subtitleColor?.startsWith('[#');
     return (
-        <div className="space-y-4">
-            <div>
-                <ColorPalette label="Color de Fondo" selectedColor={isCustomBg ? '' : data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
-                <div className="flex items-center gap-2 mt-2">
-                    <label className="text-sm text-slate-700">Fondo personalizado:</label>
-                    <input
-                        type="color"
-                        value={customBgColor}
-                        onChange={e => {
-                            setCustomBgColor(e.target.value);
-                            updateData('backgroundColor', `[${e.target.value}]`);
-                        }}
-                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                        title="Elegir color personalizado de fondo"
-                    />
-                </div>
-            </div>
-            <div>
-                <TextColorPalette label="Color del Título" selectedColor={isCustomTitle ? '' : data.titleColor} onChange={(color) => updateData('titleColor', color)} />
-                <div className="flex items-center gap-2 mt-2">
-                    <label className="text-sm text-slate-700">Título personalizado:</label>
-                    <input
-                        type="color"
-                        value={customTitleColor}
-                        onChange={e => {
-                            setCustomTitleColor(e.target.value);
-                            updateData('titleColor', `[${e.target.value}]`);
-                        }}
-                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                        title="Elegir color personalizado de título"
-                    />
-                </div>
-            </div>
-            <div>
-                <TextColorPalette label="Color del Subtítulo" selectedColor={isCustomSubtitle ? '' : data.subtitleColor} onChange={(color) => updateData('subtitleColor', color)} />
-                <div className="flex items-center gap-2 mt-2">
-                    <label className="text-sm text-slate-700">Subtítulo personalizado:</label>
-                    <input
-                        type="color"
-                        value={customSubtitleColor}
-                        onChange={e => {
-                            setCustomSubtitleColor(e.target.value);
-                            updateData('subtitleColor', `[${e.target.value}]`);
-                        }}
-                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                        title="Elegir color personalizado de subtítulo"
-                    />
-                </div>
-            </div>
-            <ButtonColorPalette label="Estilo del Botón" selectedBgColor={data.buttonBgColor || ''} selectedTextColor={data.buttonTextColor || ''} onChange={(bg, text) => { updateData('buttonBgColor', bg); updateData('buttonTextColor', text); }} />
+        <div className="space-y-3 p-4 max-w-xl mx-auto">
+            <ColorPalette 
+                label="Fondo"
+                selectedColor={data.backgroundColor || ''}
+                onChange={(color) => updateData('backgroundColor', color)}
+            />
+            <TextColorPalette
+                label="Título"
+                selectedColor={data.titleColor || ''}
+                onChange={(color) => updateData('titleColor', color)}
+            />
+            <TextColorPalette
+                label="Subtítulo"
+                selectedColor={data.subtitleColor || ''}
+                onChange={(color) => updateData('subtitleColor', color)}
+            />
+            <ButtonColorPalette
+                label="Botón"
+                selectedBgColor={data.buttonBgColor || ''}
+                selectedTextColor={data.buttonTextColor || ''}
+                onChange={(bg, text) => {
+                  updateData('buttonBgColor', bg);
+                  updateData('buttonTextColor', text);
+                }}
+            />
         </div>
     );
 }

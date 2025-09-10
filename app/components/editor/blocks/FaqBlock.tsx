@@ -180,84 +180,19 @@ export function FaqStyleEditor({ data, updateData }: { data: FaqData, updateData
         <div className="space-y-4">
             <div>
                 <ColorPalette label="Color de Fondo" selectedColor={isCustomBg ? '' : data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
-                <div className="flex items-center gap-2 mt-2">
-                    <label className="text-sm text-slate-700">Fondo personalizado:</label>
-                    <input
-                        type="color"
-                        value={customBgColor}
-                        onChange={e => {
-                            setCustomBgColor(e.target.value);
-                            updateData('backgroundColor', `[${e.target.value}]`);
-                        }}
-                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                        title="Elegir color personalizado de fondo"
-                    />
-                </div>
             </div>
             <div>
                 <TextColorPalette label="Color del Título" selectedColor={isCustomTitle ? '' : data.titleColor} onChange={(color) => updateData('titleColor', color)} />
-                <div className="flex items-center gap-2 mt-2">
-                    <label className="text-sm text-slate-700">Título personalizado:</label>
-                    <input
-                        type="color"
-                        value={customTitleColor}
-                        onChange={e => {
-                            setCustomTitleColor(e.target.value);
-                            updateData('titleColor', `[${e.target.value}]`);
-                        }}
-                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                        title="Elegir color personalizado de título"
-                    />
-                </div>
             </div>
             <div>
                 <TextColorPalette label="Color de Preguntas" selectedColor={isCustomQuestion ? '' : data.questionColor} onChange={(color) => updateData('questionColor', color)} />
-                <div className="flex items-center gap-2 mt-2">
-                    <label className="text-sm text-slate-700">Pregunta personalizada:</label>
-                    <input
-                        type="color"
-                        value={customQuestionColor}
-                        onChange={e => {
-                            setCustomQuestionColor(e.target.value);
-                            updateData('questionColor', `[${e.target.value}]`);
-                        }}
-                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                        title="Elegir color personalizado de pregunta"
-                    />
-                </div>
             </div>
             <div>
                 <TextColorPalette label="Color de Respuestas" selectedColor={isCustomAnswer ? '' : data.answerColor} onChange={(color) => updateData('answerColor', color)} />
-                <div className="flex items-center gap-2 mt-2">
-                    <label className="text-sm text-slate-700">Respuesta personalizada:</label>
-                    <input
-                        type="color"
-                        value={customAnswerColor}
-                        onChange={e => {
-                            setCustomAnswerColor(e.target.value);
-                            updateData('answerColor', `[${e.target.value}]`);
-                        }}
-                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                        title="Elegir color personalizado de respuesta"
-                    />
-                </div>
             </div>
             {data.variant === 'accordion' && (
                 <div>
                     <TextColorPalette label="Color del Ícono" selectedColor={isCustomIcon ? '' : data.iconColor} onChange={(color) => updateData('iconColor', color)} />
-                    <div className="flex items-center gap-2 mt-2">
-                        <label className="text-sm text-slate-700">Ícono personalizado:</label>
-                        <input
-                            type="color"
-                            value={customIconColor}
-                            onChange={e => {
-                                setCustomIconColor(e.target.value);
-                                updateData('iconColor', `[${e.target.value}]`);
-                            }}
-                            className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
-                            title="Elegir color personalizado de ícono"
-                        />
-                    </div>
                 </div>
             )}
         </div>

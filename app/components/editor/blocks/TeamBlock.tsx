@@ -258,53 +258,18 @@ export function TeamStyleEditor({
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
-        <input
-          type="color"
-          aria-label="Color personalizado de fondo"
-          value={getCustomColor(data.backgroundColor) || '#ffffff'}
-          onChange={e => updateData('backgroundColor', `[${e.target.value}]`)}
-          style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
-        />
       </div>
       <div className="flex items-center gap-2">
         <TextColorPalette label="Color del Título" selectedColor={data.titleColor} onChange={(color) => updateData('titleColor', color)} />
-        <input
-          type="color"
-          aria-label="Color personalizado de título"
-          value={getCustomColor(data.titleColor) || '#000000'}
-          onChange={e => updateData('titleColor', `[${e.target.value}]`)}
-          style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
-        />
       </div>
       <div className="flex items-center gap-2">
         <TextColorPalette label="Color del Subtítulo" selectedColor={data.subtitleColor} onChange={(color) => updateData('subtitleColor', color)} />
-        <input
-          type="color"
-          aria-label="Color personalizado de subtítulo"
-          value={getCustomColor(data.subtitleColor) || '#666666'}
-          onChange={e => updateData('subtitleColor', `[${e.target.value}]`)}
-          style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
-        />
       </div>
       <div className="flex items-center gap-2">
         <TextColorPalette label="Color de Nombres" selectedColor={data.nameColor} onChange={(color) => updateData('nameColor', color)} />
-        <input
-          type="color"
-          aria-label="Color personalizado de nombres"
-          value={getCustomColor(data.nameColor) || '#111111'}
-          onChange={e => updateData('nameColor', `[${e.target.value}]`)}
-          style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
-        />
       </div>
       <div className="flex items-center gap-2">
         <TextColorPalette label="Color de Cargos" selectedColor={data.roleColor} onChange={(color) => updateData('roleColor', color)} />
-        <input
-          type="color"
-          aria-label="Color personalizado de cargos"
-          value={getCustomColor(data.roleColor) || '#888888'}
-          onChange={e => updateData('roleColor', `[${e.target.value}]`)}
-          style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
-        />
       </div>
     </div>
   );

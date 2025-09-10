@@ -236,7 +236,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => setShowGenerateAllModal(true)} disabled={isGeneratingAll} className="px-3 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:opacity-50 flex items-center gap-1.5"><SparklesIcon className="h-4 w-4" />{isGeneratingAll ? 'Generando...' : 'Generar con IA'}</button>
-              <button onClick={() => window.open(`/site/${tenant?.slug}`, '_blank')} className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200">Vista Previa</button>
+              <button onClick={() => window.open(`http://${tenant?.slug}.localhost:3000`, '_blank')} className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200">Vista Previa</button>
               <button onClick={saveTenant} disabled={saving} className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">{saving ? 'Guardando...' : 'Guardar'}</button>
             </div>
           </div>
