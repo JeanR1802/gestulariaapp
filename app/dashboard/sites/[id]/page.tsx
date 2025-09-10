@@ -2,17 +2,16 @@
 import { useState, useEffect, useCallback, use, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import { BLOCKS, BlockType, BlockData } from '@/app/components/editor/blocks';
+import { BLOCKS, BlockType, BlockData, Block } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 import { ComputerDesktopIcon, DeviceTabletIcon, DevicePhoneMobileIcon, SparklesIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { PreviewModeContext } from '@/app/contexts/PreviewModeContext';
 import { TextareaField } from '@/app/components/editor/blocks/InputField';
-import { FloatingToolbar } from '@/app/components/editor/controls/FloatingToolbar';
 import { Transition } from '@headlessui/react';
 
 // --- Tipos y sModales ---
-interface Block { id: number; type: string; data: BlockData; }
+
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 
 function GenerateAllModal({ onClose, onGenerate, isLoading }: { onClose: () => void, onGenerate: (desc: string) => void, isLoading: boolean }) {
@@ -197,8 +196,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     setBlocks(newBlocks);
   };
   
-  const editingBlock = blocks.find(b => b.id === editingBlockId);
-  
   const handleGenerateAllContent = async (userDescription: string) => {
       setIsGeneratingAll(true);
       try {
@@ -283,7 +280,17 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
               <div className={cn("mx-auto bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-full transition-all duration-300 ease-in-out", { 'max-w-full': previewMode === 'desktop', 'max-w-screen-md': previewMode === 'tablet', 'max-w-sm': previewMode === 'mobile' })}>
                 <div className="p-4">
                   {blocks.map((block, index) => (
-                    <BlockRenderer key={block.id} block={block} isEditing={editingBlockId === block.id} onDelete={() => deleteBlock(block.id)} onEdit={() => setEditingBlockId(block.id)} onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} />
+                    <BlockRenderer 
+                        key={block.id} 
+                        block={block} 
+                        isEditing={editingBlockId === block.id} 
+                        onDelete={() => deleteBlock(block.id)} 
+                        onEdit={() => setEditingBlockId(block.id)}
+                        onClose={() => setEditingBlockId(null)}
+                        onUpdate={(key, value) => updateBlock(block.id, key, value)}
+                        onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} 
+                        onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} 
+                    />
                   ))}
                   {blocks.length === 0 && (
                     <div className="text-center py-24 border-2 border-dashed rounded-lg">
@@ -297,14 +304,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
             </div>
           </div>
           
-          {editingBlock && (
-            <FloatingToolbar
-                block={editingBlock}
-                onUpdate={(key, value) => updateBlock(editingBlock.id, key, value)}
-                onClose={() => setEditingBlockId(null)}
-            />
-          )}
-
           {activeBlockType && <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />}
         </main>
 

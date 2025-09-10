@@ -1,4 +1,4 @@
-// app/components/editor/blocks/index.tsx (VERSIÓN COMPLETA Y CORREGIDA)
+// app/components/editor/blocks/index.tsx (REFACTORIZADO CON TIPOS)
 'use client';
 import React from 'react';
 import {
@@ -18,9 +18,9 @@ import {
 } from '@heroicons/react/24/outline';
 
 // Importaciones de bloques y sus tipos de datos
-import { HeaderBlock, HeaderContentEditor, HeaderStyleEditor, HeaderData } from './HeaderBlock';
+import { HeaderBlock, HeaderStyleEditor, HeaderData } from './HeaderBlock';
 import { HeroBlock, HeroContentEditor, HeroStyleEditor, HeroData } from './HeroBlock';
-import { TextBlock, TextContentEditor, TextStyleEditor, TextData } from './TextBlock';
+import { TextBlock, TextStyleEditor, TextData } from './TextBlock';
 import { ImageBlock, ImageContentEditor, ImageStyleEditor, ImageData } from './ImageBlock';
 import { CardsBlock, CardsContentEditor, CardsStyleEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaContentEditor, CtaStyleEditor, CtaData } from './CtaBlock';
@@ -47,16 +47,47 @@ import { TeamPreviewGrid, TeamPreviewList } from './Team/TeamPreviews';
 import { CatalogPreviewGrid, CatalogPreviewMinimalGrid, CatalogPreviewCarousel } from './Catalog/CatalogPreviews';
 import { FeaturedProductPreviewImageLeft, FeaturedProductPreviewBackground } from './FeaturedProduct/FeaturedProductPreviews';
 
+// --- TIPOS GENÉRICOS Y DE CONFIGURACIÓN ---
+
+// Unión de todos los tipos de datos de los bloques
 export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData | FeaturedProductData;
 
-// Este objeto es el "cerebro" que conecta todo
-export const BLOCKS = {
+// Props que recibirá cada componente de renderizado de bloque (ej: TextBlock, HeaderBlock)
+export interface BlockComponentProps<T extends BlockData> {
+  data: T;
+  isEditing?: boolean;
+  onUpdate?: (key: string, value: unknown) => void;
+}
+
+// Tipado para un componente de renderizado de bloque
+export type BlockRendererComponent<T extends BlockData> = React.FC<BlockComponentProps<T>>;
+
+// Configuración para un solo tipo de bloque
+export interface BlockConfig<T extends BlockData> {
+  name: string;
+  icon: React.ElementType;
+  description: string;
+  renderer: BlockRendererComponent<T>;
+  editor: React.FC<{ data: T; updateData: (key: keyof T, value: any) => void }>;
+  styleEditor?: React.FC<{ data: T; updateData: (key: keyof T, value: any) => void }>;
+  theme: { bg: string; icon: string };
+  variants: {
+    name: string;
+    description: string;
+    preview: React.FC<{ data: T }>;
+    defaultData: T;
+  }[];
+}
+
+// --- OBJETO DE CONFIGURACIÓN DE BLOQUES ---
+
+export const BLOCKS: { [key: string]: BlockConfig<any> } = {
   header: {
     name: 'Encabezado',
     icon: QueueListIcon,
     description: 'Barra de navegación principal.',
     renderer: HeaderBlock,
-    editor: HeaderContentEditor,
+    editor: HeaderStyleEditor,
     styleEditor: HeaderStyleEditor,
     theme: { bg: 'bg-sky-50', icon: 'text-sky-600' },
     variants: [
@@ -64,7 +95,7 @@ export const BLOCKS = {
         { name: 'Centrado', description: 'Logo y enlaces centrados.', preview: HeaderVariantCentered, defaultData: { variant: 'centered', logoText: 'MiLogo', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto', backgroundColor: 'bg-white', logoColor: 'text-slate-800', linkColor: 'text-slate-600', buttonText: '', buttonBgColor: '', buttonTextColor: '' } as HeaderData },
         { name: 'Con Botón', description: 'Ideal para dirigir a una acción clave.', preview: HeaderVariantButtonPreview, defaultData: { variant: 'withButton', logoText: 'MiLogo', link1: 'Producto', link2: 'Precios', buttonText: 'Registrarse', backgroundColor: 'bg-white', logoColor: 'text-slate-800', linkColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as HeaderData },
     ]
-  },
+  } as BlockConfig<HeaderData>,
   hero: {
     name: 'Héroe',
     icon: ViewfinderCircleIcon,
@@ -78,7 +109,7 @@ export const BLOCKS = {
         { name: 'Izquierda con Imagen', description: 'Texto a la izquierda, imagen a la derecha.', preview: HeroPreviewLeftImage, defaultData: { variant: 'leftImage', title: 'Título Descriptivo', subtitle: 'Complementa tu mensaje con una imagen poderosa.', buttonText: 'Ver Más', imageUrl: '', backgroundColor: 'bg-white', titleColor: 'text-slate-800', subtitleColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as HeroData },
         { name: 'Mínimo Oscuro', description: 'Diseño elegante sobre un fondo oscuro.', preview: HeroPreviewDarkMinimal, defaultData: { variant: 'darkMinimal', title: 'Menos es Más', buttonText: 'Explorar', backgroundColor: 'bg-slate-900', titleColor: 'text-white', subtitle: '', subtitleColor: 'text-slate-300', buttonBgColor: 'bg-white', buttonTextColor: 'text-slate-800' } as HeroData },
     ]
-  },
+  } as BlockConfig<HeroData>,
   featuredProduct: {
     name: 'Producto Destacado',
     icon: StarIcon,
@@ -91,7 +122,7 @@ export const BLOCKS = {
         { name: 'Imagen a la Izquierda', description: 'Un diseño clásico con imagen y detalles.', preview: FeaturedProductPreviewImageLeft, defaultData: { variant: 'imageLeft', imageUrl: '', tag: 'Más Vendido', title: 'Nombre del Producto Increíble', description: 'Describe por qué este producto es esencial. Habla de sus beneficios y características únicas.', price: '$99.99', rating: 5, buttonText: 'Añadir al Carrito', backgroundColor: 'bg-white', tagColor: 'text-blue-600', titleColor: 'text-slate-800', descriptionColor: 'text-slate-600', priceColor: 'text-slate-900', buttonBgColor: 'bg-slate-900', buttonTextColor: 'text-white' } as FeaturedProductData },
         { name: 'Imagen de Fondo', description: 'Un diseño inmersivo y moderno.', preview: FeaturedProductPreviewBackground, defaultData: { variant: 'background', imageUrl: '', tag: 'Exclusivo Online', title: 'Producto de Edición Limitada', description: 'Una experiencia premium. Atrapa la atención de tus clientes con este diseño audaz.', price: '$149.99', rating: 5, buttonText: 'Comprar Ahora', backgroundColor: 'bg-black', tagColor: 'text-blue-400', titleColor: 'text-white', descriptionColor: 'text-slate-200', priceColor: 'text-white', buttonBgColor: 'bg-white', buttonTextColor: 'text-slate-900' } as FeaturedProductData },
     ]
-  },
+  } as BlockConfig<FeaturedProductData>,
   catalog: {
     name: 'Catálogo',
     icon: ShoppingBagIcon,
@@ -105,7 +136,7 @@ export const BLOCKS = {
         { name: 'Cuadrícula Mínima', description: 'Diseño limpio solo con imagen, título y precio.', preview: CatalogPreviewMinimalGrid, defaultData: { variant: 'minimalGrid', title: 'Colección Minimalista', subtitle: 'Productos seleccionados por su diseño.', products: [{ name: 'Producto A', price: '$49' }], backgroundColor: 'bg-white', titleColor: 'text-slate-800', subtitleColor: 'text-slate-600', cardColor: 'bg-white', productNameColor: 'text-slate-800', productPriceColor: 'text-slate-600', productDescriptionColor: '', buttonBgColor: '', buttonTextColor: '' } as CatalogData },
         { name: 'Carrusel de Productos', description: 'Ideal para mostrar una selección destacada en una sola fila.', preview: CatalogPreviewCarousel, defaultData: { variant: 'carousel', title: 'Novedades', subtitle: 'Descubre los últimos lanzamientos.', products: [{ name: 'Producto X', price: '$99' }], backgroundColor: 'bg-white', titleColor: 'text-slate-800', subtitleColor: 'text-slate-600', cardColor: 'bg-white', productNameColor: 'text-slate-800', productPriceColor: 'text-slate-600', productDescriptionColor: '', buttonBgColor: '', buttonTextColor: '' } as CatalogData },
     ]
-  },
+  } as BlockConfig<CatalogData>,
   team: {
     name: 'Equipo',
     icon: UserGroupIcon,
@@ -118,7 +149,7 @@ export const BLOCKS = {
         { name: 'Cuadrícula', description: 'Muestra a los miembros en una cuadrícula con foto.', preview: TeamPreviewGrid, defaultData: { variant: 'grid', title: 'Nuestro Equipo', subtitle: 'Conoce a las personas que hacen esto posible.', members: [{ name: 'Juan Pérez', role: 'CEO', imageUrl: '' }], backgroundColor: 'bg-white', titleColor: 'text-slate-800', subtitleColor: 'text-slate-600', nameColor: 'text-slate-900', roleColor: 'text-slate-500' } as TeamData },
         { name: 'Lista', description: 'Presenta a los miembros en un formato de lista vertical.', preview: TeamPreviewList, defaultData: { variant: 'list', title: 'Expertos a tu Servicio', subtitle: 'El equipo detrás de nuestro éxito.', members: [{ name: 'Carlos Rivas', role: 'Desarrollador' }], backgroundColor: 'bg-white', titleColor: 'text-slate-800', subtitleColor: 'text-slate-600', nameColor: 'text-slate-900', roleColor: 'text-slate-500' } as TeamData },
     ]
-  },
+  } as BlockConfig<TeamData>,
   testimonial: {
     name: 'Testimonios',
     icon: UserCircleIcon,
@@ -132,7 +163,7 @@ export const BLOCKS = {
         { name: 'Cita con Imagen', description: 'Un testimonio con la foto del autor.', preview: TestimonialPreviewWithImage, defaultData: { variant: 'singleWithImage', testimonials: [{ quote: '¡Increíble! Superó todas mis expectativas.', author: 'Ana López', role: 'Emprendedora', imageUrl: '' }], title: '', backgroundColor: 'bg-white', cardColor: '', titleColor: '', quoteColor: 'text-slate-700', authorColor: 'text-slate-900', roleColor: 'text-slate-500' } as TestimonialData },
         { name: 'Cuadrícula', description: 'Muestra múltiples testimonios en una cuadrícula.', preview: TestimonialPreviewGrid, defaultData: { variant: 'grid', title: 'Lo que dicen nuestros clientes', testimonials: [{ quote: 'El mejor soporte que he recibido.', author: 'Miguel Castro', role: 'Gerente' }], backgroundColor: 'bg-white', cardColor: 'bg-slate-50', titleColor: 'text-slate-800', quoteColor: 'text-slate-700', authorColor: 'text-slate-900', roleColor: 'text-slate-500' } as TestimonialData },
     ]
-  },
+  } as BlockConfig<TestimonialData>,
   faq: {
     name: 'Preguntas Frecuentes',
     icon: QuestionMarkCircleIcon,
@@ -145,13 +176,13 @@ export const BLOCKS = {
         { name: 'Lista', description: 'Muestra las preguntas y respuestas en una lista simple.', preview: FaqPreviewList, defaultData: { variant: 'list', title: 'Preguntas Frecuentes', items: [{ question: '¿Cuál es el costo?', answer: 'El costo varía según el plan.' }], backgroundColor: 'bg-white', titleColor: 'text-slate-800', questionColor: 'text-slate-900', answerColor: 'text-slate-600', iconColor: '' } as FaqData },
         { name: 'Acordeón', description: 'Las respuestas se revelan al hacer clic en la pregunta.', preview: FaqPreviewAccordion, defaultData: { variant: 'accordion', title: '¿Tienes Dudas?', items: [{ question: '¿Ofrecen soporte?', answer: 'Sí, ofrecemos soporte 24/7.' }], backgroundColor: 'bg-white', titleColor: 'text-slate-800', questionColor: 'text-slate-900', answerColor: 'text-slate-600', iconColor: 'text-slate-500' } as FaqData },
     ]
-  },
+  } as BlockConfig<FaqData>,
   text: {
     name: 'Texto',
     icon: ChatBubbleBottomCenterTextIcon,
     description: 'Párrafo de texto simple.',
     renderer: TextBlock,
-    editor: TextContentEditor,
+    editor: TextStyleEditor,
     styleEditor: TextStyleEditor,
     theme: { bg: 'bg-gray-50', icon: 'text-gray-600' },
     variants: [
@@ -159,7 +190,7 @@ export const BLOCKS = {
         { name: 'Cita Destacada', description: 'Resalta una frase o cita importante.', preview: TextPreviewQuote, defaultData: { variant: 'quote', content: 'Una frase inspiradora o un dato clave que quieras destacar.', backgroundColor: 'bg-white', textColor: 'text-slate-700' } as TextData },
         { name: 'Texto Resaltado', description: 'Ideal para notas o avisos importantes.', preview: TextPreviewHighlighted, defaultData: { variant: 'highlighted', content: 'Usa este bloque para mensajes importantes que no deben pasarse por alto.', backgroundColor: 'bg-yellow-100/60', textColor: 'text-yellow-800' } as TextData },
     ]
-  },
+  } as BlockConfig<TextData>,
   image: {
     name: 'Imagen',
     icon: PhotoIcon,
@@ -173,7 +204,7 @@ export const BLOCKS = {
         { name: 'Con Borde y Sombra', description: 'Destaca tu imagen con un borde sutil y sombra.', preview: ImagePreviewBordered, defaultData: { variant: 'bordered', imageUrl: 'https://placehold.co/800x450/e2e8f0/64748b?text=Imagen', alt: 'Descripción de la imagen', caption: 'Imagen con estilo' } as ImageData },
         { name: 'Ancho Completo', description: 'La imagen ocupa todo el ancho de la página.', preview: ImagePreviewFullWidth, defaultData: { variant: 'fullwidth', imageUrl: 'https://placehold.co/1200x600/e2e8f0/64748b?text=Imagen+Ancho+Completo', alt: 'Descripción de la imagen', caption: '' } as ImageData },
     ]
-  },
+  } as BlockConfig<ImageData>,
   cards: {
     name: 'Tarjetas',
     icon: RectangleGroupIcon,
@@ -187,7 +218,7 @@ export const BLOCKS = {
         { name: 'Lista Vertical', description: 'Enumera características o beneficios en formato de lista.', preview: CardsPreviewList, defaultData: { variant: 'list', title: '¿Por qué elegirnos?', cards: [{ icon: '✅', title: 'Beneficio 1', description: 'Explicación del beneficio.' }, { icon: '✅', title: 'Beneficio 2', description: 'Explicación del beneficio.' }], backgroundColor: 'bg-white', titleColor: 'text-slate-800', cardBackgroundColor: '', cardTitleColor: 'text-slate-900', cardDescriptionColor: 'text-slate-600' } as CardsData },
         { name: 'Imagen Superior', description: 'Tarjetas con una imagen destacada en la parte superior.', preview: CardsPreviewImageTop, defaultData: { variant: 'imageTop', title: 'Nuestros Servicios', cards: [{ title: 'Servicio A', description: 'Descripción.', imageUrl: '' }, { title: 'Servicio B', description: 'Descripción.', imageUrl: '' }], backgroundColor: 'bg-slate-50', titleColor: 'text-slate-800', cardBackgroundColor: 'bg-white', cardTitleColor: 'text-slate-900', cardDescriptionColor: 'text-slate-600' } as CardsData },
     ]
-  },
+  } as BlockConfig<CardsData>,
   cta: {
     name: 'Llamada a la Acción',
     icon: MegaphoneIcon,
@@ -201,7 +232,7 @@ export const BLOCKS = {
         { name: 'Banner Claro', description: 'Un diseño limpio y claro para atraer la atención.', preview: CtaPreviewLight, defaultData: { variant: 'light', title: 'Impulsa tu Negocio', subtitle: 'Descubre cómo nuestras herramientas pueden ayudarte a crecer.', buttonText: 'Saber Más', backgroundColor: 'bg-slate-100', titleColor: 'text-slate-800', subtitleColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as CtaData },
         { name: 'Dividido con Imagen', description: 'Combina un mensaje potente con una imagen.', preview: CtaPreviewSplit, defaultData: { variant: 'split', title: 'Transforma tu Flujo de Trabajo', subtitle: 'Ahorra tiempo y aumenta tu productividad.', buttonText: 'Ver Demo', imageUrl: '', backgroundColor: 'bg-white', titleColor: 'text-slate-800', subtitleColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as CtaData },
     ]
-  },
+  } as BlockConfig<CtaData>,
   pricing: {
     name: 'Precios',
     icon: CurrencyDollarIcon,
@@ -284,7 +315,7 @@ export const BLOCKS = {
             } as PricingData
         },
     ]
-  },
+  } as BlockConfig<PricingData>,
   footer: {
     name: 'Pie de Página',
     icon: CodeBracketIcon,
@@ -298,7 +329,13 @@ export const BLOCKS = {
         { name: 'Multicolumna', description: 'Organiza enlaces en varias columnas.', preview: FooterPreviewMultiColumn, defaultData: { variant: 'multiColumn', copyrightText: `© ${new Date().getFullYear()} Mi Empresa.`, columns: [{ title: 'Producto', links: ['Precios', 'Funciones'] }, { title: 'Compañía', links: ['Sobre nosotros', 'Contacto'] }], backgroundColor: 'bg-slate-800', textColor: 'text-slate-400', linkColor: 'text-slate-300' } as FooterData },
         { name: 'Mínimo', description: 'Solo el texto de copyright.', preview: FooterPreviewMinimal, defaultData: { variant: 'minimal', copyrightText: `© ${new Date().getFullYear()} Mi Empresa.`, backgroundColor: 'bg-white', textColor: 'text-slate-500', linkColor: '' } as FooterData },
     ]
-  },
+  } as BlockConfig<FooterData>,
 };
 
 export type BlockType = keyof typeof BLOCKS;
+
+export interface Block {
+    id: number;
+    type: BlockType;
+    data: BlockData;
+}

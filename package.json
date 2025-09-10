@@ -20,7 +20,8 @@
     "nanoid": "^5.1.5",
     "next": "15.5.2",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "use-editable": "^2.3.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

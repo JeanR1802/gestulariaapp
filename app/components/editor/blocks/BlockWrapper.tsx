@@ -1,53 +1,92 @@
-// app/components/editor/blocks/BlockWrapper.tsx (CORREGIDO)
+// app/components/editor/blocks/BlockWrapper.tsx (REFACTORED for toolbar position)
 'use client';
 import React from 'react';
-import { BlockType } from './index';
-import { ArrowUpIcon, ArrowDownIcon, TrashIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import { Block } from './index';
+import { PencilSquareIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
+import { cn } from '@/lib/utils';
 
 interface BlockWrapperProps {
   children: React.ReactNode;
   isEditing: boolean;
   onEdit: () => void;
+  onClose: () => void;
   onDelete: () => void;
+  onUpdate: (key: string, value: unknown) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
-  blockId: number;
-  blockType: BlockType;
+  block: Block;
 }
 
-export const BlockWrapper = ({ children, isEditing, onEdit, onDelete, onMoveUp, onMoveDown }: BlockWrapperProps) => {
-  // Si el bloque está en modo edición, solo mostramos un anillo azul alrededor.
+export const BlockWrapper = ({ 
+    children, 
+    isEditing, 
+    onEdit,
+    onClose,
+    onDelete,
+    onUpdate,
+    onMoveUp,
+    onMoveDown,
+    block 
+}: BlockWrapperProps) => {
+  const { isMobile } = usePreviewMode();
+
+  // --- Edit Mode ---
   if (isEditing) {
     return (
-      <div className="relative ring-2 ring-blue-500 rounded-lg">
-        {children}
+      <div className="relative my-4">
+        {/* Toolbar is now outside and above the block */}
+        {!isMobile && (
+            <div className="absolute bottom-full left-0 w-full flex justify-center mb-2">
+                <div className="flex items-center gap-1 p-1 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-slate-200">
+                    {onMoveUp && <button title="Mover Arriba" onClick={onMoveUp} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
+                    {onMoveDown && <button title="Mover Abajo" onClick={onMoveDown} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
+                    <button title="Eliminar Bloque" onClick={onDelete} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-100 group/trash"><TrashIcon className="w-5 h-5 text-red-500 group-hover/trash:text-red-600" /></button>
+                    <div className="w-px h-6 bg-slate-200 mx-1"></div>
+                    <button title="Finalizar Edición" onClick={onClose} className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700"><XMarkIcon className="w-5 h-5" /></button>
+                </div>
+            </div>
+        )}
+        
+        {/* The block itself with an editing ring */}
+        <div className="ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-100 rounded-lg">
+            {children}
+        </div>
+
+        {/* Bottom Sheet for Mobile */}
+        {isMobile && (
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-lg rounded-t-2xl border-t">
+                <div className="p-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold text-slate-800">Editando Bloque</h3>
+                        <div className="flex items-center gap-2">
+                            {onMoveUp && <button title="Mover Arriba" onClick={onMoveUp} className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
+                            {onMoveDown && <button title="Mover Abajo" onClick={onMoveDown} className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
+                            <button title="Eliminar Bloque" onClick={onDelete} className="w-9 h-9 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 group/trash"><TrashIcon className="w-5 h-5 text-red-500" /></button>
+                        </div>
+                    </div>
+                    {/* Placeholder for Mobile Style Controls */}
+                    <div className="py-4 border-t">
+                        <p className="text-center text-sm text-slate-500">Controles de estilo aparecerán aquí.</p>
+                    </div>
+                    <button onClick={onClose} className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700">Hecho</button>
+                </div>
+            </div>
+        )}
       </div>
     );
   }
 
-  // Si no está en modo edición, mostramos el bloque normal
-  // con los controles que aparecen al pasar el ratón.
+  // --- Normal Mode ---
   return (
-    <div className="relative rounded-lg transition-all group">
-      {/* Controles de Acción (Arriba/Abajo/Eliminar) */}
-      <div className="absolute top-2 right-2 z-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-         {onMoveUp && <button onClick={onMoveUp} className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
-         {onMoveDown && <button onClick={onMoveDown} className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
-         <button onClick={onDelete} className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-red-500 group/trash"><TrashIcon className="w-5 h-5 text-gray-700 group-hover/trash:text-white" /></button>
-      </div>
-      
-      {/* Botón central para editar que aparece al pasar el ratón */}
-      <div 
-        onClick={onEdit}
-        className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 rounded-lg flex items-center justify-center cursor-pointer"
-      >
-         <div className="bg-white/90 text-gray-800 font-semibold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transform group-hover:scale-100 scale-90 transition-transform">
+    <div className="relative rounded-lg transition-all group" onClick={onEdit}>
+      {/* Overlay with Edit button on hover */}
+      <div className="absolute inset-0 bg-sky-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 rounded-lg flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+         <div className="bg-white/95 text-gray-800 font-semibold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
             <PencilSquareIcon className="w-5 h-5" />
-            Editar Bloque
+            Editar
          </div>
       </div>
-      
-      {/* Aquí se renderiza el bloque real, sin ninguna etiqueta ni cabecera adicional */}
       {children}
     </div>
   );

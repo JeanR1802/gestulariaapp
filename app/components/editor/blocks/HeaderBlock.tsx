@@ -1,12 +1,12 @@
-// Reemplaza el contenido de app/components/editor/blocks/HeaderBlock.tsx
+// app/components/editor/blocks/HeaderBlock.tsx (REFACTORED with use-editable)
 'use client';
-import React from 'react';
-import { InputField } from './InputField';
+import React, { useRef, JSX } from 'react';
+import { useEditable } from 'use-editable';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
 import { cn } from '@/lib/utils';
+import { BlockComponentProps } from './index';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
-import { ButtonColorPalette } from '../controls/ButtonColorPalette';
 
 // --- Interfaces de Datos ---
 export interface HeaderData {
@@ -22,6 +22,37 @@ export interface HeaderData {
   buttonBgColor: string;
   buttonTextColor: string;
 }
+
+// --- Helper Component for Inline Editing ---
+const Editable = ({
+    tagName,
+    value,
+    onUpdate,
+    isEditing,
+    className,
+    style
+}: {
+    tagName: keyof JSX.IntrinsicElements;
+    value: string;
+    onUpdate: (newValue: string) => void;
+    isEditing?: boolean;
+    className?: string;
+    style?: React.CSSProperties;
+}) => {
+    const ref = useRef<HTMLElement>(null);
+    useEditable(ref, (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')), { disabled: !isEditing });
+
+    return React.createElement(
+        tagName,
+        {
+            ref: ref,
+            className: cn(className, { 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing }),
+            style: style
+        },
+        value
+    );
+};
+
 
 // --- Lógica para manejar colores personalizados ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {
@@ -51,33 +82,37 @@ const getButtonStyles = (bgColor: string | undefined, textColor: string | undefi
 };
 
 // --- HEADER RESPONSIVE Y MODERNO ---
-export function HeaderBlock({ data }: { data: HeaderData }) {
+export function HeaderBlock({ data, isEditing, onUpdate }: BlockComponentProps<HeaderData>) {
+  const props = { data, isEditing, onUpdate };
   switch (data.variant) {
     case 'centered':
-      return <HeaderCentered data={data} />;
+      return <HeaderCentered {...props} />;
     case 'withButton':
-      return <HeaderWithButton data={data} />;
+      return <HeaderWithButton {...props} />;
     default:
-      return <HeaderDefault data={data} />;
+      return <HeaderDefault {...props} />;
   }
 }
 
-// --- Componentes de Variante (Visuales) ---
-const HeaderDefault = ({ data }: { data: HeaderData }) => {
+const HeaderDefault = ({ data, isEditing, onUpdate }: BlockComponentProps<HeaderData>) => {
   const { isMobile } = usePreviewMode();
   const bg = getBackgroundStyles(data.backgroundColor);
   const logoStyles = getStyles(data.logoColor, 'text-slate-800');
   const linkStyles = getStyles(data.linkColor, 'text-slate-600');
 
+  const handleUpdate = (key: keyof HeaderData, value: string) => {
+    if (onUpdate) onUpdate(key, value);
+  };
+
   return (
     <header className={cn('p-4', bg.className)} style={bg.style}>
       <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
-        <h1 className={cn('font-bold', isMobile ? 'text-lg' : 'text-xl', logoStyles.className)} style={logoStyles.style}>{data.logoText}</h1>
+        <Editable tagName="h1" value={data.logoText} onUpdate={(v) => handleUpdate('logoText', v)} isEditing={isEditing} className={cn('font-bold', isMobile ? 'text-lg' : 'text-xl', logoStyles.className)} style={logoStyles.style} />
         {!isMobile && (
           <nav className={cn('flex items-center space-x-6 text-sm', linkStyles.className)} style={linkStyles.style}>
-            <a href="#" className="hover:opacity-80 transition-opacity">{data.link1}</a>
-            <a href="#" className="hover:opacity-80 transition-opacity">{data.link2}</a>
-            <a href="#" className="hover:opacity-80 transition-opacity">{data.link3}</a>
+            <Editable tagName="a" value={data.link1} onUpdate={(v) => handleUpdate('link1', v)} isEditing={isEditing} className="hover:opacity-80 transition-opacity" />
+            <Editable tagName="a" value={data.link2} onUpdate={(v) => handleUpdate('link2', v)} isEditing={isEditing} className="hover:opacity-80 transition-opacity" />
+            <Editable tagName="a" value={data.link3} onUpdate={(v) => handleUpdate('link3', v)} isEditing={isEditing} className="hover:opacity-80 transition-opacity" />
           </nav>
         )}
         {isMobile && <button className={logoStyles.className} style={logoStyles.style}>☰</button>}
@@ -86,21 +121,25 @@ const HeaderDefault = ({ data }: { data: HeaderData }) => {
   );
 };
 
-const HeaderCentered = ({ data }: { data: HeaderData }) => {
-  const { isMobile } = usePreviewMode();
-  const bg = getBackgroundStyles(data.backgroundColor);
-  const logoStyles = getStyles(data.logoColor, 'text-slate-800');
-  const linkStyles = getStyles(data.linkColor, 'text-slate-600');
+const HeaderCentered = ({ data, isEditing, onUpdate }: BlockComponentProps<HeaderData>) => {
+    const { isMobile } = usePreviewMode();
+    const bg = getBackgroundStyles(data.backgroundColor);
+    const logoStyles = getStyles(data.logoColor, 'text-slate-800');
+    const linkStyles = getStyles(data.linkColor, 'text-slate-600');
+  
+    const handleUpdate = (key: keyof HeaderData, value: string) => {
+      if (onUpdate) onUpdate(key, value);
+    };
 
   return (
     <header className={cn('p-4', bg.className)} style={bg.style}>
       <div className="max-w-6xl mx-auto flex flex-col items-center gap-4">
-        <h1 className={cn('font-bold', isMobile ? 'text-lg' : 'text-xl', logoStyles.className)} style={logoStyles.style}>{data.logoText}</h1>
+        <Editable tagName="h1" value={data.logoText} onUpdate={(v) => handleUpdate('logoText', v)} isEditing={isEditing} className={cn('font-bold', isMobile ? 'text-lg' : 'text-xl', logoStyles.className)} style={logoStyles.style} />
         {!isMobile && (
           <nav className={cn('flex items-center space-x-6 text-sm', linkStyles.className)} style={linkStyles.style}>
-            <a href="#" className="hover:opacity-80 transition-opacity">{data.link1}</a>
-            <a href="#" className="hover:opacity-80 transition-opacity">{data.link2}</a>
-            <a href="#" className="hover:opacity-80 transition-opacity">{data.link3}</a>
+            <Editable tagName="a" value={data.link1} onUpdate={(v) => handleUpdate('link1', v)} isEditing={isEditing} className="hover:opacity-80 transition-opacity" />
+            <Editable tagName="a" value={data.link2} onUpdate={(v) => handleUpdate('link2', v)} isEditing={isEditing} className="hover:opacity-80 transition-opacity" />
+            <Editable tagName="a" value={data.link3} onUpdate={(v) => handleUpdate('link3', v)} isEditing={isEditing} className="hover:opacity-80 transition-opacity" />
           </nav>
         )}
       </div>
@@ -108,30 +147,28 @@ const HeaderCentered = ({ data }: { data: HeaderData }) => {
   );
 };
 
-const HeaderWithButton = ({ data }: { data: HeaderData }) => {
-  const { isMobile } = usePreviewMode();
-  const bg = getBackgroundStyles(data.backgroundColor);
-  const logoStyles = getStyles(data.logoColor, 'text-slate-800');
-  const linkStyles = getStyles(data.linkColor, 'text-slate-600');
-  const buttonStyle = getButtonStyles(data.buttonBgColor, data.buttonTextColor);
+const HeaderWithButton = ({ data, isEditing, onUpdate }: BlockComponentProps<HeaderData>) => {
+    const { isMobile } = usePreviewMode();
+    const bg = getBackgroundStyles(data.backgroundColor);
+    const logoStyles = getStyles(data.logoColor, 'text-slate-800');
+    const linkStyles = getStyles(data.linkColor, 'text-slate-600');
+    const buttonStyle = getButtonStyles(data.buttonBgColor, data.buttonTextColor);
+
+    const handleUpdate = (key: keyof HeaderData, value: string) => {
+        if (onUpdate) onUpdate(key, value);
+    };
 
   return (
     <header className={cn('p-4', bg.className)} style={bg.style}>
       <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
-        <h1 className={cn('font-bold', isMobile ? 'text-lg' : 'text-xl', logoStyles.className)} style={logoStyles.style}>{data.logoText}</h1>
+        <Editable tagName="h1" value={data.logoText} onUpdate={(v) => handleUpdate('logoText', v)} isEditing={isEditing} className={cn('font-bold', isMobile ? 'text-lg' : 'text-xl', logoStyles.className)} style={logoStyles.style} />
         {!isMobile && (
           <div className="flex items-center gap-6">
             <nav className={cn('flex items-center space-x-6 text-sm', linkStyles.className)} style={linkStyles.style}>
-              <a href="#" className="hover:opacity-80 transition-opacity">{data.link1}</a>
-              <a href="#" className="hover:opacity-80 transition-opacity">{data.link2}</a>
+                <Editable tagName="a" value={data.link1} onUpdate={(v) => handleUpdate('link1', v)} isEditing={isEditing} className="hover:opacity-80 transition-opacity" />
+                <Editable tagName="a" value={data.link2} onUpdate={(v) => handleUpdate('link2', v)} isEditing={isEditing} className="hover:opacity-80 transition-opacity" />
             </nav>
-            <a 
-              href="#" 
-              className={cn('px-4 py-1.5 rounded-md text-sm font-semibold', buttonStyle.className)} 
-              style={buttonStyle.style}
-            >
-              {data.buttonText}
-            </a>
+            <Editable tagName="a" value={data.buttonText} onUpdate={(v) => handleUpdate('buttonText', v)} isEditing={isEditing} className={cn('px-4 py-1.5 rounded-md text-sm font-semibold', buttonStyle.className)} style={buttonStyle.style} />
           </div>
         )}
         {isMobile && <button className={logoStyles.className} style={logoStyles.style}>☰</button>}
@@ -139,23 +176,6 @@ const HeaderWithButton = ({ data }: { data: HeaderData }) => {
     </header>
   );
 };
-
-// --- Editor de CONTENIDO ---
-export function HeaderContentEditor({ data, updateData }: { data: HeaderData, updateData: (key: keyof HeaderData, value: string) => void }) {
-  return (
-    <div className="space-y-4">
-      <InputField label="Texto del Logo" value={data.logoText} onChange={(e) => updateData('logoText', e.target.value)} />
-      <InputField label="Enlace 1" value={data.link1} onChange={(e) => updateData('link1', e.target.value)} />
-      <InputField label="Enlace 2" value={data.link2} onChange={(e) => updateData('link2', e.target.value)} />
-      {data.variant !== 'withButton' && (
-        <InputField label="Enlace 3" value={data.link3} onChange={(e) => updateData('link3', e.target.value)} />
-      )}
-      {data.variant === 'withButton' && (
-        <InputField label="Texto del Botón" value={data.buttonText} onChange={(e) => updateData('buttonText', e.target.value)} />
-      )}
-    </div>
-  );
-}
 
 // --- Editor de ESTILO ---
 export function HeaderStyleEditor({ data, updateData }: { data: HeaderData, updateData: (key: keyof HeaderData, value: string) => void }) {

@@ -1,8 +1,10 @@
-// Reemplaza el contenido de app/components/editor/blocks/TextBlock.tsx
+// app/components/editor/blocks/TextBlock.tsx (REFACTORED with use-editable)
 'use client';
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { TextareaField } from './InputField';
+import { useEditable } from 'use-editable';
+import { BlockComponentProps } from './index';
+
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 
@@ -28,18 +30,33 @@ const getBackgroundStyles = (color: string | undefined, defaultClass = 'bg-white
 };
 
 // --- Componente Visual ---
-export function TextBlock({ data }: { data: TextData }) {
+export function TextBlock({ data, isEditing, onUpdate }: BlockComponentProps<TextData>) {
+  const editorRef = useRef<HTMLParagraphElement | HTMLQuoteElement>(null);
+  
+  const onEditableChange = (newContent: string) => {
+    if (onUpdate) {
+      // We need to strip HTML tags that might be added by contentEditable
+      const strippedContent = newContent.replace(/<[^>]*>?/gm, '');
+      onUpdate('content', strippedContent);
+    }
+  };
+
+  useEditable(editorRef, onEditableChange, { disabled: !isEditing });
+
   const bg = getBackgroundStyles(data.backgroundColor, 'bg-transparent');
   const text = getStyles(data.textColor, 'text-slate-700');
+  
+  const editableClassName = cn({ 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing });
 
   if (data.variant === 'quote') {
     return (
       <div className={cn('py-8 px-4', bg.className)} style={bg.style}>
         <blockquote
-          className={cn('border-l-4 border-slate-300 pl-6 italic max-w-3xl mx-auto', text.className)}
+          ref={editorRef as React.RefObject<HTMLQuoteElement>}
+          className={cn('border-l-4 border-slate-300 pl-6 italic max-w-3xl mx-auto', text.className, editableClassName)}
           style={text.style}
         >
-          <p className="text-xl">{data.content}</p>
+          {data.content}
         </blockquote>
       </div>
     );
@@ -50,7 +67,11 @@ export function TextBlock({ data }: { data: TextData }) {
       <div className={cn('py-4 px-4', bg.className)} style={bg.style}>
         <div className="max-w-4xl mx-auto">
           <div className={cn('p-4 rounded-lg', bg.className || 'bg-yellow-100/60')}>
-            <p className={cn(text.className || 'text-yellow-800')} style={text.style}>
+            <p
+              ref={editorRef as React.RefObject<HTMLParagraphElement>}
+              className={cn(text.className || 'text-yellow-800', editableClassName)}
+              style={text.style}
+            >
               {data.content}
             </p>
           </div>
@@ -62,7 +83,11 @@ export function TextBlock({ data }: { data: TextData }) {
   return (
     <div className={cn('py-4 px-4', bg.className)} style={bg.style}>
       <div className="max-w-4xl mx-auto">
-        <p className={cn('leading-relaxed', text.className)} style={text.style}>
+        <p
+          ref={editorRef as React.RefObject<HTMLParagraphElement>}
+          className={cn('leading-relaxed', text.className, editableClassName)}
+          style={text.style}
+        >
           {data.content}
         </p>
       </div>
@@ -70,27 +95,7 @@ export function TextBlock({ data }: { data: TextData }) {
   );
 }
 
-// --- Editor de CONTENIDO ---
-export function TextContentEditor({
-  data,
-  updateData,
-}: {
-  data: TextData;
-  updateData: (key: keyof TextData, value: string) => void;
-}) {
-  return (
-    <div className="space-y-4 p-1">
-      <TextareaField
-        label="Contenido del bloque de texto"
-        value={data.content}
-        rows={8}
-        onChange={(e) => updateData('content', e.target.value)}
-      />
-    </div>
-  );
-}
-
-// --- Editor de ESTILO ---
+// --- Editor de ESTILO (para la barra de herramientas flotante / hoja inferior) ---
 export function TextStyleEditor({
   data,
   updateData,

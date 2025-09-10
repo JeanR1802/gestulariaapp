@@ -5,23 +5,22 @@ export function middleware(request) {
   const url = request.nextUrl.clone();
   const hostname = request.headers.get('host') || '';
 
-  // --- INICIO DE LA CORRECCIÓN ---
-  // Se extrae el dominio principal sin el puerto para que funcione en localhost y producción.
-  const mainDomain = process.env.NODE_ENV === 'development' 
-    ? 'localhost:3000' 
-    : 'gestularia.com'; // Asegúrate de que este sea tu dominio de producción
+  // Expresión regular para detectar si el hostname es una IP (v4 o v6)
+  const IP_REGEX = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}|\[[a-fA-F0-9:]+\]$/;
 
-  // Si el hostname es el dominio principal, no hacemos nada y mostramos la landing page.
-  if (hostname === mainDomain || hostname === `www.${mainDomain}`) {
+  const mainDomain = process.env.NODE_ENV === 'development'
+    ? 'localhost:3000'
+    : 'gestularia.com';
+
+  // Si el hostname es el dominio principal O es una dirección IP,
+  // no hacemos nada y dejamos que muestre la página de inicio.
+  if (hostname === mainDomain || hostname === `www.${mainDomain}` || IP_REGEX.test(hostname.split(':')[0])) {
     return NextResponse.next();
   }
 
   // Extraer el subdominio de manera segura
-  // Reemplazamos el dominio principal del hostname para quedarnos solo con el subdominio.
   const subdomain = hostname.replace(`.${mainDomain}`, '');
-  // --- FIN DE LA CORRECCIÓN ---
 
-  // Evitar que subdominios del sistema (como 'api' o 'www') sean tratados como tenants
   const systemSubdomains = ['www', 'api', 'admin', 'mail', 'ftp', 'app'];
   if (systemSubdomains.includes(subdomain)) {
     return NextResponse.next();
@@ -38,7 +37,6 @@ export function middleware(request) {
 
 export const config = {
   matcher: [
-    // Excluimos las rutas de la API, assets de Next.js, y archivos estáticos.
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
