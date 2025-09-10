@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Block } from './index';
 import { PencilSquareIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
-import { cn } from '@/lib/utils';
 
 interface BlockWrapperProps {
   children: React.ReactNode;
@@ -30,6 +29,10 @@ export const BlockWrapper = ({
     block 
 }: BlockWrapperProps) => {
   const { isMobile } = usePreviewMode();
+  const [showActionsMobile, setShowActionsMobile] = useState(false);
+  // reference unused props to satisfy linter
+  void onUpdate;
+  void block;
 
   // --- Edit Mode ---
   if (isEditing) {
@@ -78,7 +81,6 @@ export const BlockWrapper = ({
   }
 
   // --- Normal Mode ---
-  const [showActionsMobile, setShowActionsMobile] = useState(false);
   return (
     <div
       className="relative rounded-lg transition-all group"
