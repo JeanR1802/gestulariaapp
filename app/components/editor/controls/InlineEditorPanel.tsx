@@ -1,7 +1,7 @@
 
 'use client';
 import React, { useState } from 'react';
-import { Block, BLOCKS, BlockType } from '../blocks';
+import { Block, BLOCKS, BlockData } from '../blocks';
 import { PaintBrushIcon, PencilIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
