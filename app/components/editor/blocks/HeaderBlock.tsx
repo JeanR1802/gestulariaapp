@@ -159,11 +159,62 @@ export function HeaderContentEditor({ data, updateData }: { data: HeaderData, up
 
 // --- Editor de ESTILO ---
 export function HeaderStyleEditor({ data, updateData }: { data: HeaderData, updateData: (key: keyof HeaderData, value: string) => void }) {
+    const [customLogoColor, setCustomLogoColor] = React.useState<string>(data.logoColor?.startsWith('[#') ? data.logoColor.slice(2, -1) : '#000000');
+    const [customLinkColor, setCustomLinkColor] = React.useState<string>(data.linkColor?.startsWith('[#') ? data.linkColor.slice(2, -1) : '#000000');
+    const [customBgColor, setCustomBgColor] = React.useState<string>(data.backgroundColor?.startsWith('[#') ? data.backgroundColor.slice(2, -1) : '#ffffff');
+    const isCustomLogo = data.logoColor?.startsWith('[#');
+    const isCustomLink = data.linkColor?.startsWith('[#');
+    const isCustomBg = data.backgroundColor?.startsWith('[#');
     return (
         <div className="space-y-4">
-            <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
-            <TextColorPalette label="Color del Logo" selectedColor={data.logoColor} onChange={(color) => updateData('logoColor', color)} />
-            <TextColorPalette label="Color de Enlaces" selectedColor={data.linkColor} onChange={(color) => updateData('linkColor', color)} />
+            <div>
+                <ColorPalette label="Color de Fondo" selectedColor={isCustomBg ? '' : data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Fondo personalizado:</label>
+                    <input
+                        type="color"
+                        value={customBgColor}
+                        onChange={e => {
+                            setCustomBgColor(e.target.value);
+                            updateData('backgroundColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de fondo"
+                    />
+                </div>
+            </div>
+            <div>
+                <TextColorPalette label="Color del Logo" selectedColor={isCustomLogo ? '' : data.logoColor} onChange={(color) => updateData('logoColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Logo personalizado:</label>
+                    <input
+                        type="color"
+                        value={customLogoColor}
+                        onChange={e => {
+                            setCustomLogoColor(e.target.value);
+                            updateData('logoColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado del logo"
+                    />
+                </div>
+            </div>
+            <div>
+                <TextColorPalette label="Color de Enlaces" selectedColor={isCustomLink ? '' : data.linkColor} onChange={(color) => updateData('linkColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Enlaces personalizado:</label>
+                    <input
+                        type="color"
+                        value={customLinkColor}
+                        onChange={e => {
+                            setCustomLinkColor(e.target.value);
+                            updateData('linkColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de enlaces"
+                    />
+                </div>
+            </div>
             {data.variant === 'withButton' && (
                 <ButtonColorPalette 
                     label="Estilo del Botón" 
