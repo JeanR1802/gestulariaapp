@@ -1,37 +1,47 @@
 // Archivo: app/lib/render-blocks-to-html.js (ACTUALIZADO CON EL DISEÑO FINAL)
 export function renderBlocksToHTML(blocks) {
+  // --- Utilidades para colores personalizados ---
+  function getClassOrStyle(color, tailwindDefault, cssProp) {
+    if (!color) return { class: tailwindDefault, style: '' };
+    if (color.startsWith('[#')) {
+      const hex = color.slice(1, -1);
+      return { class: '', style: `${cssProp}: ${hex};` };
+    }
+    return { class: color, style: '' };
+  }
+
   if (!Array.isArray(blocks)) return '';
 
   return blocks.map(block => {
     const { data, type } = block;
-
     if (!data) {
       console.warn(`AVISO: Bloque de tipo "${type}" no tiene datos y no será renderizado.`);
       return '';
     }
-    
+    // --- HEADER ---
     switch (type) {
       case 'header': {
         const headerId = `header-${block.id}`;
         const mobileMenuId = `mobile-menu-${block.id}`;
         const toggleButtonId = `toggle-button-${block.id}`;
         let headerHtml = '';
-        const bgColor = data.backgroundColor || 'bg-white';
-        const textColor = data.textColor || 'text-slate-800';
-        const navTextColor = data.textColor ? 'opacity-80' : 'text-slate-600';
-        const buttonClasses = `${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`;
+        const bg = getClassOrStyle(data.backgroundColor, 'bg-white', 'background-color');
+        const logo = getClassOrStyle(data.logoColor, 'text-slate-800', 'color');
+        const link = getClassOrStyle(data.linkColor, 'text-slate-600', 'color');
+        const buttonBg = getClassOrStyle(data.buttonBgColor, 'bg-blue-600', 'background-color');
+        const buttonText = getClassOrStyle(data.buttonTextColor, 'text-white', 'color');
         switch (data.variant) {
           case 'centered':
-            headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center md:flex-col md:gap-3"><h1 class="text-xl md:text-2xl font-bold ${textColor}">${data.logoText || 'Mi Negocio'}</h1><nav class="hidden md:flex items-center space-x-6 text-sm ${navTextColor}"><a href="#" class="hover:opacity-100 ${textColor}">${data.link1 || 'Inicio'}</a><a href="#" class="hover:opacity-100 ${textColor}">${data.link2 || 'Servicios'}</a><a href="#" class="hover:opacity-100 ${textColor}">${data.link3 || 'Contacto'}</a></nav><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${textColor}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a></nav>`;
+            headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center md:flex-col md:gap-3"><h1 class="text-xl md:text-2xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1><nav class="hidden md:flex items-center space-x-6 text-sm ${link.class}" style="${link.style}"><a href="#" class="hover:opacity-100">${data.link1 || 'Inicio'}</a><a href="#" class="hover:opacity-100">${data.link2 || 'Servicios'}</a><a href="#" class="hover:opacity-100">${data.link3 || 'Contacto'}</a></nav><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${logo.class}" style="${logo.style}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a></nav>`;
             break;
           case 'withButton':
-            headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center"><h1 class="text-xl font-bold ${textColor}">${data.logoText || 'Mi Negocio'}</h1><div class="hidden md:flex items-center gap-6"><nav class="flex items-center space-x-6 text-sm ${navTextColor}"><a href="#" class="hover:opacity-100 ${textColor}">${data.link1 || 'Producto'}</a><a href="#" class="hover:opacity-100 ${textColor}">${data.link2 || 'Precios'}</a></nav><a href="#" class="px-4 py-1.5 rounded-md text-sm font-semibold ${buttonClasses}">${data.buttonText || 'Acción'}</a></div><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${textColor}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Producto'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Precios'}</a><a href="#" class="mt-2 px-4 py-1.5 rounded-md text-sm font-semibold w-fit ${buttonClasses}">${data.buttonText || 'Acción'}</a></nav>`;
+            headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center"><h1 class="text-xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1><div class="hidden md:flex items-center gap-6"><nav class="flex items-center space-x-6 text-sm ${link.class}" style="${link.style}"><a href="#" class="hover:opacity-100">${data.link1 || 'Producto'}</a><a href="#" class="hover:opacity-100">${data.link2 || 'Precios'}</a></nav><a href="#" class="px-4 py-1.5 rounded-md text-sm font-semibold ${buttonBg.class}" style="${buttonBg.style}">${data.buttonText || 'Acción'}</a></div><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${logo.class}" style="${logo.style}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Producto'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Precios'}</a><a href="#" class="mt-2 px-4 py-1.5 rounded-md text-sm font-semibold w-fit ${buttonBg.class}" style="${buttonBg.style}">${data.buttonText || 'Acción'}</a></nav>`;
             break;
           default:
-             headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center"><h1 class="text-xl font-bold ${textColor}">${data.logoText || 'Mi Negocio'}</h1><nav class="hidden md:flex items-center space-x-6 text-sm ${navTextColor}"><a href="#" class="hover:opacity-100 ${textColor}">${data.link1 || 'Inicio'}</a><a href="#" class="hover:opacity-100 ${textColor}">${data.link2 || 'Servicios'}</a><a href="#" class="hover:opacity-100 ${textColor}">${data.link3 || 'Contacto'}</a></nav><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${textColor}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a></nav>`;
+             headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center"><h1 class="text-xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1><nav class="hidden md:flex items-center space-x-6 text-sm ${link.class}" style="${link.style}"><a href="#" class="hover:opacity-100">${data.link1 || 'Inicio'}</a><a href="#" class="hover:opacity-100">${data.link2 || 'Servicios'}</a><a href="#" class="hover:opacity-100">${data.link3 || 'Contacto'}</a></nav><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${logo.class}" style="${logo.style}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a></nav>`;
             break;
         }
-        return `<header id="${headerId}" class="${bgColor} p-4 border-b border-slate-200 w-full sticky top-0 z-30">${headerHtml}</header><script>(function(){var button=document.getElementById('${toggleButtonId}');var menu=document.getElementById('${mobileMenuId}');if(button&&menu){button.addEventListener('click',function(){menu.classList.toggle('hidden');});}})();</script>`;
+        return `<header id="${headerId}" class="${bg.class} p-4 border-b border-slate-200 w-full sticky top-0 z-30" style="${bg.style}">${headerHtml}</header><script>(function(){var button=document.getElementById('${toggleButtonId}');var menu=document.getElementById('${mobileMenuId}');if(button&&menu){button.addEventListener('click',function(){menu.classList.toggle('hidden');});}})();</script>`;
       }
       case 'hero': {
         const titleClass = data.titleColor || 'text-slate-800';
@@ -142,9 +152,9 @@ export function renderBlocksToHTML(blocks) {
                             <p class="font-bold text-lg md:text-xl lg:text-2xl mb-3 md:mb-4 ${data.productPriceColor || 'text-blue-600'}">${product.price}</p>
                             <p class="flex-grow text-sm md:text-base line-clamp-3 mb-4 md:mb-6 ${data.productDescriptionColor || 'text-slate-600'}">${product.description}</p>
                             <button class="w-full text-center rounded-lg font-semibold transition-all duration-200 hover:scale-105 active:scale-95 mt-auto py-2 md:py-2.5 lg:py-3 text-sm md:text-base ${data.buttonBgColor || 'bg-slate-800 hover:bg-slate-700'} ${data.buttonTextColor || 'text-white'}">${product.buttonText}</button>
-                        </div>
-                    </div>
-                `).join('')}</div></div></div>`;
+</div>
+</div>
+`).join('')}</div></div></div>`;
         }
       }
       case 'team': {
