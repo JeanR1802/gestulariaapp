@@ -98,18 +98,52 @@ export function TextStyleEditor({
   data: TextData;
   updateData: (key: keyof TextData, value: string) => void;
 }) {
+  const [customTextColor, setCustomTextColor] = React.useState<string>(data.textColor?.startsWith('[#') ? data.textColor.slice(2, -1) : '#000000');
+  const [customBgColor, setCustomBgColor] = React.useState<string>(data.backgroundColor?.startsWith('[#') ? data.backgroundColor.slice(2, -1) : '#ffffff');
+  const isCustomText = data.textColor?.startsWith('[#');
+  const isCustomBg = data.backgroundColor?.startsWith('[#');
   return (
     <div className="space-y-4">
-      <ColorPalette
-        label="Color de Fondo"
-        selectedColor={data.backgroundColor || 'bg-transparent'}
-        onChange={(color) => updateData('backgroundColor', color)}
-      />
-      <TextColorPalette
-        label="Color del Texto"
-        selectedColor={data.textColor || 'text-slate-700'}
-        onChange={(color) => updateData('textColor', color)}
-      />
+      <div>
+        <ColorPalette
+          label="Color de Fondo"
+          selectedColor={isCustomBg ? '' : data.backgroundColor || 'bg-transparent'}
+          onChange={(color) => updateData('backgroundColor', color)}
+        />
+        <div className="flex items-center gap-2 mt-2">
+          <label className="text-sm text-slate-700">Fondo personalizado:</label>
+          <input
+            type="color"
+            value={customBgColor}
+            onChange={e => {
+              setCustomBgColor(e.target.value);
+              updateData('backgroundColor', `[${e.target.value}]`);
+            }}
+            className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+            title="Elegir color personalizado de fondo"
+          />
+        </div>
+      </div>
+      <div>
+        <TextColorPalette
+          label="Color del Texto"
+          selectedColor={isCustomText ? '' : data.textColor || 'text-slate-700'}
+          onChange={(color) => updateData('textColor', color)}
+        />
+        <div className="flex items-center gap-2 mt-2">
+          <label className="text-sm text-slate-700">Texto personalizado:</label>
+          <input
+            type="color"
+            value={customTextColor}
+            onChange={e => {
+              setCustomTextColor(e.target.value);
+              updateData('textColor', `[${e.target.value}]`);
+            }}
+            className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+            title="Elegir color personalizado de texto"
+          />
+        </div>
+      </div>
     </div>
   );
 }

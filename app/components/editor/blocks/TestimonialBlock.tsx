@@ -372,40 +372,94 @@ export function TestimonialStyleEditor({
 }) {
   return (
     <div className="space-y-4">
-      <ColorPalette
-        label="Color de Fondo de Sección"
-        selectedColor={data.backgroundColor || ''}
-        onChange={(color) => updateData('backgroundColor', color)}
-      />
-      {data.variant === 'grid' && (
+      <div className="flex items-center gap-2">
         <ColorPalette
-          label="Color de Fondo de Tarjeta"
-          selectedColor={data.cardColor || ''}
-          onChange={(color) => updateData('cardColor', color)}
+          label="Color de Fondo de Sección"
+          selectedColor={data.backgroundColor || ''}
+          onChange={(color) => updateData('backgroundColor', color)}
         />
+        <input
+          type="color"
+          aria-label="Color personalizado de fondo de sección"
+          value={data.backgroundColor && data.backgroundColor.startsWith('[#') ? data.backgroundColor.slice(2, -1) : '#f8fafc'}
+          onChange={e => updateData('backgroundColor', `[${e.target.value}]`)}
+          style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
+        />
+      </div>
+      {data.variant === 'grid' && (
+        <div className="flex items-center gap-2">
+          <ColorPalette
+            label="Color de Fondo de Tarjeta"
+            selectedColor={data.cardColor || ''}
+            onChange={(color) => updateData('cardColor', color)}
+          />
+          <input
+            type="color"
+            aria-label="Color personalizado de fondo de tarjeta"
+            value={data.cardColor && data.cardColor.startsWith('[#') ? data.cardColor.slice(2, -1) : '#ffffff'}
+            onChange={e => updateData('cardColor', `[${e.target.value}]`)}
+            style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
+          />
+        </div>
       )}
       {data.variant === 'grid' && (
-        <TextColorPalette
-          label="Color del Título"
-          selectedColor={data.titleColor || ''}
-          onChange={(color) => updateData('titleColor', color)}
-        />
+        <div className="flex items-center gap-2">
+          <TextColorPalette
+            label="Color del Título"
+            selectedColor={data.titleColor || ''}
+            onChange={(color) => updateData('titleColor', color)}
+          />
+          <input
+            type="color"
+            aria-label="Color personalizado de título"
+            value={data.titleColor && data.titleColor.startsWith('[#') ? data.titleColor.slice(2, -1) : '#000000'}
+            onChange={e => updateData('titleColor', `[${e.target.value}]`)}
+            style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
+          />
+        </div>
       )}
-      <TextColorPalette
-        label="Color de la Cita"
-        selectedColor={data.quoteColor || ''}
-        onChange={(color) => updateData('quoteColor', color)}
-      />
-      <TextColorPalette
-        label="Color del Autor"
-        selectedColor={data.authorColor || ''}
-        onChange={(color) => updateData('authorColor', color)}
-      />
-      <TextColorPalette
-        label="Color del Cargo"
-        selectedColor={data.roleColor || ''}
-        onChange={(color) => updateData('roleColor', color)}
-      />
+      <div className="flex items-center gap-2">
+        <TextColorPalette
+          label="Color de la Cita"
+          selectedColor={data.quoteColor || ''}
+          onChange={(color) => updateData('quoteColor', color)}
+        />
+        <input
+          type="color"
+          aria-label="Color personalizado de cita"
+          value={data.quoteColor && data.quoteColor.startsWith('[#') ? data.quoteColor.slice(2, -1) : '#334155'}
+          onChange={e => updateData('quoteColor', `[${e.target.value}]`)}
+          style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <TextColorPalette
+          label="Color del Autor"
+          selectedColor={data.authorColor || ''}
+          onChange={(color) => updateData('authorColor', color)}
+        />
+        <input
+          type="color"
+          aria-label="Color personalizado de autor"
+          value={data.authorColor && data.authorColor.startsWith('[#') ? data.authorColor.slice(2, -1) : '#0f172a'}
+          onChange={e => updateData('authorColor', `[${e.target.value}]`)}
+          style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <TextColorPalette
+          label="Color del Cargo"
+          selectedColor={data.roleColor || ''}
+          onChange={(color) => updateData('roleColor', color)}
+        />
+        <input
+          type="color"
+          aria-label="Color personalizado de cargo"
+          value={data.roleColor && data.roleColor.startsWith('[#') ? data.roleColor.slice(2, -1) : '#64748b'}
+          onChange={e => updateData('roleColor', `[${e.target.value}]`)}
+          style={{ width: 32, height: 32, border: 'none', background: 'none', padding: 0 }}
+        />
+      </div>
     </div>
   );
 }

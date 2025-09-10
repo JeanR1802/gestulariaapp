@@ -122,11 +122,62 @@ export function FooterContentEditor({ data, updateData }: { data: FooterData, up
 
 // --- Editor de ESTILO (SEPARADO) ---
 export function FooterStyleEditor({ data, updateData }: { data: FooterData, updateData: (key: keyof FooterData, value: string) => void }) {
+    const [customBgColor, setCustomBgColor] = React.useState<string>(data.backgroundColor?.startsWith('[#') ? data.backgroundColor.slice(2, -1) : '#ffffff');
+    const [customTextColor, setCustomTextColor] = React.useState<string>(data.textColor?.startsWith('[#') ? data.textColor.slice(2, -1) : '#000000');
+    const [customLinkColor, setCustomLinkColor] = React.useState<string>(data.linkColor?.startsWith('[#') ? data.linkColor.slice(2, -1) : '#000000');
+    const isCustomBg = data.backgroundColor?.startsWith('[#');
+    const isCustomText = data.textColor?.startsWith('[#');
+    const isCustomLink = data.linkColor?.startsWith('[#');
     return (
         <div className="space-y-4">
-            <ColorPalette label="Color de Fondo" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
-            <TextColorPalette label="Color de Texto (Copyright)" selectedColor={data.textColor} onChange={(color) => updateData('textColor', color)} />
-            <TextColorPalette label="Color de Enlaces" selectedColor={data.linkColor} onChange={(color) => updateData('linkColor', color)} />
+            <div>
+                <ColorPalette label="Color de Fondo" selectedColor={isCustomBg ? '' : data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Fondo personalizado:</label>
+                    <input
+                        type="color"
+                        value={customBgColor}
+                        onChange={e => {
+                            setCustomBgColor(e.target.value);
+                            updateData('backgroundColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de fondo"
+                    />
+                </div>
+            </div>
+            <div>
+                <TextColorPalette label="Color de Texto (Copyright)" selectedColor={isCustomText ? '' : data.textColor} onChange={(color) => updateData('textColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Texto personalizado:</label>
+                    <input
+                        type="color"
+                        value={customTextColor}
+                        onChange={e => {
+                            setCustomTextColor(e.target.value);
+                            updateData('textColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de texto"
+                    />
+                </div>
+            </div>
+            <div>
+                <TextColorPalette label="Color de Enlaces" selectedColor={isCustomLink ? '' : data.linkColor} onChange={(color) => updateData('linkColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Enlaces personalizado:</label>
+                    <input
+                        type="color"
+                        value={customLinkColor}
+                        onChange={e => {
+                            setCustomLinkColor(e.target.value);
+                            updateData('linkColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de enlaces"
+                    />
+                </div>
+            </div>
         </div>
     );
 }

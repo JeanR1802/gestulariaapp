@@ -312,35 +312,135 @@ export function CatalogContentEditor({ data, updateData }: { data: CatalogData, 
 
 // --- Editor de ESTILO (SEPARADO) ---
 export function CatalogStyleEditor({ data, updateData }: { data: CatalogData, updateData: (key: keyof CatalogData, value: string) => void }) {
+    const [customBgColor, setCustomBgColor] = React.useState<string>(data.backgroundColor?.startsWith('[#') ? data.backgroundColor.slice(2, -1) : '#ffffff');
+    const [customTitleColor, setCustomTitleColor] = React.useState<string>(data.titleColor?.startsWith('[#') ? data.titleColor.slice(2, -1) : '#000000');
+    const [customSubtitleColor, setCustomSubtitleColor] = React.useState<string>(data.subtitleColor?.startsWith('[#') ? data.subtitleColor.slice(2, -1) : '#000000');
+    const [customCardColor, setCustomCardColor] = React.useState<string>(data.cardColor?.startsWith('[#') ? data.cardColor.slice(2, -1) : '#ffffff');
+    const [customProductNameColor, setCustomProductNameColor] = React.useState<string>(data.productNameColor?.startsWith('[#') ? data.productNameColor.slice(2, -1) : '#000000');
+    const [customProductPriceColor, setCustomProductPriceColor] = React.useState<string>(data.productPriceColor?.startsWith('[#') ? data.productPriceColor.slice(2, -1) : '#000000');
+    const [customProductDescriptionColor, setCustomProductDescriptionColor] = React.useState<string>(data.productDescriptionColor?.startsWith('[#') ? data.productDescriptionColor.slice(2, -1) : '#000000');
+    const isCustomBg = data.backgroundColor?.startsWith('[#');
+    const isCustomTitle = data.titleColor?.startsWith('[#');
+    const isCustomSubtitle = data.subtitleColor?.startsWith('[#');
+    const isCustomCard = data.cardColor?.startsWith('[#');
+    const isCustomProductName = data.productNameColor?.startsWith('[#');
+    const isCustomProductPrice = data.productPriceColor?.startsWith('[#');
+    const isCustomProductDescription = data.productDescriptionColor?.startsWith('[#');
     return (
         <div className="space-y-4">
-            <h4 className="font-medium text-sm text-slate-600 mb-3">Diseño General</h4>
-            <ColorPalette label="Color de Fondo de Sección" selectedColor={data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
-            <TextColorPalette label="Color del Título" selectedColor={data.titleColor} onChange={(color) => updateData('titleColor', color)} />
-            <TextColorPalette label="Color del Subtítulo" selectedColor={data.subtitleColor} onChange={(color) => updateData('subtitleColor', color)} />
-            
-            <div className="border-t border-slate-200 pt-4 mt-4">
-                <h4 className="font-medium text-sm text-slate-600 mb-3">Estilo de las Tarjetas de Producto</h4>
-                {data.variant === 'grid' && (
-                    <ColorPalette label="Color de Fondo de Tarjeta" selectedColor={data.cardColor} onChange={(color) => updateData('cardColor', color)} />
-                )}
-                <TextColorPalette label="Color de Nombre del Producto" selectedColor={data.productNameColor} onChange={(color) => updateData('productNameColor', color)} />
-                <TextColorPalette label="Color del Precio" selectedColor={data.productPriceColor} onChange={(color) => updateData('productPriceColor', color)} />
-                {data.variant === 'grid' && (
-                    <>
-                        <TextColorPalette label="Color de Descripción" selectedColor={data.productDescriptionColor} onChange={(color) => updateData('productDescriptionColor', color)} />
-                        <ButtonColorPalette 
-                            label="Estilo del Botón" 
-                            selectedBgColor={data.buttonBgColor || ''} 
-                            selectedTextColor={data.buttonTextColor || ''} 
-                            onChange={(bg, text) => { 
-                                updateData('buttonBgColor', bg); 
-                                updateData('buttonTextColor', text); 
-                            }} 
-                        />
-                    </>
-                )}
+            <div>
+                <ColorPalette label="Color de Fondo" selectedColor={isCustomBg ? '' : data.backgroundColor} onChange={(color) => updateData('backgroundColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Fondo personalizado:</label>
+                    <input
+                        type="color"
+                        value={customBgColor}
+                        onChange={e => {
+                            setCustomBgColor(e.target.value);
+                            updateData('backgroundColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de fondo"
+                    />
+                </div>
             </div>
+            <div>
+                <TextColorPalette label="Color del Título" selectedColor={isCustomTitle ? '' : data.titleColor} onChange={(color) => updateData('titleColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Título personalizado:</label>
+                    <input
+                        type="color"
+                        value={customTitleColor}
+                        onChange={e => {
+                            setCustomTitleColor(e.target.value);
+                            updateData('titleColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de título"
+                    />
+                </div>
+            </div>
+            <div>
+                <TextColorPalette label="Color del Subtítulo" selectedColor={isCustomSubtitle ? '' : data.subtitleColor} onChange={(color) => updateData('subtitleColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Subtítulo personalizado:</label>
+                    <input
+                        type="color"
+                        value={customSubtitleColor}
+                        onChange={e => {
+                            setCustomSubtitleColor(e.target.value);
+                            updateData('subtitleColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de subtítulo"
+                    />
+                </div>
+            </div>
+            <div>
+                <ColorPalette label="Color de Tarjeta" selectedColor={isCustomCard ? '' : data.cardColor} onChange={(color) => updateData('cardColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Tarjeta personalizada:</label>
+                    <input
+                        type="color"
+                        value={customCardColor}
+                        onChange={e => {
+                            setCustomCardColor(e.target.value);
+                            updateData('cardColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de tarjeta"
+                    />
+                </div>
+            </div>
+            <div>
+                <TextColorPalette label="Color de Nombre de Producto" selectedColor={isCustomProductName ? '' : data.productNameColor} onChange={(color) => updateData('productNameColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Nombre producto personalizado:</label>
+                    <input
+                        type="color"
+                        value={customProductNameColor}
+                        onChange={e => {
+                            setCustomProductNameColor(e.target.value);
+                            updateData('productNameColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de nombre de producto"
+                    />
+                </div>
+            </div>
+            <div>
+                <TextColorPalette label="Color de Precio de Producto" selectedColor={isCustomProductPrice ? '' : data.productPriceColor} onChange={(color) => updateData('productPriceColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Precio producto personalizado:</label>
+                    <input
+                        type="color"
+                        value={customProductPriceColor}
+                        onChange={e => {
+                            setCustomProductPriceColor(e.target.value);
+                            updateData('productPriceColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de precio de producto"
+                    />
+                </div>
+            </div>
+            <div>
+                <TextColorPalette label="Color de Descripción de Producto" selectedColor={isCustomProductDescription ? '' : data.productDescriptionColor} onChange={(color) => updateData('productDescriptionColor', color)} />
+                <div className="flex items-center gap-2 mt-2">
+                    <label className="text-sm text-slate-700">Descripción producto personalizada:</label>
+                    <input
+                        type="color"
+                        value={customProductDescriptionColor}
+                        onChange={e => {
+                            setCustomProductDescriptionColor(e.target.value);
+                            updateData('productDescriptionColor', `[${e.target.value}]`);
+                        }}
+                        className="w-8 h-8 p-0 border-0 bg-transparent cursor-pointer"
+                        title="Elegir color personalizado de descripción de producto"
+                    />
+                </div>
+            </div>
+            <ButtonColorPalette label="Estilo del Botón" selectedBgColor={data.buttonBgColor || ''} selectedTextColor={data.buttonTextColor || ''} onChange={(bg, text) => { updateData('buttonBgColor', bg); updateData('buttonTextColor', text); }} />
         </div>
     );
 }
