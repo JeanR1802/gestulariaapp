@@ -1,6 +1,6 @@
 // app/components/editor/blocks/BlockWrapper.tsx (REFACTORED for toolbar position)
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { Block } from './index';
 import { PencilSquareIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
@@ -78,15 +78,121 @@ export const BlockWrapper = ({
   }
 
   // --- Normal Mode ---
+  const [showActionsMobile, setShowActionsMobile] = useState(false);
   return (
-    <div className="relative rounded-lg transition-all group" onClick={onEdit}>
-      {/* Overlay with Edit button on hover */}
-      <div className="absolute inset-0 bg-sky-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 rounded-lg flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
-         <div className="bg-white/95 text-gray-800 font-semibold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-            <PencilSquareIcon className="w-5 h-5" />
-            Editar
-         </div>
-      </div>
+    <div
+      className="relative rounded-lg transition-all group"
+      onClick={(e) => {
+        if (isMobile) {
+          e.stopPropagation();
+          setShowActionsMobile(true);
+        } else {
+          onEdit();
+        }
+      }}
+    >
+      {/* Desktop: Overlay with Edit and Move buttons on hover */}
+      {!isMobile && (
+        <div className="absolute inset-0 bg-sky-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 rounded-lg flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
+          <div className="bg-white/95 text-gray-800 font-semibold px-3 py-2 rounded-full shadow-lg flex items-center gap-1.5">
+            {onMoveUp && (
+              <button
+                title="Mover arriba"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoveUp && onMoveUp();
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
+              >
+                <ArrowUpIcon className="w-5 h-5 text-gray-700" />
+              </button>
+            )}
+            <button
+              title="Editar"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="h-8 px-3 flex items-center gap-1 rounded-full hover:bg-slate-100"
+            >
+              <PencilSquareIcon className="w-5 h-5" />
+              Editar
+            </button>
+            {onMoveDown && (
+              <button
+                title="Mover abajo"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoveDown && onMoveDown();
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
+              >
+                <ArrowDownIcon className="w-5 h-5 text-gray-700" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile: Tap to show actions */}
+      {isMobile && showActionsMobile && (
+        <div
+          className="absolute inset-0 bg-sky-900/10 z-10 rounded-lg flex items-center justify-center backdrop-blur-[2px]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-white/95 text-gray-800 font-semibold px-3 py-2 rounded-full shadow-lg flex items-center gap-1.5">
+            {onMoveUp && (
+              <button
+                title="Mover arriba"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoveUp && onMoveUp();
+                  setShowActionsMobile(false);
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
+              >
+                <ArrowUpIcon className="w-5 h-5 text-gray-700" />
+              </button>
+            )}
+            <button
+              title="Editar"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowActionsMobile(false);
+                onEdit();
+              }}
+              className="h-8 px-3 flex items-center gap-1 rounded-full hover:bg-slate-100"
+            >
+              <PencilSquareIcon className="w-5 h-5" />
+              Editar
+            </button>
+            {onMoveDown && (
+              <button
+                title="Mover abajo"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoveDown && onMoveDown();
+                  setShowActionsMobile(false);
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
+              >
+                <ArrowDownIcon className="w-5 h-5 text-gray-700" />
+              </button>
+            )}
+            <button
+              title="Cerrar"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowActionsMobile(false);
+              }}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
+            >
+              <XMarkIcon className="w-5 h-5 text-gray-700" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {children}
     </div>
   );

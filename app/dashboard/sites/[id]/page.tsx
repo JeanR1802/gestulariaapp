@@ -279,7 +279,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
             <div className="p-4 md:p-8">
               <div className={cn("mx-auto bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-full transition-all duration-300 ease-in-out", { 'max-w-full': previewMode === 'desktop', 'max-w-screen-md': previewMode === 'tablet', 'max-w-sm': previewMode === 'mobile' })}>
                 <div className="p-4">
-                  {blocks.map((block, index) => (
+                  {(editingBlockId ? blocks.filter(b => b.id === editingBlockId) : blocks).map((block, index) => (
                     <BlockRenderer 
                         key={block.id} 
                         block={block} 
@@ -288,8 +288,8 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
                         onEdit={() => setEditingBlockId(block.id)}
                         onClose={() => setEditingBlockId(null)}
                         onUpdate={(key, value) => updateBlock(block.id, key, value)}
-                        onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} 
-                        onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} 
+                        onMoveUp={editingBlockId === null && index > 0 ? () => moveBlock(index, index - 1) : undefined} 
+                        onMoveDown={editingBlockId === null && index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} 
                     />
                   ))}
                   {blocks.length === 0 && (
