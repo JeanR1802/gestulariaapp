@@ -1,6 +1,6 @@
 // app/components/editor/blocks/TextBlock.tsx (REFACTORED with use-editable)
 'use client';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, JSX } from 'react';
 import { cn } from '@/lib/utils';
 import { useEditable } from 'use-editable';
 import { BlockComponentProps } from './index';
@@ -29,34 +29,56 @@ const getBackgroundStyles = (color: string | undefined, defaultClass = 'bg-white
   return { className: color, style: {} };
 };
 
+// --- Editable Inline Component (reusable) ---
+type EditableProps = {
+  tagName: keyof JSX.IntrinsicElements;
+  value: string;
+  onUpdate: (newValue: string) => void;
+  isEditing?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+};
+
+const Editable: React.FC<EditableProps> = ({ tagName, value, onUpdate, isEditing, className, style }) => {
+  const ref = React.useRef<HTMLElement>(null);
+  useEditable(ref, (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')), { disabled: !isEditing });
+  const Tag = tagName as any;
+  return (
+    <Tag
+      ref={ref}
+      className={cn(className, { 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing })}
+      style={style}
+      contentEditable={isEditing || undefined}
+      suppressContentEditableWarning={true}
+    >
+      {value}
+    </Tag>
+  );
+};
+
 // --- Componente Visual ---
 export function TextBlock({ data, isEditing, onUpdate }: BlockComponentProps<TextData>) {
-  const editorRef = useRef<HTMLParagraphElement | HTMLQuoteElement>(null);
-  
-  const onEditableChange = (newContent: string) => {
-    if (onUpdate) {
-      // We need to strip HTML tags that might be added by contentEditable
-      const strippedContent = newContent.replace(/<[^>]*>?/gm, '');
-      onUpdate('content', strippedContent);
-    }
+  const handleUpdate = (key: keyof TextData, value: string) => {
+    if (onUpdate) onUpdate(key, value);
   };
-
-  useEditable(editorRef, onEditableChange, { disabled: !isEditing });
-
   const bg = getBackgroundStyles(data.backgroundColor, 'bg-transparent');
   const text = getStyles(data.textColor, 'text-slate-700');
-  
-  const editableClassName = cn({ 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing });
 
   if (data.variant === 'quote') {
     return (
       <div className={cn('py-8 px-4', bg.className)} style={bg.style}>
         <blockquote
-          ref={editorRef as React.RefObject<HTMLQuoteElement>}
-          className={cn('border-l-4 border-slate-300 pl-6 italic max-w-3xl mx-auto', text.className, editableClassName)}
+          className={cn('border-l-4 border-slate-300 pl-6 italic max-w-3xl mx-auto', text.className)}
           style={text.style}
         >
-          {data.content}
+          <Editable
+            tagName="p"
+            value={data.content}
+            onUpdate={v => handleUpdate('content', v)}
+            isEditing={isEditing}
+            className="w-full bg-transparent"
+            style={{}}
+          />
         </blockquote>
       </div>
     );
@@ -67,13 +89,14 @@ export function TextBlock({ data, isEditing, onUpdate }: BlockComponentProps<Tex
       <div className={cn('py-4 px-4', bg.className)} style={bg.style}>
         <div className="max-w-4xl mx-auto">
           <div className={cn('p-4 rounded-lg', bg.className || 'bg-yellow-100/60')}>
-            <p
-              ref={editorRef as React.RefObject<HTMLParagraphElement>}
-              className={cn(text.className || 'text-yellow-800', editableClassName)}
+            <Editable
+              tagName="p"
+              value={data.content}
+              onUpdate={v => handleUpdate('content', v)}
+              isEditing={isEditing}
+              className={cn(text.className || 'text-yellow-800')}
               style={text.style}
-            >
-              {data.content}
-            </p>
+            />
           </div>
         </div>
       </div>
@@ -83,13 +106,14 @@ export function TextBlock({ data, isEditing, onUpdate }: BlockComponentProps<Tex
   return (
     <div className={cn('py-4 px-4', bg.className)} style={bg.style}>
       <div className="max-w-4xl mx-auto">
-        <p
-          ref={editorRef as React.RefObject<HTMLParagraphElement>}
-          className={cn('leading-relaxed', text.className, editableClassName)}
+        <Editable
+          tagName="p"
+          value={data.content}
+          onUpdate={v => handleUpdate('content', v)}
+          isEditing={isEditing}
+          className={cn('leading-relaxed', text.className)}
           style={text.style}
-        >
-          {data.content}
-        </p>
+        />
       </div>
     </div>
   );
@@ -122,3 +146,6 @@ export function TextStyleEditor({
     </div>
   );
 }
+
+// --- Helper para exportar Editable y usarlo en otros bloques ---
+export { Editable };

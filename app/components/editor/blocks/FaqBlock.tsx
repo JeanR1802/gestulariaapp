@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef, JSX } from 'react';
+import React, { JSX } from 'react';
 import { useEditable } from 'use-editable';
 import { cn } from '@/lib/utils';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
@@ -8,6 +8,7 @@ import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { BlockComponentProps } from './index';
+import { Editable } from './TextBlock';
 
 // --- Tipos de datos ---
 interface FaqItem { question: string; answer: string; }
@@ -21,35 +22,6 @@ export interface FaqData {
   answerColor: string;
   iconColor: string;
 }
-
-// --- Helper Editable ---
-const Editable = ({
-  tagName,
-  value,
-  onUpdate,
-  isEditing,
-  className,
-  style,
-}: {
-  tagName: keyof JSX.IntrinsicElements;
-  value: string;
-  onUpdate: (newValue: string) => void;
-  isEditing?: boolean;
-  className?: string;
-  style?: React.CSSProperties;
-}) => {
-  const ref = useRef<HTMLElement>(null);
-  useEditable(ref, (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')), { disabled: !isEditing });
-  return React.createElement(
-    tagName,
-    {
-      ref,
-      className: cn(className, { 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing }),
-      style,
-    },
-    value
-  );
-};
 
 // --- Helpers de estilos ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {

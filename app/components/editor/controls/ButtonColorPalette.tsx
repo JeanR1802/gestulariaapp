@@ -36,28 +36,37 @@ const CustomColorPicker = ({ label, color, onApply, title }: { label: string, co
         />
       </div>
       {open && (
-        <div className="absolute left-0 mt-2 z-20 bg-white p-3 rounded-lg shadow-lg border flex flex-col items-center gap-2">
-          <input
-            type="color"
-            value={tempColor}
-            onChange={e => setTempColor(e.target.value)}
-            className="w-10 h-10 border rounded-full"
-          />
-          <button
-            className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            onClick={() => {
-              onApply(`[${tempColor}]`);
-              setOpen(false);
-            }}
-          >
-            Aplicar
-          </button>
-          <button
-            className="text-xs text-slate-500 mt-1 hover:underline"
-            onClick={() => setOpen(false)}
-          >
-            Cancelar
-          </button>
+        <div>
+          {/* Overlay modal */}
+          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity animate-fadeIn" onClick={() => setOpen(false)} />
+          {/* Panel centrado */}
+          <div className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 bg-white/90 p-6 rounded-2xl shadow-2xl border flex flex-col items-center gap-4 w-[90vw] max-w-xs animate-fadeIn" style={{backdropFilter:'blur(8px)'}}>
+            <label className="block text-base font-semibold text-slate-700 mb-2">{label}</label>
+            <input
+              type="color"
+              value={tempColor}
+              onChange={e => setTempColor(e.target.value)}
+              className="w-16 h-16 border-2 border-slate-200 rounded-full shadow"
+              autoFocus
+            />
+            <div className="flex gap-3 w-full mt-2">
+              <button
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-base"
+                onClick={() => {
+                  onApply(`[${tempColor}]`);
+                  setOpen(false);
+                }}
+              >
+                Aplicar
+              </button>
+              <button
+                className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200 transition text-base"
+                onClick={() => setOpen(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

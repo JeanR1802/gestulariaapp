@@ -1,6 +1,6 @@
 'use client';
-import React, { useRef, JSX } from 'react';
-import { useEditable } from 'use-editable';
+import React, { JSX } from 'react';
+import { Editable } from './TextBlock';
 import { InputField, TextareaField } from './InputField';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
 import { cn } from '@/lib/utils';
@@ -22,42 +22,6 @@ export interface CtaData {
   buttonBgColor: string;
   buttonTextColor: string;
 }
-
-// --- Helper Component for Inline Editing ---
-const Editable = ({
-  tagName,
-  value,
-  onUpdate,
-  isEditing,
-  className,
-  style,
-}: {
-  tagName: keyof JSX.IntrinsicElements;
-  value: string;
-  onUpdate: (newValue: string) => void;
-  isEditing?: boolean;
-  className?: string;
-  style?: React.CSSProperties;
-}) => {
-  const ref = useRef<HTMLElement>(null);
-  useEditable(
-    ref,
-    (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')),
-    { disabled: !isEditing }
-  );
-
-  return React.createElement(
-    tagName,
-    {
-      ref: ref,
-      className: cn(className, {
-        'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing,
-      }),
-      style: style,
-    },
-    value
-  );
-};
 
 // --- Lógica para manejar colores personalizados ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {

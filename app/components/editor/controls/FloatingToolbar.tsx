@@ -60,26 +60,44 @@ const ToolbarButton = ({ label, isActive, onClick, children, className }: Toolba
     </div>
 );
 
-// --- Panel Desplegable ---
+// --- Panel Desplegable Mejorado UX ---
 const PopoverPanel = ({ title, onClose, children }: PopoverPanelProps) => {
+    // Detecta si es móvil
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    if (isMobile) {
+        // Modal tipo bottom-sheet en móvil
+        return (
+            <div className="fixed inset-0 z-[1001] flex items-end justify-center bg-black/30">
+                <div className="w-full max-w-md bg-red-500 rounded-t-2xl shadow-2xl animate-slideUp flex flex-col" style={{ maxHeight: '80vh', minHeight: '40vh' }}>
+                    <div className="p-3 border-b flex-shrink-0 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                        <h3 className="font-semibold text-sm text-slate-700">{title}</h3>
+                        <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><XMarkIcon className="w-4 h-4" /></button>
+                    </div>
+                    <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0" style={{ maxHeight: 'calc(80vh - 56px)' }}>
+                        {children}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    // Desktop: panel fijo en el centro vertical y pegado a la derecha
     return (
         <div
-            className="absolute right-full top-0 mr-3 bg-white rounded-lg shadow-2xl border border-slate-200 flex flex-col animate-fadeIn"
+            className="fixed top-1/2 right-8 -translate-y-1/2 bg-red-500 rounded-lg shadow-2xl border border-slate-200 flex flex-col animate-fadeIn"
             style={{
-                maxWidth: '36rem', // 576px, mucho más ancho
+                maxWidth: '36rem',
                 minWidth: '320px',
-                width: '100%',
+                width: '90vw',
                 zIndex: 1000,
-                height: '70vh',
-                maxHeight: '70vh',
-                overflow: 'hidden'
+                maxHeight: '80vh',
+                overflow: 'hidden',
             }}
         >
             <div className="p-3 border-b flex-shrink-0 flex justify-between items-center bg-slate-50">
                 <h3 className="font-semibold text-sm text-slate-700">{title}</h3>
                 <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><XMarkIcon className="w-4 h-4" /></button>
             </div>
-            <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0" style={{ maxHeight: 'calc(70vh - 56px)' }}>
+            <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0" style={{ maxHeight: 'calc(80vh - 56px)' }}>
                 {children}
             </div>
         </div>

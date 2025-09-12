@@ -4,6 +4,7 @@ import { useEditable } from 'use-editable';
 import { cn } from '@/lib/utils';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
 import { InputField } from './InputField';
+import { Editable } from './TextBlock';
 
 // --- Interfaces de Datos ---
 export interface ImageData {
@@ -16,42 +17,6 @@ export interface ImageData {
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { BlockComponentProps } from './index';
-
-// --- Helper Component for Inline Editing ---
-const Editable = ({
-  tagName,
-  value,
-  onUpdate,
-  isEditing,
-  className,
-  style,
-}: {
-  tagName: keyof JSX.IntrinsicElements;
-  value: string;
-  onUpdate: (newValue: string) => void;
-  isEditing?: boolean;
-  className?: string;
-  style?: React.CSSProperties;
-}) => {
-  const ref = useRef<HTMLElement>(null);
-  useEditable(
-    ref,
-    (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')),
-    { disabled: !isEditing }
-  );
-
-  return React.createElement(
-    tagName,
-    {
-      ref: ref,
-      className: cn(className, {
-        'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing,
-      }),
-      style: style,
-    },
-    value
-  );
-};
 
 // --- Componente de Bloque (Visual + Inline Editing) ---
 export function ImageBlock({ data, isEditing, onUpdate }: BlockComponentProps<ImageData>) {

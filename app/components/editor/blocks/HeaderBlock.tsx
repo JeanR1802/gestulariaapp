@@ -1,12 +1,13 @@
 // app/components/editor/blocks/HeaderBlock.tsx (REFACTORED with use-editable)
 'use client';
-import React, { useRef, JSX } from 'react';
+import React, { JSX } from 'react';
 import { useEditable } from 'use-editable';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
 import { cn } from '@/lib/utils';
 import { BlockComponentProps } from './index';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
+import { Editable } from './TextBlock';
 
 // --- Interfaces de Datos ---
 export interface HeaderData {
@@ -22,37 +23,6 @@ export interface HeaderData {
   buttonBgColor: string;
   buttonTextColor: string;
 }
-
-// --- Helper Component for Inline Editing ---
-const Editable = ({
-    tagName,
-    value,
-    onUpdate,
-    isEditing,
-    className,
-    style
-}: {
-    tagName: keyof JSX.IntrinsicElements;
-    value: string;
-    onUpdate: (newValue: string) => void;
-    isEditing?: boolean;
-    className?: string;
-    style?: React.CSSProperties;
-}) => {
-    const ref = useRef<HTMLElement>(null);
-    useEditable(ref, (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')), { disabled: !isEditing });
-
-    return React.createElement(
-        tagName,
-        {
-            ref: ref,
-            className: cn(className, { 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing }),
-            style: style
-        },
-        value
-    );
-};
-
 
 // --- Lógica para manejar colores personalizados ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {

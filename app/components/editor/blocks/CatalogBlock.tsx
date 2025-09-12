@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect, JSX } from 'react';
-import { useEditable } from 'use-editable';
+import { Editable } from './TextBlock';
 import { InputField, TextareaField } from './InputField';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
 import { cn } from '@/lib/utils';
@@ -27,13 +27,6 @@ export interface CatalogData {
   buttonBgColor: string;
   buttonTextColor: string;
 }
-
-// --- Helper Editable ---
-const Editable = ({ tagName, value, onUpdate, isEditing, className, style }: { tagName: keyof JSX.IntrinsicElements; value: string; onUpdate: (newValue: string) => void; isEditing?: boolean; className?: string; style?: React.CSSProperties; }) => {
-  const ref = useRef<HTMLElement>(null);
-  useEditable(ref, (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')), { disabled: !isEditing });
-  return React.createElement(tagName, { ref, className: cn(className, { 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing }), style }, value);
-};
 
 // --- Lógica de estilos ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {
@@ -133,7 +126,7 @@ const CatalogMinimalGrid = ({ data, isEditing, onUpdate }: BlockComponentProps<C
       <div className={cn('mx-auto', { 'max-w-7xl': isDesktop, 'max-w-5xl': isTablet, 'max-w-full': isMobile })}>
         <div className={cn('text-center', { 'mb-16': isDesktop, 'mb-12': isTablet, 'mb-8': isMobile })}>
           <Editable tagName="h2" value={data.title} onUpdate={(v) => handleUpdate('title', v)} isEditing={isEditing} className={cn('font-bold', { 'text-4xl mb-6': isDesktop, 'text-3xl mb-4': isTablet, 'text-2xl mb-3': isMobile }, titleStyles.className)} style={titleStyles.style} />
-          <Editable tagName="p" value={data.subtitle} onUpdate={(v) => handleUpdate('subtitle', v)} isEditing={isEditing} className={cn('mx-auto', { 'text-xl max-w-3xl': isDesktop, 'text-lg max-w-2xl': isTablet, 'text-base': isMobile }, subtitleStyles.className)} style={subtitleStyles.style} />
+          <Editable tagName="p" value={data.subtitle} onUpdate={(v) => handleUpdate('subtitle', v)} isEditing={isEditing} className={cn('mx-auto', { 'text-xl max-w-3xl leading-relaxed': isDesktop, 'text-lg max-w-2xl leading-relaxed': isTablet, 'text-base': isMobile }, subtitleStyles.className)} style={subtitleStyles.style} />
         </div>
         <div className={cn('grid', { 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8': isDesktop, 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6': isTablet, 'grid-cols-2 gap-4': isMobile })}>
           {(data.products || []).map((product, index) => (
