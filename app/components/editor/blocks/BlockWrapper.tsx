@@ -145,6 +145,27 @@ export const BlockWrapper = ({
     };
   }, [draggingPanel]);
 
+  // --- Handlers para el panel de estilos de elemento ---
+  const handleElementClick = (e: React.MouseEvent) => {
+    if (!isEditing) return;
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    const el = target.closest('[data-style-text], [data-style-bg], [data-style-btn-bg], [data-style-btn-text]') as HTMLElement | null;
+    if (!el) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const rect = el.getBoundingClientRect();
+    const keys = {
+      text: el.dataset.styleText,
+      bg: el.dataset.styleBg,
+      btnBg: el.dataset.styleBtnBg,
+      btnText: el.dataset.styleBtnText,
+    };
+    const anchor = { top: rect.bottom + window.scrollY + 8, left: rect.left + window.scrollX };
+    setElementStyle({ keys, anchor });
+  };
+  const closeElementStyle = () => setElementStyle(null);
+
   // --- Edit Mode ---
   // El bloque siempre se ve normal, solo aparecen los controles flotantes
   return (
