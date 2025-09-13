@@ -45,7 +45,7 @@ const Editable: React.FC<EditableProps> = ({ tagName, value, onUpdate, isEditing
   return React.createElement(
     tagName,
     {
-      ref: ref as React.Ref<any>,
+      ref: ref as React.Ref<HTMLElement>,
       className: cn(className, { 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing }),
       style,
       contentEditable: isEditing || undefined,

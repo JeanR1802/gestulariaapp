@@ -5,23 +5,9 @@ import { Block, BLOCKS } from './index';
 import { PencilSquareIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon, PaintBrushIcon } from '@heroicons/react/24/outline';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
 import type { BlockType, BlocksConfig } from './index';
-
-// Helper type to extract the correct data type for a block type
-// Given a BlockType, get the data type from BlocksConfig
-// Usage: BlockDataForType<typeof block.type>
-type BlockDataForType<T extends BlockType> = BlocksConfig[T]['variants'][number]['defaultData'];
-
-interface BlockWrapperProps {
-  children: React.ReactNode;
-  isEditing: boolean;
-  onEdit: () => void;
-  onClose: () => void;
-  onDelete: () => void;
-  onUpdate: (key: string, value: unknown) => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  block: Block;
-}
+import { ColorPalette } from '../controls/ColorPalette';
+import { TextColorPalette } from '../controls/TextColorPalette';
+import { ButtonColorPalette } from '../controls/ButtonColorPalette';
 
 // --- Element Style Panel ---
 function getValue<T extends object>(obj: T, key: string | undefined): string {
@@ -41,11 +27,6 @@ const ElementStylePanel = <T extends object>({
   onClose: () => void;
   anchor: { top: number; left: number };
 }) => {
-  // Lazy import palettes to avoid circular deps
-  const { ColorPalette } = require('../controls/ColorPalette');
-  const { TextColorPalette } = require('../controls/TextColorPalette');
-  const { ButtonColorPalette } = require('../controls/ButtonColorPalette');
-
   return (
     <div
       className="fixed z-50 bg-white border border-slate-200 rounded-lg shadow-xl p-3 space-y-2"
@@ -86,6 +67,18 @@ const ElementStylePanel = <T extends object>({
     </div>
   );
 };
+
+interface BlockWrapperProps {
+  children: React.ReactNode;
+  isEditing: boolean;
+  onEdit: () => void;
+  onClose: () => void;
+  onDelete: () => void;
+  onUpdate: (key: string, value: unknown) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  block: Block & { type: BlockType };
+}
 
 export const BlockWrapper = ({ 
     children, 
