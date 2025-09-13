@@ -24,6 +24,10 @@ interface BlockWrapperProps {
 }
 
 // --- Element Style Panel ---
+function getValue<T extends object>(obj: T, key: string | undefined): string {
+  return key && (obj as Record<string, unknown>)[key] as string || '';
+}
+
 const ElementStylePanel = <T extends object>({
   keys,
   values,
@@ -57,22 +61,22 @@ const ElementStylePanel = <T extends object>({
       {keys.text && (
         <TextColorPalette
           label="Texto"
-          selectedColor={(values as any)[keys.text] || ''}
+          selectedColor={getValue(values, keys.text)}
           onChange={(c: string) => onChange(keys.text as keyof T & string, c)}
         />
       )}
       {keys.bg && (
         <ColorPalette
           label="Fondo"
-          selectedColor={(values as any)[keys.bg] || ''}
+          selectedColor={getValue(values, keys.bg)}
           onChange={(c: string) => onChange(keys.bg as keyof T & string, c)}
         />
       )}
       {(keys.btnBg || keys.btnText) && (
         <ButtonColorPalette
           label="Botón"
-          selectedBgColor={(keys.btnBg && (values as any)[keys.btnBg]) || ''}
-          selectedTextColor={(keys.btnText && (values as any)[keys.btnText]) || ''}
+          selectedBgColor={getValue(values, keys.btnBg)}
+          selectedTextColor={getValue(values, keys.btnText)}
           onChange={(bg: string, text: string) => {
             if (keys.btnBg) onChange(keys.btnBg as keyof T & string, bg);
             if (keys.btnText) onChange(keys.btnText as keyof T & string, text);
@@ -184,8 +188,8 @@ export const BlockWrapper = ({
             </div>
             <div className="flex-1 overflow-y-auto p-5">
               {(() => {
-                // Type assertion is safe here because block.data always matches block.type
-                const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<any> | undefined;
+                // Type-safe: get the style editor and its correct data type
+                const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<{ data: typeof block.data; updateData: (key: string, value: unknown) => void }> | undefined;
                 if (!StyleEditor) return <div className="text-sm text-slate-500">Este bloque no tiene editor de estilo.</div>;
                 return <StyleEditor data={block.data} updateData={onUpdate} />;
               })()}
@@ -224,8 +228,7 @@ export const BlockWrapper = ({
                     {/* Block Style Editor (Mobile) */}
                     <div className="py-2 border-t">
                       {(() => {
-                        // Type assertion is safe here because block.data always matches block.type
-                        const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<any> | undefined;
+                        const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<{ data: typeof block.data; updateData: (key: string, value: unknown) => void }> | undefined;
                         if (!StyleEditor) return <p className="text-center text-sm text-slate-500">Este bloque no tiene editor de estilo.</p>;
                         return <StyleEditor data={block.data} updateData={onUpdate} />;
                       })()}

@@ -42,7 +42,7 @@ type EditableProps = {
 const Editable: React.FC<EditableProps> = ({ tagName, value, onUpdate, isEditing, className, style }) => {
   const ref = React.useRef<HTMLElement>(null);
   useEditable(ref, (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')), { disabled: !isEditing });
-  const Tag = tagName as any;
+  const Tag = tagName as keyof JSX.IntrinsicElements;
   return (
     <Tag
       ref={ref}
