@@ -226,7 +226,17 @@ export const BlockWrapper = ({
                         return <StyleEditor data={block.data} updateData={onUpdate} />;
                       })()}
                     </div>
-                    <button onClick={onClose} className="w-full mt-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700">Hecho</button>
+                    <button
+                      onClick={() => {
+                        // Forzar blur en el elemento editable antes de cerrar
+                        const active = document.querySelector('[contenteditable="true"]') as HTMLElement | null;
+                        if (active) active.blur();
+                        onClose();
+                      }}
+                      className="w-full mt-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700"
+                    >
+                      Hecho
+                    </button>
                 </div>
             </div>
         )}
