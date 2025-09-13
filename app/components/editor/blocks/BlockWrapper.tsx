@@ -4,6 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Block, BLOCKS } from './index';
 import { PencilSquareIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon, PaintBrushIcon } from '@heroicons/react/24/outline';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
+import type { BlockType, BlocksConfig } from './index';
+
+// Helper type to extract the correct data type for a block type
+// Given a BlockType, get the data type from BlocksConfig
+// Usage: BlockDataForType<typeof block.type>
+type BlockDataForType<T extends BlockType> = BlocksConfig[T]['variants'][number]['defaultData'];
 
 interface BlockWrapperProps {
   children: React.ReactNode;
@@ -18,7 +24,7 @@ interface BlockWrapperProps {
 }
 
 // --- Element Style Panel ---
-const ElementStylePanel = ({
+const ElementStylePanel = <T extends object>({
   keys,
   values,
   onChange,
@@ -26,8 +32,8 @@ const ElementStylePanel = ({
   anchor
 }: {
   keys: { text?: string; bg?: string; btnBg?: string; btnText?: string };
-  values: Record<string, string | undefined>;
-  onChange: (key: string, value: string) => void;
+  values: T;
+  onChange: (key: keyof T & string, value: string) => void;
   onClose: () => void;
   anchor: { top: number; left: number };
 }) => {
@@ -51,25 +57,25 @@ const ElementStylePanel = ({
       {keys.text && (
         <TextColorPalette
           label="Texto"
-          selectedColor={values[keys.text] || ''}
-          onChange={(c: string) => onChange(keys.text!, c)}
+          selectedColor={(values as any)[keys.text] || ''}
+          onChange={(c: string) => onChange(keys.text as keyof T & string, c)}
         />
       )}
       {keys.bg && (
         <ColorPalette
           label="Fondo"
-          selectedColor={values[keys.bg] || ''}
-          onChange={(c: string) => onChange(keys.bg!, c)}
+          selectedColor={(values as any)[keys.bg] || ''}
+          onChange={(c: string) => onChange(keys.bg as keyof T & string, c)}
         />
       )}
       {(keys.btnBg || keys.btnText) && (
         <ButtonColorPalette
           label="Botón"
-          selectedBgColor={(keys.btnBg && values[keys.btnBg]) || ''}
-          selectedTextColor={(keys.btnText && values[keys.btnText]) || ''}
+          selectedBgColor={(keys.btnBg && (values as any)[keys.btnBg]) || ''}
+          selectedTextColor={(keys.btnText && (values as any)[keys.btnText]) || ''}
           onChange={(bg: string, text: string) => {
-            if (keys.btnBg) onChange(keys.btnBg, bg);
-            if (keys.btnText) onChange(keys.btnText, text);
+            if (keys.btnBg) onChange(keys.btnBg as keyof T & string, bg);
+            if (keys.btnText) onChange(keys.btnText as keyof T & string, text);
           }}
         />
       )}
@@ -170,7 +176,7 @@ export const BlockWrapper = ({
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white/80 rounded-tl-2xl sticky top-0 z-10">
               <div className="flex items-center gap-2">
                 <PaintBrushIcon className="w-5 h-5 text-blue-500" />
-                <span className="font-semibold text-base text-slate-700 truncate max-w-[180px]">{(BLOCKS as any)[block.type]?.name || 'Bloque'}</span>
+                <span className="font-semibold text-base text-slate-700 truncate max-w-[180px]">{BLOCKS[block.type]?.name || 'Bloque'}</span>
               </div>
               <button onClick={() => setShowBlockStyle(false)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-slate-100 transition">
                 <XMarkIcon className="w-5 h-5 text-slate-500" />
@@ -178,9 +184,10 @@ export const BlockWrapper = ({
             </div>
             <div className="flex-1 overflow-y-auto p-5">
               {(() => {
-                const StyleEditor = (BLOCKS as any)[block.type]?.styleEditor as React.FC<{ data: any; updateData: (key: string, value: any) => void }> | undefined;
+                // Type assertion is safe here because block.data always matches block.type
+                const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<any> | undefined;
                 if (!StyleEditor) return <div className="text-sm text-slate-500">Este bloque no tiene editor de estilo.</div>;
-                return <StyleEditor data={block.data as any} updateData={(k, v) => onUpdate(k as string, v)} />;
+                return <StyleEditor data={block.data} updateData={onUpdate} />;
               })()}
             </div>
           </div>
@@ -195,7 +202,7 @@ export const BlockWrapper = ({
         {elementStyle && (
           <ElementStylePanel
             keys={elementStyle.keys}
-            values={block.data as any}
+            values={block.data}
             onChange={(key, val) => onUpdate(key, val)}
             onClose={closeElementStyle}
             anchor={elementStyle.anchor}
@@ -217,9 +224,10 @@ export const BlockWrapper = ({
                     {/* Block Style Editor (Mobile) */}
                     <div className="py-2 border-t">
                       {(() => {
-                        const StyleEditor = (BLOCKS as any)[block.type]?.styleEditor as React.FC<{ data: any; updateData: (key: string, value: any) => void }> | undefined;
+                        // Type assertion is safe here because block.data always matches block.type
+                        const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<any> | undefined;
                         if (!StyleEditor) return <p className="text-center text-sm text-slate-500">Este bloque no tiene editor de estilo.</p>;
-                        return <StyleEditor data={block.data as any} updateData={(k, v) => onUpdate(k as string, v)} />;
+                        return <StyleEditor data={block.data} updateData={onUpdate} />;
                       })()}
                     </div>
                     <button onClick={onClose} className="w-full mt-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700">Hecho</button>
