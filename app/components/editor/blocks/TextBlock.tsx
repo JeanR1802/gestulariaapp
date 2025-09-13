@@ -31,7 +31,7 @@ const getBackgroundStyles = (color: string | undefined, defaultClass = 'bg-white
 
 // --- Editable Inline Component (reusable) ---
 type EditableProps = {
-  tagName: keyof JSX.IntrinsicElements;
+  tagName: keyof HTMLElementTagNameMap;
   value: string;
   onUpdate: (newValue: string) => void;
   isEditing?: boolean;
@@ -42,17 +42,16 @@ type EditableProps = {
 const Editable: React.FC<EditableProps> = ({ tagName, value, onUpdate, isEditing, className, style }) => {
   const ref = React.useRef<HTMLElement>(null);
   useEditable(ref, (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')), { disabled: !isEditing });
-  const Tag = tagName as keyof JSX.IntrinsicElements;
-  return (
-    <Tag
-      ref={ref}
-      className={cn(className, { 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing })}
-      style={style}
-      contentEditable={isEditing || undefined}
-      suppressContentEditableWarning={true}
-    >
-      {value}
-    </Tag>
+  return React.createElement(
+    tagName,
+    {
+      ref: ref as React.Ref<any>,
+      className: cn(className, { 'outline-dashed outline-1 outline-gray-400 focus:outline-blue-500': isEditing }),
+      style,
+      contentEditable: isEditing || undefined,
+      suppressContentEditableWarning: true,
+    },
+    value
   );
 };
 
