@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Block, BLOCKS } from './index';
 import { PencilSquareIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon, PaintBrushIcon } from '@heroicons/react/24/outline';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
-import type { BlockType, BlocksConfig } from './index';
+import type { BlockType } from './index';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { ButtonColorPalette } from '../controls/ButtonColorPalette';
@@ -93,7 +93,6 @@ export const BlockWrapper = ({
 }: BlockWrapperProps) => {
   const { isMobile } = usePreviewMode();
   const [showActionsMobile, setShowActionsMobile] = useState(false);
-  const [showBlockStyle, setShowBlockStyle] = useState(false);
   const [elementStyle, setElementStyle] = useState<{
     keys: { text?: string; bg?: string; btnBg?: string; btnText?: string };
     anchor: { top: number; left: number };
@@ -104,9 +103,7 @@ export const BlockWrapper = ({
   const [dragging, setDragging] = useState(false);
   const dragOffset = useRef(0);
   const panelRef = useRef<HTMLDivElement>(null);
-  // --- REPARA: containerRef y setPlaceToolbarBelow ---
   const containerRef = useRef<HTMLDivElement>(null);
-  const [placeToolbarBelow, setPlaceToolbarBelow] = useState(false);
   
   useEffect(() => {
     if (!isEditing) return;
@@ -115,7 +112,6 @@ export const BlockWrapper = ({
     const recalc = () => {
       const rect = el.getBoundingClientRect();
       const threshold = 96; // altura aproximada del header
-      setPlaceToolbarBelow(rect.top - threshold < 0);
     };
     recalc();
     window.addEventListener('scroll', recalc, true);
@@ -151,7 +147,7 @@ export const BlockWrapper = ({
   useEffect(() => {
     if (!dragging) return;
     const onMove = (e: MouseEvent) => {
-      let clientX = e.clientX;
+      const clientX = e.clientX;
       let newX = clientX - dragOffset.current;
       // Limitar dentro de la ventana
       newX = Math.max(0, Math.min(newX, window.innerWidth - 320));
