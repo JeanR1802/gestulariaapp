@@ -1,6 +1,7 @@
 // app/components/editor/controls/ButtonColorPalette.tsx (VERSIÓN CORREGIDA Y ROBUSTA)
 'use client';
 import React from 'react';
+import { ColorPicker } from './ColorPicker';
 
 // Se exporta la interfaz de propiedades para asegurar consistencia en todo el proyecto.
 export interface ButtonColorPaletteProps {
@@ -42,12 +43,10 @@ const CustomColorPicker = ({ label, color, onApply, title }: { label: string, co
           {/* Panel centrado */}
           <div className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 bg-white/90 p-6 rounded-2xl shadow-2xl border flex flex-col items-center gap-4 w-[90vw] max-w-xs animate-fadeIn" style={{backdropFilter:'blur(8px)'}}>
             <label className="block text-base font-semibold text-slate-700 mb-2">{label}</label>
-            <input
-              type="color"
-              value={tempColor}
-              onChange={e => setTempColor(e.target.value)}
-              className="w-16 h-16 border-2 border-slate-200 rounded-full shadow"
-              autoFocus
+            <ColorPicker
+              color={tempColor}
+              onChange={setTempColor}
+              label={label}
             />
             <div className="flex gap-3 w-full mt-2">
               <button

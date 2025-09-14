@@ -1,6 +1,7 @@
 // Archivo: app/components/editor/controls/TextColorPalette.tsx (NUEVO)
 'use client';
 import React from 'react';
+import { ColorPicker } from './ColorPicker';
 
 // Lista de colores de texto predefinidos (clases de Tailwind)
 const textColors = [
@@ -52,11 +53,10 @@ export function TextColorPalette({ label, selectedColor, onChange }: TextColorPa
         </button>
         {showCustom && (
           <div className="absolute z-30 mt-2 bg-white p-4 rounded-lg shadow-lg border flex flex-col items-center gap-2">
-            <input
-              type="color"
-              value={customColor}
-              onChange={e => setCustomColor(e.target.value)}
-              className="w-10 h-10 border rounded-full"
+            <ColorPicker
+              color={customColor}
+              onChange={setCustomColor}
+              label="Color personalizado"
             />
             <button
               className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
