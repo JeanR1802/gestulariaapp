@@ -6,7 +6,7 @@ import { InputField, TextareaField } from './InputField';
 import { ColorPalette } from '../controls/ColorPalette';
 import { cn } from '@/lib/utils';
 import { nanoid } from 'nanoid';
-import { PlusIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, Heading, Type, Image, Circle } from 'lucide-react';
+import { TrashIcon, ArrowUpIcon, ArrowDownIcon, Heading, Type, Image, Circle } from 'lucide-react';
 
 
 // --- 1. INTERFACES DE DATOS ---
@@ -38,7 +38,7 @@ export interface StackData {
 
 
 export function StackBlock({ data, isEditing, onUpdate }: BlockComponentProps<StackData>) {
-    const handleElementUpdate = (index: number, newElementData: any) => {
+    const handleElementUpdate = (index: number, newElementData: StackElement['data']) => {
         if (!onUpdate) return;
         const newElements = [...data.elements];
         newElements[index] = { ...newElements[index], data: newElementData };
@@ -65,6 +65,7 @@ const ElementRenderer: React.FC<{ element: StackElement; isEditing?: boolean; on
         case 'paragraph':
             return <Editable tagName="p" value={element.data.content || ''} onUpdate={(v: string) => onUpdate({ ...element.data, content: v })} isEditing={isEditing} className="leading-relaxed" />;
         case 'image':
+            // eslint-disable-next-line @next/next/no-img-element
             return <img src={element.data.imageUrl || 'https://placehold.co/800x450/e2e8f0/64748b?text=Imagen'} alt={element.data.alt} className="mx-auto rounded-lg max-w-full h-auto my-4" />;
         case 'button':
             return <a href={element.data.buttonLink || '#'} className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md font-semibold my-4">{element.data.buttonText}</a>;
@@ -77,7 +78,7 @@ const ElementRenderer: React.FC<{ element: StackElement; isEditing?: boolean; on
 
 // --- 3. EDITOR DE CONTENIDO ---
 
-export function StackContentEditor({ data, updateData }: { data: StackData; updateData: (key: keyof StackData, value: any) => void; }) {
+export function StackContentEditor({ data, updateData }: { data: StackData; updateData: (key: keyof StackData, value: StackElement[] | string) => void; }) {
     const updateElements = (newElements: StackElement[]) => {
         updateData('elements', newElements);
     };
@@ -117,7 +118,7 @@ export function StackContentEditor({ data, updateData }: { data: StackData; upda
         updateElements(newElements);
     };
     
-    const updateElementData = (index: number, field: string, value: any) => {
+    const updateElementData = (index: number, field: keyof StackElement['data'], value: string | number) => {
         const newElements = [...data.elements];
         newElements[index] = { ...newElements[index], data: { ...newElements[index].data, [field]: value }};
         updateElements(newElements);
