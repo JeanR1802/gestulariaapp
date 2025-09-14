@@ -94,6 +94,10 @@ export function BlockRenderer({
         const Component = BLOCKS.footer.renderer;
         return <Component data={block.data as FooterData} isEditing={isEditing} onUpdate={onUpdate} />;
       }
+      case 'stack': {
+        const Component = BLOCKS.stack.renderer;
+        return <Component data={block.data as import('./blocks/StackBlock').StackData} isEditing={isEditing} onUpdate={onUpdate} />;
+      }
       default:
         return <div>Error: Bloque de tipo &apos;{block.type}&apos; no reconocido.</div>;
     }
