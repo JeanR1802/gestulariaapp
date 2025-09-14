@@ -195,12 +195,20 @@ export const BlockWrapper = ({
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-5">
-              {(() => {
-                // Type-safe: get the style editor and its correct data type
-                const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<{ data: typeof block.data; updateData: (key: string, value: unknown) => void }> | undefined;
-                if (!StyleEditor) return <div className="text-sm text-slate-500">Este bloque no tiene editor de estilo.</div>;
-                return <StyleEditor data={block.data} updateData={onUpdate} />;
-              })()}
+              {block.type === 'stack' ? (
+                // Editor de contenido flexible para Stack
+                <BLOCKS.stack.editor
+                  data={block.data as import('./StackBlock').StackData}
+                  updateData={onUpdate}
+                />
+              ) : (
+                (() => {
+                  // Type-safe: get the style editor and its correct data type
+                  const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<{ data: typeof block.data; updateData: (key: string, value: unknown) => void }> | undefined;
+                  if (!StyleEditor) return <div className="text-sm text-slate-500">Este bloque no tiene editor de estilo.</div>;
+                  return <StyleEditor data={block.data} updateData={onUpdate} />;
+                })()
+              )}
             </div>
           </div>
         )}
@@ -232,11 +240,18 @@ export const BlockWrapper = ({
                     </div>
                     {/* Block Style Editor (Mobile) */}
                     <div className="py-2 border-t">
-                      {(() => {
-                        const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<{ data: typeof block.data; updateData: (key: string, value: unknown) => void }> | undefined;
-                        if (!StyleEditor) return <p className="text-center text-sm text-slate-500">Este bloque no tiene editor de estilo.</p>;
-                        return <StyleEditor data={block.data} updateData={onUpdate} />;
-                      })()}
+                      {block.type === 'stack' ? (
+                        <BLOCKS.stack.editor
+                          data={block.data as import('./StackBlock').StackData}
+                          updateData={onUpdate}
+                        />
+                      ) : (
+                        (() => {
+                          const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<{ data: typeof block.data; updateData: (key: string, value: unknown) => void }> | undefined;
+                          if (!StyleEditor) return <p className="text-center text-sm text-slate-500">Este bloque no tiene editor de estilo.</p>;
+                          return <StyleEditor data={block.data} updateData={onUpdate} />;
+                        })()
+                      )}
                     </div>
                     <button
                       onClick={() => {
