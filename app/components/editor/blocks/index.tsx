@@ -47,6 +47,7 @@ import { FaqPreviewList, FaqPreviewAccordion } from './Faq/FaqPreviews';
 import { TeamPreviewGrid, TeamPreviewList } from './Team/TeamPreviews';
 import { CatalogPreviewGrid, CatalogPreviewMinimalGrid, CatalogPreviewCarousel } from './Catalog/CatalogPreviews';
 import { FeaturedProductPreviewImageLeft, FeaturedProductPreviewBackground } from './FeaturedProduct/FeaturedProductPreviews';
+import { StackPreviewDefault } from './Stack/StackPreviews';
 
 // --- TIPOS GENÉRICOS Y DE CONFIGURACIÓN ---
 
@@ -350,9 +351,9 @@ export const BLOCKS: BlocksConfig = {
     ]
   } as BlockConfig<FooterData>,
   stack: {
-    name: 'Stack',
+    name: 'Contenido Flexible',
     icon: RectangleGroupIcon,
-    description: 'Bloque flexible de elementos apilados (títulos, párrafos, imágenes, botones, separadores).',
+    description: 'Agrupa títulos, párrafos, imágenes y botones en un solo bloque apilable y ordenable.',
     renderer: StackBlock,
     editor: StackContentEditor,
     styleEditor: StackStyleEditor,
@@ -360,8 +361,8 @@ export const BLOCKS: BlocksConfig = {
     variants: [
       {
         name: 'Stack Básico',
-        description: 'Stack de elementos personalizable.',
-        preview: () => <div className="p-6 text-center text-slate-500">Vista previa Stack</div>,
+        description: 'Crea secciones únicas apilando distintos tipos de contenido.',
+        preview: StackPreviewDefault,
         defaultData: {
           variant: 'default',
           elements: [],
