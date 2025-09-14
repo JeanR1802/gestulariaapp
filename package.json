@@ -24,7 +24,10 @@
     "react-dom": "19.1.0",
     "react-focus-lock": "^2.13.6",
     "react-toastify": "^11.0.5",
-    "use-editable": "^2.3.3"
+    "use-editable": "^2.3.3",
+    "@dnd-kit/core": "^7.0.0",
+    "@dnd-kit/sortable": "^7.0.0",
+    "@dnd-kit/modifiers": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
