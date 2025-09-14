@@ -31,6 +31,7 @@ import { FaqBlock, FaqContentEditor, FaqStyleEditor, FaqData } from './FaqBlock'
 import { TeamBlock, TeamContentEditor, TeamStyleEditor, TeamData } from './TeamBlock';
 import { CatalogBlock, CatalogContentEditor, CatalogStyleEditor, CatalogData } from './CatalogBlock';
 import { FeaturedProductBlock, FeaturedProductContentEditor, FeaturedProductStyleEditor, FeaturedProductData } from './FeaturedProductBlock';
+import { StackBlock, StackContentEditor, StackStyleEditor, StackData } from './StackBlock';
 
 // Importaciones de todas las vistas previas de variantes
 import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview } from './Header/HeaderPreviews';
@@ -50,7 +51,7 @@ import { FeaturedProductPreviewImageLeft, FeaturedProductPreviewBackground } fro
 // --- TIPOS GENÉRICOS Y DE CONFIGURACIÓN ---
 
 // Unión de todos los tipos de datos de los bloques
-export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData | FeaturedProductData;
+export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData | FeaturedProductData | StackData;
 
 // Props que recibirá cada componente de renderizado de bloque (ej: TextBlock, HeaderBlock)
 export interface BlockComponentProps<T extends BlockData> {
@@ -94,6 +95,7 @@ export type BlocksConfig = {
   cta: BlockConfig<CtaData>;
   pricing: BlockConfig<PricingData>;
   footer: BlockConfig<FooterData>;
+  stack: BlockConfig<StackData>;
 };
 
 // --- OBJETO DE CONFIGURACIÓN DE BLOQUES ---
@@ -347,6 +349,27 @@ export const BLOCKS: BlocksConfig = {
         { name: 'Mínimo', description: 'Solo el texto de copyright.', preview: FooterPreviewMinimal, defaultData: { variant: 'minimal', copyrightText: `© ${new Date().getFullYear()} Mi Empresa.`, backgroundColor: 'bg-white', textColor: 'text-slate-500', linkColor: '' } as FooterData },
     ]
   } as BlockConfig<FooterData>,
+  stack: {
+    name: 'Stack',
+    icon: RectangleGroupIcon,
+    description: 'Bloque flexible de elementos apilados (títulos, párrafos, imágenes, botones, separadores).',
+    renderer: StackBlock,
+    editor: StackContentEditor,
+    styleEditor: StackStyleEditor,
+    theme: { bg: 'bg-slate-50', icon: 'text-slate-700' },
+    variants: [
+      {
+        name: 'Stack Básico',
+        description: 'Stack de elementos personalizable.',
+        preview: () => <div className="p-6 text-center text-slate-500">Vista previa Stack</div>,
+        defaultData: {
+          variant: 'default',
+          elements: [],
+          backgroundColor: '',
+        } as StackData,
+      },
+    ],
+  } as BlockConfig<StackData>,
 };
 
 export type BlockType = keyof typeof BLOCKS;

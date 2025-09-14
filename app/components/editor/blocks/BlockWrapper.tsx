@@ -10,8 +10,6 @@ import { TextColorPalette } from '../controls/TextColorPalette';
 import { ButtonColorPalette } from '../controls/ButtonColorPalette';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { AnimatePresence, motion } from 'framer-motion';
-import FocusLock from 'react-focus-lock';
 
 // --- Element Style Panel ---
 function getValue<T extends object>(obj: T, key: string | undefined): string {
@@ -102,6 +100,9 @@ export const BlockWrapper = ({
     anchor: { top: number; left: number };
   } | null>(null);
   const [showBlockStyle, setShowBlockStyle] = useState(false);
+  const [panelPos, setPanelPos] = useState<{ x: number; y: number }>({ x: window.innerWidth - 380, y: window.innerHeight / 2 - 200 });
+  const [draggingPanel, setDraggingPanel] = useState(false);
+  const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
   // --- Handlers para el panel de estilos de elemento ---
@@ -125,6 +126,24 @@ export const BlockWrapper = ({
   };
   const closeElementStyle = () => setElementStyle(null);
 
+  // Drag & drop para el panel de estilos (desktop)
+  useEffect(() => {
+    if (!draggingPanel) return;
+    const onMove = (e: MouseEvent) => {
+      setPanelPos(pos => ({
+        x: Math.max(0, Math.min(e.clientX - dragOffset.current.x, window.innerWidth - 360)),
+        y: Math.max(0, Math.min(e.clientY - dragOffset.current.y, window.innerHeight - 320)),
+      }));
+    };
+    const onUp = () => setDraggingPanel(false);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [draggingPanel]);
+
   // --- Edit Mode ---
   if (isEditing) {
     return (
@@ -143,17 +162,13 @@ export const BlockWrapper = ({
             </div>
           </div>
         )}
-        {/* Panel lateral de estilos (desktop) */}
-        <AnimatePresence>
+        {/* Panel lateral de estilos (desktop, movible) */}
         {!isMobile && showBlockStyle && (
-          <motion.div
-            key="style-panel"
-            initial={{ x: 400, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 400, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed top-1/2 right-0 -translate-y-1/2 z-50 bg-white/90 border-l border-slate-200 rounded-l-2xl shadow-2xl w-[360px] max-w-full flex flex-col animate-fadeIn"
+          <div
+            className="fixed z-50 bg-white/90 border border-slate-200 rounded-2xl shadow-2xl w-[360px] max-w-full flex flex-col animate-fadeIn"
             style={{
+              left: panelPos.x,
+              top: panelPos.y,
               maxHeight: '90vh',
               minHeight: '320px',
               boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
@@ -161,8 +176,16 @@ export const BlockWrapper = ({
             }}
             onClick={e => e.stopPropagation()}
           >
-            <FocusLock returnFocus>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white/80 rounded-tl-2xl sticky top-0 z-10">
+            <div
+              className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white/80 rounded-t-2xl cursor-move select-none"
+              onMouseDown={e => {
+                setDraggingPanel(true);
+                dragOffset.current = {
+                  x: e.clientX - panelPos.x,
+                  y: e.clientY - panelPos.y,
+                };
+              }}
+            >
               <div className="flex items-center gap-2">
                 <PaintBrushIcon className="w-5 h-5 text-blue-500" />
                 <span className="font-semibold text-base text-slate-700 truncate max-w-[180px]">{BLOCKS[block.type]?.name || 'Bloque'}</span>
@@ -179,10 +202,8 @@ export const BlockWrapper = ({
                 return <StyleEditor data={block.data} updateData={onUpdate} />;
               })()}
             </div>
-            </FocusLock>
-          </motion.div>
+          </div>
         )}
-        </AnimatePresence>
         {/* El bloque con anillo de edición */}
         <div className="ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-100 rounded-lg" onClick={handleElementClick}>
             {children}
