@@ -8,6 +8,10 @@ import type { BlockType } from './index';
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { ButtonColorPalette } from '../controls/ButtonColorPalette';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { AnimatePresence, motion } from 'framer-motion';
+import FocusLock from 'react-focus-lock';
 
 // --- Element Style Panel ---
 function getValue<T extends object>(obj: T, key: string | undefined): string {
@@ -125,6 +129,7 @@ export const BlockWrapper = ({
   if (isEditing) {
     return (
       <div ref={containerRef} className="relative my-4">
+        <ToastContainer position="top-center" autoClose={2000} hideProgressBar newestOnTop closeOnClick rtl={false} pauseOnFocusLoss={false} draggable pauseOnHover={false} theme="colored" />
         {/* Barra de acciones arriba del bloque */}
         {!isMobile && (
           <div className="absolute -top-12 left-0 w-full flex justify-center z-40">
@@ -132,15 +137,21 @@ export const BlockWrapper = ({
               {onMoveUp && <button title="Mover Arriba" onClick={onMoveUp} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
               {onMoveDown && <button title="Mover Abajo" onClick={onMoveDown} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
               <button title="Estilo del Bloque" onClick={() => setShowBlockStyle((v) => !v)} className="h-8 px-3 flex items-center gap-1 rounded-full hover:bg-slate-100"><PaintBrushIcon className="w-5 h-5 text-gray-700" /><span className="text-sm">Estilo</span></button>
-              <button title="Eliminar Bloque" onClick={onDelete} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-100 group/trash"><TrashIcon className="w-5 h-5 text-red-500 group-hover/trash:text-red-600" /></button>
+              <button title="Eliminar Bloque" onClick={() => { onDelete(); toast.success('Bloque eliminado'); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-100 group/trash"><TrashIcon className="w-5 h-5 text-red-500 group-hover/trash:text-red-600" /></button>
               <div className="w-px h-6 bg-slate-200 mx-1"></div>
               <button title="Finalizar Edición" onClick={onClose} className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700"><XMarkIcon className="w-5 h-5" /></button>
             </div>
           </div>
         )}
         {/* Panel lateral de estilos (desktop) */}
+        <AnimatePresence>
         {!isMobile && showBlockStyle && (
-          <div
+          <motion.div
+            key="style-panel"
+            initial={{ x: 400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 400, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="fixed top-1/2 right-0 -translate-y-1/2 z-50 bg-white/90 border-l border-slate-200 rounded-l-2xl shadow-2xl w-[360px] max-w-full flex flex-col animate-fadeIn"
             style={{
               maxHeight: '90vh',
@@ -150,6 +161,7 @@ export const BlockWrapper = ({
             }}
             onClick={e => e.stopPropagation()}
           >
+            <FocusLock returnFocus>
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white/80 rounded-tl-2xl sticky top-0 z-10">
               <div className="flex items-center gap-2">
                 <PaintBrushIcon className="w-5 h-5 text-blue-500" />
@@ -167,8 +179,10 @@ export const BlockWrapper = ({
                 return <StyleEditor data={block.data} updateData={onUpdate} />;
               })()}
             </div>
-          </div>
+            </FocusLock>
+          </motion.div>
         )}
+        </AnimatePresence>
         {/* El bloque con anillo de edición */}
         <div className="ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-100 rounded-lg" onClick={handleElementClick}>
             {children}
@@ -192,7 +206,7 @@ export const BlockWrapper = ({
                         <div className="flex items-center gap-2">
                             {onMoveUp && <button title="Mover Arriba" onClick={onMoveUp} className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
                             {onMoveDown && <button title="Mover Abajo" onClick={onMoveDown} className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
-                            <button title="Eliminar Bloque" onClick={onDelete} className="w-9 h-9 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 group/trash"><TrashIcon className="w-5 h-5 text-red-500" /></button>
+                            <button title="Eliminar Bloque" onClick={() => { onDelete(); toast.success('Bloque eliminado'); }} className="w-9 h-9 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 group/trash"><TrashIcon className="w-5 h-5 text-red-500" /></button>
                         </div>
                     </div>
                     {/* Block Style Editor (Mobile) */}
