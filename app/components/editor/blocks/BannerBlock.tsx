@@ -147,7 +147,7 @@ export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: k
       <select
         className="border rounded px-2 py-1 text-sm"
         value={data.textAlign || 'center'}
-        onChange={e => updateData('textAlign', e.target.value as any)}
+        onChange={e => updateData('textAlign', e.target.value as 'left' | 'center' | 'right')}
       >
         <option value="left">Izquierda</option>
         <option value="center">Centro</option>
