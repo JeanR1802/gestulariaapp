@@ -32,6 +32,7 @@ import { TeamBlock, TeamContentEditor, TeamStyleEditor, TeamData } from './TeamB
 import { CatalogBlock, CatalogContentEditor, CatalogStyleEditor, CatalogData } from './CatalogBlock';
 import { FeaturedProductBlock, FeaturedProductContentEditor, FeaturedProductStyleEditor, FeaturedProductData } from './FeaturedProductBlock';
 import { StackBlock, StackContentEditor, StackStyleEditor, StackData } from './StackBlock';
+import { BannerBlock, BannerData, BannerContentEditor, BannerStyleEditor } from './BannerBlock';
 
 // Importaciones de todas las vistas previas de variantes
 import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview } from './Header/HeaderPreviews';
@@ -48,11 +49,12 @@ import { TeamPreviewGrid, TeamPreviewList } from './Team/TeamPreviews';
 import { CatalogPreviewGrid, CatalogPreviewMinimalGrid, CatalogPreviewCarousel } from './Catalog/CatalogPreviews';
 import { FeaturedProductPreviewImageLeft, FeaturedProductPreviewBackground } from './FeaturedProduct/FeaturedProductPreviews';
 import { StackPreviewDefault } from './Stack/StackPreviews';
+import { BannerPreviewDefault, BannerPreviewInfo, BannerPreviewSuccess, BannerPreviewPromo } from './Banner/BannerPreviews';
 
 // --- TIPOS GENÉRICOS Y DE CONFIGURACIÓN ---
 
 // Unión de todos los tipos de datos de los bloques
-export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData | FeaturedProductData | StackData;
+export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData | FeaturedProductData | StackData | BannerData;
 
 // Props que recibirá cada componente de renderizado de bloque (ej: TextBlock, HeaderBlock)
 export interface BlockComponentProps<T extends BlockData> {
@@ -97,6 +99,7 @@ export type BlocksConfig = {
   pricing: BlockConfig<PricingData>;
   footer: BlockConfig<FooterData>;
   stack: BlockConfig<StackData>;
+  banner: BlockConfig<BannerData>;
 };
 
 // --- OBJETO DE CONFIGURACIÓN DE BLOQUES ---
@@ -371,6 +374,51 @@ export const BLOCKS: BlocksConfig = {
       },
     ],
   } as BlockConfig<StackData>,
+  banner: {
+    name: 'Banner',
+    icon: MegaphoneIcon,
+    description: 'Sección destacada con imagen, color y texto.',
+    renderer: BannerBlock,
+    editor: BannerContentEditor,
+    styleEditor: BannerStyleEditor,
+    theme: { bg: 'bg-blue-50', icon: 'text-blue-600' },
+    variants: [
+      {
+        name: 'Informativo',
+        description: 'Banner para avisos o información general.',
+        preview: BannerPreviewInfo,
+        defaultData: {
+          variant: 'info',
+          text: '¡Bienvenido a tu nuevo sitio!',
+          bgColor: 'bg-blue-50',
+          textColor: 'text-blue-900',
+        } as BannerData,
+      },
+      {
+        name: 'Éxito',
+        description: 'Banner para mensajes de éxito o confirmación.',
+        preview: BannerPreviewSuccess,
+        defaultData: {
+          variant: 'success',
+          text: '¡Operación realizada con éxito!',
+          bgColor: 'bg-green-50',
+          textColor: 'text-green-900',
+        } as BannerData,
+      },
+      {
+        name: 'Promoción',
+        description: 'Banner para promociones o anuncios destacados.',
+        preview: BannerPreviewPromo,
+        defaultData: {
+          variant: 'promo',
+          text: '¡Aprovecha nuestra oferta especial!',
+          bgColor: 'bg-yellow-50',
+          textColor: 'text-yellow-900',
+          buttonText: 'Ver más',
+        } as BannerData,
+      },
+    ],
+  } as BlockConfig<BannerData>,
 };
 
 export type BlockType = keyof typeof BLOCKS;

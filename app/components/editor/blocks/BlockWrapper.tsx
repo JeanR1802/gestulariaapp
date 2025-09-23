@@ -213,7 +213,7 @@ export const BlockWrapper = ({
           </div>
         )}
         {/* El bloque con anillo de edición */}
-        <div className="ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-100 rounded-lg" onClick={handleElementClick}>
+        <div className="ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-100 rounded-lg min-h-24" onClick={handleElementClick}>
             {children}
         </div>
         {/* Element Style Panel */}
