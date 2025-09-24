@@ -31,57 +31,33 @@ export function InlineEditorPanel({ block, onUpdate, onClose, onDelete, onMoveUp
     const ContentEditorComponent = blockConfig.editor;
     const StyleEditorComponent = hasStyleEditor(blockConfig) ? blockConfig.styleEditor : undefined;
 
-    // Detecta si es móvil
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    if (isMobile) {
-        // Modal tipo bottom-sheet en móvil
-        return (
-            <div className="fixed inset-0 z-[1001] flex items-end justify-center bg-black/30">
-                <div className="w-full max-w-md bg-white rounded-t-2xl shadow-2xl animate-slideUp flex flex-col" style={{ maxHeight: '80vh', minHeight: '40vh' }}>
-                    <div className="p-3 border-b flex-shrink-0 flex justify-between items-center bg-slate-50 rounded-t-2xl">
-                        <h3 className="font-semibold text-sm text-slate-800">Editando: {blockConfig.name}</h3>
-                        <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><XMarkIcon className="w-4 h-4" /></button>
-                    </div>
-                    <div className="p-2 border-b flex items-center justify-center gap-2">
-                        {onMoveUp && <button onClick={onMoveUp} className="p-2 bg-slate-100 rounded-md hover:bg-slate-200"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
-                        {onMoveDown && <button onClick={onMoveDown} className="p-2 bg-slate-100 rounded-md hover:bg-slate-200"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
-                        <button onClick={onDelete} className="p-2 bg-slate-100 rounded-md hover:bg-red-500 group"><TrashIcon className="w-5 h-5 text-gray-700 group-hover:text-white" /></button>
-                    </div>
-                    <div className="border-b flex">
-                        <button onClick={() => setActiveTab('content')} className={cn("flex-1 p-3 text-sm font-semibold flex items-center justify-center gap-2", activeTab === 'content' ? "text-blue-600 bg-blue-50 border-b-2 border-blue-600" : "text-slate-600 hover:bg-slate-100")}> <PencilIcon className="w-5 h-5" /> Contenido </button>
-                        {StyleEditorComponent && (
-                            <button onClick={() => setActiveTab('style')} className={cn("flex-1 p-3 text-sm font-semibold flex items-center justify-center gap-2", activeTab === 'style' ? "text-blue-600 bg-blue-50 border-b-2 border-blue-600" : "text-slate-600 hover:bg-slate-100")}> <PaintBrushIcon className="w-5 h-5" /> Estilo </button>
-                        )}
-                    </div>
-                    <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0" style={{ maxHeight: 'calc(80vh - 120px)' }}>
-                        {activeTab === 'content' && ContentEditorComponent && (<ContentEditorComponent data={block.data} updateData={onUpdate} />)}
-                        {activeTab === 'style' && StyleEditorComponent && (<StyleEditorComponent data={block.data} updateData={onUpdate} />)}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-    // Desktop: panel centrado y fijo
+    // Panel unificado para móvil y desktop: centrado y fijo
     return (
-        <div className="fixed left-1/2 top-1/2 z-[1001] -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-lg shadow-2xl border border-slate-200 flex flex-col" style={{ maxHeight: '80vh', minHeight: '40vh' }} onClick={e => e.stopPropagation()}>
-            <div className="p-3 border-b flex justify-between items-center bg-slate-50">
-                <h3 className="font-semibold text-sm text-slate-800">Editando: {blockConfig.name}</h3>
-                <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><XMarkIcon className="w-4 h-4" /></button>
-            </div>
-            <div className="p-2 border-b flex items-center justify-center gap-2">
-                {onMoveUp && <button onClick={onMoveUp} className="p-2 bg-slate-100 rounded-md hover:bg-slate-200"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
-                {onMoveDown && <button onClick={onMoveDown} className="p-2 bg-slate-100 rounded-md hover:bg-slate-200"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
-                <button onClick={onDelete} className="p-2 bg-slate-100 rounded-md hover:bg-red-500 group"><TrashIcon className="w-5 h-5 text-gray-700 group-hover:text-white" /></button>
-            </div>
-            <div className="border-b flex">
-                <button onClick={() => setActiveTab('content')} className={cn("flex-1 p-3 text-sm font-semibold flex items-center justify-center gap-2", activeTab === 'content' ? "text-blue-600 bg-blue-50 border-b-2 border-blue-600" : "text-slate-600 hover:bg-slate-100")}> <PencilIcon className="w-5 h-5" /> Contenido </button>
-                {StyleEditorComponent && (
-                    <button onClick={() => setActiveTab('style')} className={cn("flex-1 p-3 text-sm font-semibold flex items-center justify-center gap-2", activeTab === 'style' ? "text-blue-600 bg-blue-50 border-b-2 border-blue-600" : "text-slate-600 hover:bg-slate-100")}> <PaintBrushIcon className="w-5 h-5" /> Estilo </button>
-                )}
-            </div>
-            <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0" style={{ maxHeight: 'calc(80vh - 120px)' }}>
-                {activeTab === 'content' && ContentEditorComponent && (<ContentEditorComponent data={block.data} updateData={onUpdate} />)}
-                {activeTab === 'style' && StyleEditorComponent && (<StyleEditorComponent data={block.data} updateData={onUpdate} />)}
+        <div className="fixed inset-0 z-[1001] flex items-center justify-center bg-black/30 p-4">
+            <div 
+                className="w-full max-w-lg bg-white rounded-lg shadow-2xl border border-slate-200 flex flex-col" 
+                style={{ maxHeight: 'calc(100vh - 2rem)', minHeight: '300px' }} 
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="p-3 border-b flex justify-between items-center bg-slate-50 flex-shrink-0">
+                    <h3 className="font-semibold text-sm text-slate-800">Editando: {blockConfig.name}</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-700"><XMarkIcon className="w-4 h-4" /></button>
+                </div>
+                <div className="p-2 border-b flex items-center justify-center gap-2 flex-shrink-0">
+                    {onMoveUp && <button onClick={onMoveUp} className="p-2 bg-slate-100 rounded-md hover:bg-slate-200"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
+                    {onMoveDown && <button onClick={onMoveDown} className="p-2 bg-slate-100 rounded-md hover:bg-slate-200"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
+                    <button onClick={onDelete} className="p-2 bg-slate-100 rounded-md hover:bg-red-500 group"><TrashIcon className="w-5 h-5 text-gray-700 group-hover:text-white" /></button>
+                </div>
+                <div className="border-b flex flex-shrink-0">
+                    <button onClick={() => setActiveTab('content')} className={cn("flex-1 p-3 text-sm font-semibold flex items-center justify-center gap-2", activeTab === 'content' ? "text-blue-600 bg-blue-50 border-b-2 border-blue-600" : "text-slate-600 hover:bg-slate-100")}> <PencilIcon className="w-5 h-5" /> Contenido </button>
+                    {StyleEditorComponent && (
+                        <button onClick={() => setActiveTab('style')} className={cn("flex-1 p-3 text-sm font-semibold flex items-center justify-center gap-2", activeTab === 'style' ? "text-blue-600 bg-blue-50 border-b-2 border-blue-600" : "text-slate-600 hover:bg-slate-100")}> <PaintBrushIcon className="w-5 h-5" /> Estilo </button>
+                    )}
+                </div>
+                <div className="p-4 space-y-4 overflow-y-auto flex-grow">
+                    {activeTab === 'content' && ContentEditorComponent && (<ContentEditorComponent data={block.data} updateData={onUpdate} />)}
+                    {activeTab === 'style' && StyleEditorComponent && (<StyleEditorComponent data={block.data} updateData={onUpdate} />)}
+                </div>
             </div>
         </div>
     );

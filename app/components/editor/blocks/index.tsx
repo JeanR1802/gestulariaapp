@@ -33,6 +33,7 @@ import { CatalogBlock, CatalogContentEditor, CatalogStyleEditor, CatalogData } f
 import { FeaturedProductBlock, FeaturedProductContentEditor, FeaturedProductStyleEditor, FeaturedProductData } from './FeaturedProductBlock';
 import { StackBlock, StackContentEditor, StackStyleEditor, StackData } from './StackBlock';
 import { BannerBlock, BannerData, BannerContentEditor, BannerStyleEditor } from './BannerBlock';
+import { GalleryBlock, GalleryContentEditor, GalleryStyleEditor, GalleryData } from './GalleryBlock';
 
 // Importaciones de todas las vistas previas de variantes
 import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview } from './Header/HeaderPreviews';
@@ -50,11 +51,12 @@ import { CatalogPreviewGrid, CatalogPreviewMinimalGrid, CatalogPreviewCarousel }
 import { FeaturedProductPreviewImageLeft, FeaturedProductPreviewBackground } from './FeaturedProduct/FeaturedProductPreviews';
 import { StackPreviewDefault } from './Stack/StackPreviews';
 import { BannerPreviewDefault, BannerPreviewInfo, BannerPreviewSuccess, BannerPreviewPromo } from './Banner/BannerPreviews';
+import { GalleryPreviewGrid, GalleryPreviewCarousel, GalleryPreviewFeatured } from './Gallery/GalleryPreviews';
 
 // --- TIPOS GENÉRICOS Y DE CONFIGURACIÓN ---
 
 // Unión de todos los tipos de datos de los bloques
-export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData | FeaturedProductData | StackData | BannerData;
+export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData | FeaturedProductData | StackData | BannerData | GalleryData;
 
 // Props que recibirá cada componente de renderizado de bloque (ej: TextBlock, HeaderBlock)
 export interface BlockComponentProps<T extends BlockData> {
@@ -94,6 +96,7 @@ export type BlocksConfig = {
   faq: BlockConfig<FaqData>;
   text: BlockConfig<TextData>;
   image: BlockConfig<ImageData>;
+  gallery: BlockConfig<GalleryData>;
   cards: BlockConfig<CardsData>;
   cta: BlockConfig<CtaData>;
   pricing: BlockConfig<PricingData>;
@@ -228,6 +231,20 @@ export const BLOCKS: BlocksConfig = {
         { name: 'Ancho Completo', description: 'La imagen ocupa todo el ancho de la página.', preview: ImagePreviewFullWidth, defaultData: { variant: 'fullwidth', imageUrl: 'https://placehold.co/1200x600/e2e8f0/64748b?text=Imagen+Ancho+Completo', alt: 'Descripción de la imagen', caption: '' } as ImageData },
     ]
   } as BlockConfig<ImageData>,
+  gallery: {
+    name: 'Galería',
+    icon: PhotoIcon,
+    description: 'Muestra una colección de imágenes.',
+    renderer: GalleryBlock,
+    editor: GalleryContentEditor,
+    styleEditor: GalleryStyleEditor,
+    theme: { bg: 'bg-purple-50', icon: 'text-purple-600' },
+    variants: [
+        { name: 'Rejilla (Grid)', description: 'Una cuadrícula simple de imágenes.', preview: GalleryPreviewGrid, defaultData: { variant: 'grid', images: [{}, {}, {}, {}], spacing: 'md', lightbox: true } as GalleryData },
+        { name: 'Carrusel', description: 'Un carrusel horizontal de imágenes.', preview: GalleryPreviewCarousel, defaultData: { variant: 'carousel', images: [{}, {}, {}, {}, {}], spacing: 'md', lightbox: true } as GalleryData },
+        { name: 'Destacado', description: 'Una imagen grande y varias miniaturas.', preview: GalleryPreviewFeatured, defaultData: { variant: 'featured', images: [{}, {}, {}], spacing: 'md', lightbox: true } as GalleryData },
+    ]
+  } as BlockConfig<GalleryData>,
   cards: {
     name: 'Tarjetas',
     icon: RectangleGroupIcon,

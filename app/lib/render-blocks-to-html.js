@@ -1,13 +1,22 @@
 // Archivo: app/lib/render-blocks-to-html.js (ACTUALIZADO CON EL DISEÑO FINAL)
 export function renderBlocksToHTML(blocks) {
   // --- Utilidades para colores personalizados ---
-  function getClassOrStyle(color, tailwindDefault, cssProp) {
+    function getClassOrStyle(color, tailwindDefault, cssProp) {
     if (!color) return { class: tailwindDefault, style: '' };
-    if (color.startsWith('[#')) {
+
+    // Si es un valor arbitrario de Tailwind JIT (ej. [#aabbcc])
+    if (color.startsWith('[#') && color.endsWith(']')) {
       const hex = color.slice(1, -1);
       return { class: '', style: `${cssProp}: ${hex};` };
     }
-    return { class: color, style: '' };
+
+    // Si es una clase de Tailwind (heurística: contiene un guión, no es un color funcional como `rgb()`)
+    if (color.includes('-') && !color.includes('(')) {
+      return { class: color, style: '' };
+    }
+
+    // Si es un color hexadecimal, rgb, o nombre de color, aplicar como estilo en línea
+    return { class: '', style: `${cssProp}: ${color};` };
   }
 
   if (!Array.isArray(blocks)) return '';
@@ -215,6 +224,152 @@ export function renderBlocksToHTML(blocks) {
           default: return `<div class="max-w-4xl mx-auto p-4 text-center"><img src="${data.imageUrl}" alt="${data.alt}" class="rounded-lg mx-auto max-w-full h-auto" />${captionHtml}</div>`;
         }
       }
+      case 'gallery': {
+        const spacingClasses = { sm: 'gap-2', md: 'gap-4', lg: 'gap-8' };
+        const spacingClass = spacingClasses[data.spacing] || 'gap-4';
+        
+        const widthClasses = { normal: 'max-w-4xl', wide: 'max-w-7xl', full: 'w-full' };
+        const widthClass = widthClasses[data.width] || 'max-w-7xl';
+
+        const images = data.images || [];
+        const galleryId = `gallery-${block.id}`;
+
+        let galleryHtml = '';
+
+        switch (data.variant) {
+          case 'carousel': {
+            const scrollContainerId = `scroll-${galleryId}`;
+            const prevButtonId = `prev-${galleryId}`;
+            const nextButtonId = `next-${galleryId}`;
+            galleryHtml = `
+              <div class="relative">
+                <div id="${scrollContainerId}" class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth ${spacingClass}" style="scrollbar-width: none; -ms-overflow-style: none;">
+                  ${images.map((img, i) => `
+                    <div class="snap-center flex-shrink-0 w-2/3 sm:w-1/2 md:w-1/3 lg:w-1/4">
+                      <img src="${img.url || 'https://placehold.co/400x400/e2e8f0/64748b?text=Imagen'}" alt="${img.alt}" class="w-full aspect-square object-cover rounded-lg gallery-image" data-gallery-id="${galleryId}" data-image-index="${i}" />
+                    </div>
+                  `).join('')}
+                </div>
+                <button id="${prevButtonId}" aria-label="Anterior" class="absolute top-1/2 left-2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 border border-slate-200 text-slate-600 hover:bg-white flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+                <button id="${nextButtonId}" aria-label="Siguiente" class="absolute top-1/2 right-2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 border border-slate-200 text-slate-600 hover:bg-white flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+              </div>
+              <script>
+                (function() {
+                  var container = document.getElementById('${scrollContainerId}');
+                  var prevBtn = document.getElementById('${prevButtonId}');
+                  var nextBtn = document.getElementById('${nextButtonId}');
+                  if (!container || !prevBtn || !nextBtn) return;
+                  
+                  function updateButtons() {
+                    var scrollLeft = container.scrollLeft;
+                    var scrollWidth = container.scrollWidth;
+                    var clientWidth = container.clientWidth;
+                    prevBtn.disabled = scrollLeft <= 0;
+                    nextBtn.disabled = scrollLeft >= scrollWidth - clientWidth - 1;
+                  }
+
+                  function scrollToNext() {
+                    var itemWidth = container.querySelector('div').offsetWidth;
+                    var currentScroll = container.scrollLeft;
+                    var targetScroll = Math.floor((currentScroll + itemWidth) / itemWidth) * itemWidth;
+                    container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+                  }
+
+                  function scrollToPrev() {
+                    var itemWidth = container.querySelector('div').offsetWidth;
+                    var currentScroll = container.scrollLeft;
+                    var targetScroll = Math.ceil((currentScroll - itemWidth) / itemWidth) * itemWidth;
+                    container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+                  }
+
+                  prevBtn.addEventListener('click', scrollToPrev);
+                  nextBtn.addEventListener('click', scrollToNext);
+                  container.addEventListener('scroll', updateButtons, { passive: true });
+                  
+                  var resizeObserver = new ResizeObserver(updateButtons);
+                  resizeObserver.observe(container);
+                  
+                  setTimeout(updateButtons, 100);
+                })();
+              </script>
+            `;
+            break;
+          }
+          case 'featured': {
+            const [first, ...rest] = images;
+            if (!first) break;
+            galleryHtml = `
+              <div class="grid grid-cols-1 md:grid-cols-3 ${spacingClass}">
+                <div class="md:col-span-2">
+                  <img src="${first.url || 'https://placehold.co/800x800/e2e8f0/64748b?text=Imagen'}" alt="${first.alt}" class="w-full aspect-square object-cover rounded-lg gallery-image" data-gallery-id="${galleryId}" data-image-index="0" />
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-1 ${spacingClass}">
+                  ${rest.slice(0, 2).map((img, i) => `
+                    <img src="${img.url || 'https://placehold.co/400x400/e2e8f0/64748b?text=Imagen'}" alt="${img.alt}" class="w-full aspect-square object-cover rounded-lg gallery-image" data-gallery-id="${galleryId}" data-image-index="${i + 1}" />
+                  `).join('')}
+                </div>
+              </div>
+            `;
+            break;
+          }
+          case 'grid':
+          default: {
+            galleryHtml = `
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${spacingClass}">
+                ${images.map((img, i) => `
+                  <img src="${img.url || 'https://placehold.co/400x400/e2e8f0/64748b?text=Imagen'}" alt="${img.alt}" class="w-full aspect-square object-cover rounded-lg gallery-image" data-gallery-id="${galleryId}" data-image-index="${i}" />
+                `).join('')}
+              </div>
+            `;
+            break;
+          }
+        }
+
+        let lightboxScript = '';
+        if (data.lightbox) {
+          lightboxScript = `
+            <script>
+              (function() {
+                if (document.getElementById('gallery-lightbox-container')) return;
+
+                var container = document.createElement('div');
+                container.id = 'gallery-lightbox-container';
+                container.className = 'fixed inset-0 z-[2000] bg-black/80 flex items-center justify-center p-4 hidden';
+                container.innerHTML = '<img id="gallery-lightbox-image" src="" alt="Vista ampliada" class="max-w-full max-h-full rounded-lg" /><button id="gallery-lightbox-close" class="absolute top-4 right-4 text-white text-3xl">&times;</button>';
+                document.body.appendChild(container);
+
+                var imageEl = document.getElementById('gallery-lightbox-image');
+                var closeBtn = document.getElementById('gallery-lightbox-close');
+
+                function closeLightbox() {
+                  container.classList.add('hidden');
+                }
+
+                container.addEventListener('click', closeLightbox);
+                closeBtn.addEventListener('click', closeLightbox);
+
+                var allImages = ${JSON.stringify(images.map(i => i.url))};
+
+                document.querySelectorAll('.gallery-image[data-gallery-id="${galleryId}"]').forEach(function(el) {
+                  el.addEventListener('click', function() {
+                    var index = parseInt(this.getAttribute('data-image-index'), 10);
+                    if (imageEl) {
+                      imageEl.src = allImages[index];
+                    }
+                    container.classList.remove('hidden');
+                  });
+                });
+              })();
+            </script>
+          `;
+        }
+
+        return `<div class="py-8 px-4" id="${galleryId}">
+                  <div class="${widthClass} mx-auto">
+                    ${galleryHtml}
+                  </div>
+                </div>${lightboxScript}`;
+      }
       case 'cards': {
         const cardsTitleHtml = `<h2 class="text-3xl font-bold text-center mb-12 ${data.titleColor || 'text-slate-800'}">${data.title}</h2>`;
         switch (data.variant) {
@@ -265,31 +420,34 @@ export function renderBlocksToHTML(blocks) {
         }
       }
       case 'banner': {
-        // Igualar exactamente la estructura y clases del editor, sin max-w ni mx-auto, y SIN bordes redondeados
-        const bg = getClassOrStyle(data.bgColor, data.variant === 'promo' ? 'bg-gradient-to-r from-pink-500 to-yellow-400' : data.variant === 'success' ? 'bg-green-100' : 'bg-blue-100', 'background-color');
-        const text = getClassOrStyle(data.textColor, data.variant === 'promo' ? 'text-white' : data.variant === 'success' ? 'text-green-900' : 'text-blue-900', 'color');
-        const btnBg = getClassOrStyle(data.buttonBgColor, data.variant === 'promo' ? 'bg-white/20' : data.variant === 'success' ? 'bg-green-600' : 'bg-blue-600', 'background-color');
-        const btnText = getClassOrStyle(data.buttonTextColor, data.variant === 'promo' ? 'text-white' : 'text-white', 'color');
-        // Padding vertical igual que en el editor
-        const heightClass = data.height === 'sm' ? 'py-1' : data.height === 'lg' ? 'py-4' : 'py-2';
-        const textSizeClass = data.textSize === 'sm' ? 'text-sm' : data.textSize === 'lg' ? 'text-xl' : 'text-base';
-        let containerClass, textClass, buttonClass;
-        if (data.textAlign === 'center') {
-          // Centrado: columna SIEMPRE, ambos hijos centrados, texto ocupa todo el ancho y centrado
-          containerClass = `w-full ${bg.class} ${heightClass} px-4 border border-black/5 shadow-sm flex flex-col items-center justify-center gap-3 md:gap-6 relative overflow-hidden`;
-          textClass = `w-full block ${text.class} ${textSizeClass} text-center font-medium`;
-        } else {
-          // Izquierda/derecha: columna en móvil, fila en desktop, texto ocupa flex-1
-          let justifyClass = 'justify-between';
-          let flexDirClass = 'flex-col md:flex-row';
-          if (data.textAlign === 'right') justifyClass = 'justify-end';
-          else if (data.textAlign === 'left') justifyClass = 'justify-start';
-          containerClass = `w-full ${bg.class} ${heightClass} px-4 border border-black/5 shadow-sm flex ${flexDirClass} items-center gap-3 md:gap-6 ${justifyClass} relative overflow-hidden`;
-          textClass = `block flex-1 ${text.class} ${textSizeClass} ${data.textAlign === 'right' ? 'text-right' : 'text-left'} font-medium`;
-        }
-        buttonClass = `inline-block px-5 py-2 rounded-md font-semibold shadow transition-all duration-200 ${btnBg.class} ${btnText.class} text-sm`;
-        // Banner body (sin wrapper de max-w ni mx-auto)
-        return `<div class=\"${containerClass}\" style=\"${bg.style}\">\n  <span class=\"${textClass}\" style=\"${text.style}\">${data.text || ''}</span>\n  ${data.buttonText ? `<a href=\"#\" class=\"${buttonClass}\" style=\"${btnBg.style}${btnText.style ? ' ' + btnText.style : ''}\">${data.buttonText}</a>` : ''}\n</div>`;
+        const bg = getClassOrStyle(data.bgColor, 'bg-blue-50', 'background-color');
+        const text = getClassOrStyle(data.textColor, 'text-blue-900', 'color');
+        const btnBg = getClassOrStyle(data.buttonBgColor, 'bg-yellow-400/90', 'background-color');
+        const btnText = getClassOrStyle(data.buttonTextColor, 'text-yellow-900', 'color');
+
+        const heightClass = data.height || 'h-12';
+        const textSizeClass = data.textSize || 'text-base';
+        
+        // Simplificar la lógica de alineación para que coincida con el editor de React
+        const align = data.textAlign || 'center';
+        const alignClass = {
+          left: 'justify-start',
+          center: 'justify-center',
+          right: 'justify-end'
+        }[align];
+
+        const textClass = `font-semibold ${text.class} ${textSizeClass}`;
+        
+        // La clase del contenedor ahora es siempre flex horizontal
+        const containerClass = `w-full ${heightClass} flex items-center px-4 shadow-sm gap-2 ${bg.class} ${alignClass}`;
+
+        const buttonClass = `ml-2 px-3 py-1 rounded-md font-semibold transition ${btnBg.class} ${btnText.class} ${textSizeClass}`;
+        const buttonStyle = `${btnBg.style} ${btnText.style}`.trim();
+
+        return `<div class="${containerClass}" style="${bg.style}">
+                  <span class="${textClass}" style="${text.style}">${data.text}</span>
+                  ${data.buttonText ? `<a href="#" class="${buttonClass}" style="${buttonStyle}">${data.buttonText}</a>` : ''}
+                </div>`;
       }
       default:
         console.warn(`AVISO: El tipo de bloque "${type}" no está registrado y no será renderizado.`);

@@ -45,7 +45,7 @@ export const BannerBlock: React.FC<{ data: BannerData }> = ({ data }) => {
       <span className={`font-semibold ${text.className} ${textSizeClass}`} style={text.style}>{data.text}</span>
       {data.buttonText && (
         <button
-          className={`ml-2 px-3 py-1 rounded-md text-xs font-semibold hover:bg-yellow-400 transition ${buttonBg.className} ${buttonText.className}`}
+          className={`ml-2 px-3 py-1 rounded-md font-semibold hover:bg-yellow-400 transition ${buttonBg.className} ${buttonText.className} ${textSizeClass}`}
           style={{ ...buttonBg.style, ...buttonText.style }}
         >
           {data.buttonText}

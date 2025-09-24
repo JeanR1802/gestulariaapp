@@ -10,6 +10,7 @@ import { TestimonialData } from './blocks/TestimonialBlock';
 import { FaqData } from './blocks/FaqBlock';
 import { TextData } from './blocks/TextBlock';
 import { ImageData } from './blocks/ImageBlock';
+import { GalleryData } from './blocks/GalleryBlock';
 import { CardsData } from './blocks/CardsBlock';
 import { CtaData } from './blocks/CtaBlock';
 import { PricingData } from './blocks/PricingBlock';
@@ -77,6 +78,10 @@ export function BlockRenderer({
       case 'image': {
         const Component = BLOCKS.image.renderer;
         return <Component data={block.data as ImageData} isEditing={isEditing} onUpdate={onUpdate} />;
+      }
+      case 'gallery': {
+        const Component = BLOCKS.gallery.renderer;
+        return <Component data={block.data as GalleryData} isEditing={isEditing} onUpdate={onUpdate} />;
       }
       case 'cards': {
         const Component = BLOCKS.cards.renderer;
