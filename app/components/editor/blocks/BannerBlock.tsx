@@ -94,20 +94,16 @@ export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: k
 
   return (
     <div className="space-y-4">
-      <ControlWrapper>
-        <Label>Color de Fondo</Label>
-        <ColorPalette
-          selectedColor={data.bgColor || ''}
-          onChange={color => updateData('bgColor', color)}
-        />
-      </ControlWrapper>
-      <ControlWrapper>
-        <Label>Color de Texto</Label>
-        <TextColorPalette
-          selectedColor={data.textColor || ''}
-          onChange={color => updateData('textColor', color)}
-        />
-      </ControlWrapper>
+      <ColorPalette
+        label="Color de Fondo"
+        selectedColor={data.bgColor || ''}
+        onChange={color => updateData('bgColor', color)}
+      />
+      <TextColorPalette
+        label="Color de Texto"
+        selectedColor={data.textColor || ''}
+        onChange={color => updateData('textColor', color)}
+      />
       <hr />
       <ControlWrapper>
         <Label>Alto</Label>
@@ -154,19 +150,16 @@ export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: k
       {data.variant === 'promo' && (
         <>
           <hr />
-          <ControlWrapper>
-            <Label>Colores del Botón</Label>
-            <div className="flex items-center gap-2">
-              <ColorPalette
-                selectedColor={data.buttonBgColor || ''}
-                onChange={color => updateData('buttonBgColor', color)}
-              />
-              <TextColorPalette
-                selectedColor={data.buttonTextColor || ''}
-                onChange={color => updateData('buttonTextColor', color)}
-              />
-            </div>
-          </ControlWrapper>
+          <ColorPalette
+            label="Fondo del Botón"
+            selectedColor={data.buttonBgColor || ''}
+            onChange={color => updateData('buttonBgColor', color)}
+          />
+          <TextColorPalette
+            label="Texto del Botón"
+            selectedColor={data.buttonTextColor || ''}
+            onChange={color => updateData('buttonTextColor', color)}
+          />
         </>
       )}
     </div>
