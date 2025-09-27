@@ -26,7 +26,7 @@ export const GalleryBlock: React.FC<{ data: GalleryData }> = ({ data }) => {
 
   const renderGrid = () => (
     <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${spacingClass}`}>
-      {(data.images.length > 0 ? data.images : [{}, {}, {}, {}]).map((img, index) => (
+      {(data.images.length > 0 ? data.images : Array(4).fill({ url: '', alt: 'Placeholder' })).map((img, index) => (
         <img
           key={index}
           src={img.url || 'https://placehold.co/400x400/e2e8f0/64748b?text=Imagen'}
@@ -40,7 +40,7 @@ export const GalleryBlock: React.FC<{ data: GalleryData }> = ({ data }) => {
 
   const renderCarousel = () => (
     <div className={`flex overflow-x-auto ${spacingClass}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-      {(data.images.length > 0 ? data.images : [{}, {}, {}, {}, {}]).map((img, index) => (
+      {(data.images.length > 0 ? data.images : Array(5).fill({ url: '', alt: 'Placeholder' })).map((img, index) => (
         <div key={index} className="flex-shrink-0 w-2/3 sm:w-1/2 md:w-1/3 lg:w-1/4">
           <img
             src={img.url || 'https://placehold.co/400x400/e2e8f0/64748b?text=Imagen'}
@@ -54,7 +54,7 @@ export const GalleryBlock: React.FC<{ data: GalleryData }> = ({ data }) => {
   );
 
   const renderFeatured = () => {
-    const images = data.images.length > 0 ? data.images : [{}, {}, {}];
+    const images = data.images.length > 0 ? data.images : Array(3).fill({ url: '', alt: 'Placeholder' });
     const [first, ...rest] = images;
     return (
       <div className={`grid grid-cols-1 md:grid-cols-3 ${spacingClass}`}>
