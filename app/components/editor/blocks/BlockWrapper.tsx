@@ -41,6 +41,8 @@ interface BlockWrapperProps extends ToolbarProps {
   isEditing: boolean;
   isMobileEdit?: boolean;
   block: Block;
+  onClose?: () => void;
+  onUpdate?: (key: string, value: unknown) => void;
 }
 
 // --- Componente de Toolbar para Desktop ---
