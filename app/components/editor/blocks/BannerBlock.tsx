@@ -57,7 +57,7 @@ export const BannerBlock: React.FC<{ data: BannerData }> = ({ data }) => {
 };
 
 // --- EDITOR DE CONTENIDO ---
-export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: any) => void }> = ({ data, updateData }) => (
+export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: string) => void }> = ({ data, updateData }) => (
   <div className="space-y-4">
     <div>
       <label className="text-sm font-medium text-slate-700 mb-1 block">Texto del banner</label>
@@ -83,7 +83,7 @@ export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key:
 );
 
 // --- EDITOR DE ESTILOS ---
-export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: any) => void }> = ({ data, updateData }) => {
+export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: string) => void }> = ({ data, updateData }) => {
   const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <label className="text-sm font-medium text-slate-700 w-full sm:w-1/3 flex-shrink-0">{children}</label>
   );

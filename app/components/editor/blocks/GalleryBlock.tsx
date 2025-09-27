@@ -103,7 +103,7 @@ export const GalleryBlock: React.FC<{ data: GalleryData }> = ({ data }) => {
 };
 
 // --- EDITOR DE CONTENIDO ---
-export const GalleryContentEditor: React.FC<{ data: GalleryData; updateData: (key: keyof GalleryData, value: any) => void }> = ({ data, updateData }) => {
+export const GalleryContentEditor: React.FC<{ data: GalleryData; updateData: (key: keyof GalleryData, value: string | boolean | { url: string; alt: string }[]) => void }> = ({ data, updateData }) => {
   const handleImageChange = (index: number, field: 'url' | 'alt', value: string) => {
     const newImages = [...data.images];
     newImages[index] = { ...newImages[index], [field]: value };
@@ -156,7 +156,7 @@ export const GalleryContentEditor: React.FC<{ data: GalleryData; updateData: (ke
 };
 
 // --- EDITOR DE ESTILOS ---
-export const GalleryStyleEditor: React.FC<{ data: GalleryData; updateData: (key: keyof GalleryData, value: any) => void }> = ({ data, updateData }) => {
+export const GalleryStyleEditor: React.FC<{ data: GalleryData; updateData: (key: keyof GalleryData, value: string | boolean | { url: string; alt: string }[]) => void }> = ({ data, updateData }) => {
   
   const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <label className="text-sm font-medium text-slate-700 w-full sm:w-1/3 flex-shrink-0">{children}</label>
