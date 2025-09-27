@@ -176,6 +176,16 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     }
   }, [editingBlockId, updateBlockData]);
 
+  const updateBlockProperty = useCallback((blockId: number, key: string, value: unknown) => {
+    setBlocks(prevBlocks => 
+        prevBlocks.map(b => 
+            b.id === blockId 
+            ? { ...b, data: { ...b.data, [key]: value } } 
+            : b
+        )
+    );
+  }, []);
+
   const deleteBlock = (blockId: number) => {
     setBlocks(blocks.filter(block => block.id !== blockId));
     if (editingBlockId === blockId) setEditingBlockId(null);
@@ -257,6 +267,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
                         block={block} 
                         isEditing={editingBlockId === block.id} 
                         isMobileEdit={isMobileEdit}
+                        onUpdate={(key, value) => updateBlockProperty(block.id, key, value)}
                         onDelete={() => deleteBlock(block.id)} 
                         onEdit={editingBlockId === null ? () => setEditingBlockId(block.id) : undefined}
                         onClose={() => setEditingBlockId(null)}
