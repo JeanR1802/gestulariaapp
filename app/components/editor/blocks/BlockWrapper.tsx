@@ -1,398 +1,136 @@
-// app/components/editor/blocks/BlockWrapper.tsx (REFACTORED para toolbar position)
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { Block, BLOCKS } from './index';
-import { PencilSquareIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon, PaintBrushIcon } from '@heroicons/react/24/outline';
-import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
-import type { BlockType } from './index';
-import { ColorPalette } from '../controls/ColorPalette';
-import { TextColorPalette } from '../controls/TextColorPalette';
-import { ButtonColorPalette } from '../controls/ButtonColorPalette';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Block } from './index';
+import { PencilIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon, EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+import { cn } from '@/lib/utils';
 
-// --- Element Style Panel ---
-function getValue<T extends object>(obj: T, key: string | undefined): string {
-  return key && (obj as Record<string, unknown>)[key] as string || '';
+// --- Hook para Media Query ---
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => {
+      setMatches(media.matches);
+    };
+    // Asegurarse de que addEventListener y removeEventListener existan
+    if (media.addEventListener) {
+      media.addEventListener('change', listener);
+      return () => media.removeEventListener('change', listener);
+    } else {
+      // Fallback para navegadores más antiguos
+      media.addListener(listener);
+      return () => media.removeListener(listener);
+    }
+  }, [matches, query]);
+  return matches;
+};
+
+// --- Tipos de Props para los componentes internos ---
+interface ToolbarProps {
+  onEdit?: () => void;
+  onDelete: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
-const ElementStylePanel = <T extends object>({
-  keys,
-  values,
-  onChange,
-  onClose,
-  anchor
-}: {
-  keys: { text?: string; bg?: string; btnBg?: string; btnText?: string };
-  values: T;
-  onChange: (key: keyof T & string, value: string) => void;
-  onClose: () => void;
-  anchor: { top: number; left: number };
-}) => {
+interface BlockWrapperProps extends ToolbarProps {
+  children: React.ReactNode;
+  isEditing: boolean;
+  isMobileEdit?: boolean;
+  block: Block;
+}
+
+// --- Componente de Toolbar para Desktop ---
+const DesktopToolbar: React.FC<ToolbarProps> = ({ onEdit, onDelete, onMoveUp, onMoveDown }) => (
+  <div className="absolute -top-5 right-2 z-10 flex items-center gap-1 p-1 bg-white rounded-full shadow-md border border-slate-200 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200">
+    {onMoveUp && <button title="Mover Arriba" onClick={(e) => { e.stopPropagation(); onMoveUp(); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowUpIcon className="w-5 h-5 text-gray-600" /></button>}
+    {onMoveDown && <button title="Mover Abajo" onClick={(e) => { e.stopPropagation(); onMoveDown(); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowDownIcon className="w-5 h-5 text-gray-600" /></button>}
+    {onEdit && <button title="Editar" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-100"><PencilIcon className="w-5 h-5 text-blue-600" /></button>}
+    <button title="Eliminar" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-100"><TrashIcon className="w-5 h-5 text-red-500" /></button>
+  </div>
+);
+
+// --- Componente de Menú para Móvil ---
+const MobileMenu: React.FC<ToolbarProps> = ({ onEdit, onDelete, onMoveUp, onMoveDown }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const handleAction = (action: (() => void) | undefined) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (action) action();
+    setIsOpen(false);
+  };
+
   return (
-    <div
-      className="fixed z-50 bg-white border border-slate-200 rounded-lg shadow-xl p-3 space-y-2"
-      style={{ top: anchor.top, left: anchor.left, width: 260 }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex items-center justify-between mb-1">
-        <div className="text-xs font-semibold text-slate-600">Estilo del elemento</div>
-        <button onClick={onClose} className="w-6 h-6 rounded-full hover:bg-slate-100 flex items-center justify-center">
-          <XMarkIcon className="w-4 h-4 text-slate-600" />
-        </button>
-      </div>
-      {keys.text && (
-        <TextColorPalette
-          label="Texto"
-          selectedColor={getValue(values, keys.text)}
-          onChange={(c: string) => onChange(keys.text as keyof T & string, c)}
-        />
-      )}
-      {keys.bg && (
-        <ColorPalette
-          label="Fondo"
-          selectedColor={getValue(values, keys.bg)}
-          onChange={(c: string) => onChange(keys.bg as keyof T & string, c)}
-        />
-      )}
-      {(keys.btnBg || keys.btnText) && (
-        <ButtonColorPalette
-          label="Botón"
-          selectedBgColor={getValue(values, keys.btnBg)}
-          selectedTextColor={getValue(values, keys.btnText)}
-          onChange={(bg: string, text: string) => {
-            if (keys.btnBg) onChange(keys.btnBg as keyof T & string, bg);
-            if (keys.btnText) onChange(keys.btnText as keyof T & string, text);
-          }}
-        />
+    <div className="absolute top-2 right-2 z-10" ref={menuRef}>
+      <button onClick={(e) => { e.stopPropagation(); setIsOpen(v => !v); }} className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md border border-slate-200 backdrop-blur-sm">
+        <EllipsisVerticalIcon className="w-5 h-5 text-gray-700" />
+      </button>
+      {isOpen && (
+        <div className="absolute top-11 right-0 bg-white rounded-lg shadow-xl border border-slate-200 w-48 py-1 animate-fade-in-fast">
+          {onEdit && <button onClick={handleAction(onEdit)} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"><PencilIcon className="w-4 h-4" /> Editar</button>}
+          {onMoveUp && <button onClick={handleAction(onMoveUp)} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"><ArrowUpIcon className="w-4 h-4" /> Mover Arriba</button>}
+          {onMoveDown && <button onClick={handleAction(onMoveDown)} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"><ArrowDownIcon className="w-4 h-4" /> Mover Abajo</button>}
+          <div className="h-px bg-slate-100 my-1"></div>
+          <button onClick={handleAction(onDelete)} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><TrashIcon className="w-4 h-4" /> Eliminar</button>
+        </div>
       )}
     </div>
   );
 };
 
-interface BlockWrapperProps {
-  children: React.ReactNode;
-  isEditing: boolean;
-  onEdit: () => void;
-  onClose: () => void;
-  onDelete: () => void;
-  onUpdate: (key: string, value: unknown) => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  block: Block & { type: BlockType };
-}
-
+// --- Componente Principal del Wrapper ---
 export const BlockWrapper = ({ 
     children, 
-    isEditing, 
+    isEditing,
+    isMobileEdit,
     onEdit,
-    onClose,
     onDelete,
-    onUpdate,
-    onMoveUp,
+    onMoveUp, 
     onMoveDown,
-    block 
 }: BlockWrapperProps) => {
-  const { isMobile } = usePreviewMode();
-  const [showActionsMobile, setShowActionsMobile] = useState(false);
-  const [elementStyle, setElementStyle] = useState<{
-    keys: { text?: string; bg?: string; btnBg?: string; btnText?: string };
-    anchor: { top: number; left: number };
-  } | null>(null);
-  const [showBlockStyle, setShowBlockStyle] = useState(false);
-  const [panelPos, setPanelPos] = useState<{ x: number; y: number }>({ x: window.innerWidth - 380, y: window.innerHeight / 2 - 200 });
-  const [draggingPanel, setDraggingPanel] = useState(false);
-  const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 799px)');
 
-  // --- Handlers para el panel de estilos de elemento ---
-  const handleElementClick = (e: React.MouseEvent) => {
-    if (!isEditing) return;
-    const target = e.target as HTMLElement | null;
-    if (!target) return;
-    const el = target.closest('[data-style-text], [data-style-bg], [data-style-btn-bg], [data-style-btn-text]') as HTMLElement | null;
-    if (!el) return;
-    e.stopPropagation();
-    e.preventDefault();
-    const rect = el.getBoundingClientRect();
-    const keys = {
-      text: el.dataset.styleText,
-      bg: el.dataset.styleBg,
-      btnBg: el.dataset.styleBtnBg,
-      btnText: el.dataset.styleBtnText,
-    };
-    const anchor = { top: rect.bottom + window.scrollY + 8, left: rect.left + window.scrollX };
-    setElementStyle({ keys, anchor });
-  };
-  const closeElementStyle = () => setElementStyle(null);
-
-  // Drag & drop para el panel de estilos (desktop)
-  useEffect(() => {
-    if (!draggingPanel) return;
-    const onMove = (e: MouseEvent) => {
-      setPanelPos(pos => ({
-        x: Math.max(0, Math.min(e.clientX - dragOffset.current.x, window.innerWidth - 360)),
-        y: Math.max(0, Math.min(e.clientY - dragOffset.current.y, window.innerHeight - 320)),
-      }));
-    };
-    const onUp = () => setDraggingPanel(false);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, [draggingPanel]);
-
-  // --- Edit Mode ---
+  // En modo de edición, el panel se encarga de todo. El wrapper solo dibuja un anillo.
   if (isEditing) {
     return (
-      <div ref={containerRef} className="relative my-4">
-        <ToastContainer position="top-center" autoClose={2000} hideProgressBar newestOnTop closeOnClick rtl={false} pauseOnFocusLoss={false} draggable pauseOnHover={false} theme="colored" />
-        {/* Barra de acciones arriba del bloque */}
-        {!isMobile && (
-          <div className="absolute -top-12 left-0 w-full flex justify-center z-40">
-            <div className="flex items-center gap-1 p-1 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-slate-200">
-              {onMoveUp && <button title="Mover Arriba" onClick={onMoveUp} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
-              {onMoveDown && <button title="Mover Abajo" onClick={onMoveDown} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
-              <button title="Estilo del Bloque" onClick={() => setShowBlockStyle((v) => !v)} className="h-8 px-3 flex items-center gap-1 rounded-full hover:bg-slate-100"><PaintBrushIcon className="w-5 h-5 text-gray-700" /><span className="text-sm">Estilo</span></button>
-              <button title="Eliminar Bloque" onClick={() => { onDelete(); toast.success('Bloque eliminado'); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-100 group/trash"><TrashIcon className="w-5 h-5 text-red-500 group-hover/trash:text-red-600" /></button>
-              <div className="w-px h-6 bg-slate-200 mx-1"></div>
-              <button title="Finalizar Edición" onClick={onClose} className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700"><XMarkIcon className="w-5 h-5" /></button>
-            </div>
-          </div>
-        )}
-        {/* Panel lateral de estilos (desktop, movible) */}
-        {!isMobile && showBlockStyle && (
-          <div
-            className="fixed z-50 bg-white/90 border border-slate-200 rounded-2xl shadow-2xl w-[360px] max-w-full flex flex-col animate-fadeIn"
-            style={{
-              left: panelPos.x,
-              top: panelPos.y,
-              maxHeight: '90vh',
-              minHeight: '320px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-              backdropFilter: 'blur(8px)',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div
-              className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white/80 rounded-t-2xl cursor-move select-none"
-              onMouseDown={e => {
-                setDraggingPanel(true);
-                dragOffset.current = {
-                  x: e.clientX - panelPos.x,
-                  y: e.clientY - panelPos.y,
-                };
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <PaintBrushIcon className="w-5 h-5 text-blue-500" />
-                <span className="font-semibold text-base text-slate-700 truncate max-w-[180px]">{BLOCKS[block.type]?.name || 'Bloque'}</span>
-              </div>
-              <button onClick={() => setShowBlockStyle(false)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-slate-100 transition">
-                <XMarkIcon className="w-5 h-5 text-slate-500" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5">
-              {block.type === 'stack' ? (
-                // Editor de contenido flexible para Stack
-                <BLOCKS.stack.editor
-                  data={block.data as import('./StackBlock').StackData}
-                  updateData={onUpdate}
-                />
-              ) : (
-                (() => {
-                  // Type-safe: get the style editor and its correct data type
-                  const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<{ data: typeof block.data; updateData: (key: string, value: unknown) => void }> | undefined;
-                  if (!StyleEditor) return <div className="text-sm text-slate-500">Este bloque no tiene editor de estilo.</div>;
-                  return <StyleEditor data={block.data} updateData={onUpdate} />;
-                })()
-              )}
-            </div>
-          </div>
-        )}
-        {/* El bloque con anillo de edición */}
-        <div className="ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-100 rounded-lg min-h-24" onClick={handleElementClick}>
-            {children}
+      <div className="relative">
+        <div className="ring-2 ring-blue-500 ring-offset-2 rounded-lg">
+          {children}
         </div>
-        {/* Element Style Panel */}
-        {elementStyle && (
-          <ElementStylePanel
-            keys={elementStyle.keys}
-            values={block.data}
-            onChange={(key, val) => onUpdate(key, val)}
-            onClose={closeElementStyle}
-            anchor={elementStyle.anchor}
-          />
-        )}
-        {/* Bottom Sheet for Mobile */}
-        {isMobile && (
-            <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-lg rounded-t-2xl border-t">
-                <div className="p-4">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-semibold text-slate-800">Editando Bloque</h3>
-                        <div className="flex items-center gap-2">
-                            {onMoveUp && <button title="Mover Arriba" onClick={onMoveUp} className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200"><ArrowUpIcon className="w-5 h-5 text-gray-700" /></button>}
-                            {onMoveDown && <button title="Mover Abajo" onClick={onMoveDown} className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200"><ArrowDownIcon className="w-5 h-5 text-gray-700" /></button>}
-                            <button title="Eliminar Bloque" onClick={() => { onDelete(); toast.success('Bloque eliminado'); }} className="w-9 h-9 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 group/trash"><TrashIcon className="w-5 h-5 text-red-500" /></button>
-                        </div>
-                    </div>
-                    {/* Block Style Editor (Mobile) */}
-                    <div className="py-2 border-t">
-                      {block.type === 'stack' ? (
-                        <BLOCKS.stack.editor
-                          data={block.data as import('./StackBlock').StackData}
-                          updateData={onUpdate}
-                        />
-                      ) : (
-                        (() => {
-                          const StyleEditor = BLOCKS[block.type]?.styleEditor as React.FC<{ data: typeof block.data; updateData: (key: string, value: unknown) => void }> | undefined;
-                          if (!StyleEditor) return <p className="text-center text-sm text-slate-500">Este bloque no tiene editor de estilo.</p>;
-                          return <StyleEditor data={block.data} updateData={onUpdate} />;
-                        })()
-                      )}
-                    </div>
-                    <button
-                      onClick={() => {
-                        // Forzar blur en el elemento editable antes de cerrar
-                        const active = document.querySelector('[contenteditable="true"]') as HTMLElement | null;
-                        if (active) active.blur();
-                        onClose();
-                      }}
-                      className="w-full mt-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700"
-                    >
-                      Hecho
-                    </button>
-                </div>
-            </div>
-        )}
       </div>
     );
   }
-  // --- Normal Mode ---
+
+  // En modo normal, el wrapper gestiona el hover/click para mostrar controles.
   return (
-    <div
-      className="relative rounded-lg transition-all group"
-      onClick={(e) => {
-        if (isMobile) {
-          e.stopPropagation();
-          setShowActionsMobile(true);
-        } else {
-          onEdit();
-        }
-      }}
-    >
-      {/* Desktop: Overlay con sombra al pasar el mouse (sin editar) */}
-      {!isMobile && (
-        <div className="absolute inset-0 bg-sky-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 rounded-lg flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
-          <div className="bg-white/95 text-gray-800 font-semibold px-3 py-2 rounded-full shadow-lg flex items-center gap-1.5">
-            {onMoveUp && (
-              <button
-                title="Mover arriba"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveUp && onMoveUp();
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
-              >
-                <ArrowUpIcon className="w-5 h-5 text-gray-700" />
-              </button>
-            )}
-            {onMoveDown && (
-              <button
-                title="Mover abajo"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveDown && onMoveDown();
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
-              >
-                <ArrowDownIcon className="w-5 h-5 text-gray-700" />
-              </button>
-            )}
-            <button
-              title="Editar"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-100"
-            >
-              <PencilSquareIcon className="w-5 h-5 text-blue-600" />
-            </button>
-            <button
-              title="Eliminar Bloque"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-100"
-            >
-              <TrashIcon className="w-5 h-5 text-red-500" />
-            </button>
-          </div>
-        </div>
-      )}
-      {/* Mobile: Tap to show actions */}
-      {isMobile && showActionsMobile && (
-        <div
-          className="absolute inset-0 bg-sky-900/10 z-10 rounded-lg flex items-center justify-center backdrop-blur-[2px]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="bg-white/95 text-gray-800 font-semibold px-3 py-2 rounded-full shadow-lg flex items-center gap-1.5">
-            {onMoveUp && (
-              <button
-                title="Mover arriba"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveUp && onMoveUp();
-                  setShowActionsMobile(false);
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
-              >
-                <ArrowUpIcon className="w-5 h-5 text-gray-700" />
-              </button>
-            )}
-            <button
-              title="Editar"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowActionsMobile(false);
-                onEdit();
-              }}
-              className="h-8 px-3 flex items-center gap-1 rounded-full hover:bg-slate-100"
-            >
-              <PencilSquareIcon className="w-5 h-5" />
-              Editar
-            </button>
-            {onMoveDown && (
-              <button
-                title="Mover abajo"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveDown && onMoveDown();
-                  setShowActionsMobile(false);
-                }}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
-              >
-                <ArrowDownIcon className="w-5 h-5 text-gray-700" />
-              </button>
-            )}
-            <button
-              title="Cerrar"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowActionsMobile(false);
-              }}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"
-            >
-              <XMarkIcon className="w-5 h-5 text-gray-700" />
-            </button>
-          </div>
-        </div>
-      )}
+    <div className="relative group rounded-lg">
       {children}
+      {isMobile ? (
+        isMobileEdit ? <MobileMenu onEdit={onEdit} onDelete={onDelete} onMoveUp={onMoveUp} onMoveDown={onMoveDown} /> : null
+      ) : (
+        <>
+          <div 
+            className="absolute inset-0 rounded-lg cursor-pointer transition-all duration-300 opacity-0 group-hover:opacity-100 ring-2 ring-transparent group-hover:ring-blue-400"
+            onClick={(e) => { e.stopPropagation(); onEdit && onEdit(); }}
+          />
+          <DesktopToolbar onEdit={onEdit} onDelete={onDelete} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
+        </>
+      )}
     </div>
   );
 };

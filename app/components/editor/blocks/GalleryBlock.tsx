@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Bars3Icon } from '@heroicons/react/24/outline';
 
 // --- INTERFAZ DE DATOS ---
 export interface GalleryData {
@@ -90,11 +91,11 @@ export const GalleryBlock: React.FC<{ data: GalleryData }> = ({ data }) => {
 
       {data.lightbox && lightboxImage && (
         <div 
-          className="fixed inset-0 z-[2000] bg-black/80 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in-fast"
           onClick={() => setLightboxImage(null)}
         >
-          <img src={lightboxImage} alt="Vista ampliada" className="max-w-full max-h-full rounded-lg" />
-          <button className="absolute top-4 right-4 text-white text-3xl">&times;</button>
+          <img src={lightboxImage} alt="Vista ampliada" className="max-w-full max-h-full rounded-lg shadow-2xl" />
+          <button className="absolute top-4 right-4 text-white/80 hover:text-white text-3xl">&times;</button>
         </div>
       )}
     </div>
@@ -120,39 +121,57 @@ export const GalleryContentEditor: React.FC<{ data: GalleryData; updateData: (ke
 
   return (
     <div className="space-y-4">
-      <label className="text-xs font-semibold text-gray-600">Imágenes</label>
-      {data.images.map((img, index) => (
-        <div key={index} className="p-2 border rounded-md space-y-2 bg-slate-50">
-          <input
-            type="text"
-            placeholder="URL de la imagen"
-            className="border rounded px-2 py-1 text-sm w-full"
-            value={img.url}
-            onChange={(e) => handleImageChange(index, 'url', e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Texto alternativo (alt)"
-            className="border rounded px-2 py-1 text-sm w-full"
-            value={img.alt}
-            onChange={(e) => handleImageChange(index, 'alt', e.target.value)}
-          />
-          <button onClick={() => removeImage(index)} className="text-red-500 text-xs font-semibold">Eliminar</button>
-        </div>
-      ))}
-      <button onClick={addImage} className="w-full text-center py-2 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600">Añadir Imagen</button>
+      <label className="text-sm font-semibold text-gray-700">Imágenes</label>
+      <div className="space-y-3">
+        {data.images.map((img, index) => (
+          <div key={index} className="p-3 border rounded-lg bg-slate-50/80">
+            <div className="flex items-center gap-2 mb-2">
+                <Bars3Icon className="w-5 h-5 text-slate-400 cursor-grab" />
+                <p className="text-xs font-medium text-slate-600">Imagen {index + 1}</p>
+                <div className="flex-grow"></div>
+                <button onClick={() => removeImage(index)} className="text-red-500 hover:text-red-700 text-xs font-semibold">Eliminar</button>
+            </div>
+            <div className="space-y-2">
+                <input
+                    type="text"
+                    placeholder="URL de la imagen"
+                    className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    value={img.url}
+                    onChange={(e) => handleImageChange(index, 'url', e.target.value)}
+                />
+                <input
+                    type="text"
+                    placeholder="Texto alternativo (alt)"
+                    className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    value={img.alt}
+                    onChange={(e) => handleImageChange(index, 'alt', e.target.value)}
+                />
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={addImage} className="w-full text-center py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors">Añadir Imagen</button>
     </div>
   );
 };
 
 // --- EDITOR DE ESTILOS ---
 export const GalleryStyleEditor: React.FC<{ data: GalleryData; updateData: (key: keyof GalleryData, value: any) => void }> = ({ data, updateData }) => {
+  
+  const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <label className="text-sm font-medium text-slate-700 w-full sm:w-1/3 flex-shrink-0">{children}</label>
+  );
+
+  const ControlWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2">{children}</div>
+  );
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-semibold text-gray-600">Variante de Galería</label>
+    <div className="space-y-4">
+      <ControlWrapper>
+        <Label>Variante</Label>
         <select
-          className="border rounded px-2 py-1 text-sm w-full"
+          className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           value={data.variant || 'grid'}
           onChange={e => updateData('variant', e.target.value)}
         >
@@ -160,11 +179,11 @@ export const GalleryStyleEditor: React.FC<{ data: GalleryData; updateData: (key:
           <option value="carousel">Carrusel</option>
           <option value="featured">Destacado</option>
         </select>
-      </div>
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-semibold text-gray-600">Ancho del Bloque</label>
+      </ControlWrapper>
+      <ControlWrapper>
+        <Label>Ancho del Bloque</Label>
         <select
-          className="border rounded px-2 py-1 text-sm w-full"
+          className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           value={data.width || 'wide'}
           onChange={e => updateData('width', e.target.value)}
         >
@@ -172,11 +191,11 @@ export const GalleryStyleEditor: React.FC<{ data: GalleryData; updateData: (key:
           <option value="wide">Ancho</option>
           <option value="full">Ancho Completo</option>
         </select>
-      </div>
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-semibold text-gray-600">Espaciado</label>
+      </ControlWrapper>
+      <ControlWrapper>
+        <Label>Espaciado</Label>
         <select
-          className="border rounded px-2 py-1 text-sm w-full"
+          className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           value={data.spacing || 'md'}
           onChange={e => updateData('spacing', e.target.value)}
         >
@@ -184,14 +203,14 @@ export const GalleryStyleEditor: React.FC<{ data: GalleryData; updateData: (key:
           <option value="md">Mediano</option>
           <option value="lg">Grande</option>
         </select>
-      </div>
-      <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-gray-600">Activar Lightbox (abrir al hacer clic)</label>
+      </ControlWrapper>
+      <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+          <Label>Activar Lightbox</Label>
           <input 
             type="checkbox" 
             checked={data.lightbox} 
             onChange={e => updateData('lightbox', e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
           />
       </div>
     </div>

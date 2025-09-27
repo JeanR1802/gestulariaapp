@@ -22,7 +22,8 @@ import { BlockWrapper } from './blocks/BlockWrapper';
 interface BlockRendererProps { 
   block: Block; 
   isEditing: boolean; 
-  onEdit: () => void;
+  isMobileEdit: boolean;
+  onEdit?: () => void;
   onDelete: () => void; 
   onClose: () => void;
   onUpdate: (key: string, value: unknown) => void;
@@ -33,6 +34,7 @@ interface BlockRendererProps {
 export function BlockRenderer({ 
     block, 
     isEditing, 
+    isMobileEdit,
     onEdit, 
     onDelete, 
     onClose,
@@ -116,6 +118,7 @@ export function BlockRenderer({
     <BlockWrapper 
       block={block}
       isEditing={isEditing} 
+      isMobileEdit={isMobileEdit}
       onEdit={onEdit} 
       onClose={onClose}
       onDelete={onDelete}

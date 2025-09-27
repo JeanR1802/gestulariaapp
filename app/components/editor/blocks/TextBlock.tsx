@@ -118,6 +118,22 @@ export function TextBlock({ data, isEditing, onUpdate }: BlockComponentProps<Tex
   );
 }
 
+// --- Editor de CONTENIDO ---
+export function TextContentEditor({ data, updateData }: { data: TextData; updateData: (key: keyof TextData, value: string) => void; }) {
+  return (
+    <div className="space-y-2">
+      <label htmlFor="textContent" className="text-sm font-medium text-slate-700">Contenido</label>
+      <textarea
+        id="textContent"
+        value={data.content}
+        onChange={(e) => updateData('content', e.target.value)}
+        className="w-full h-40 border rounded-md px-2 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Escribe tu texto aquí..."
+      />
+    </div>
+  );
+}
+
 // --- Editor de ESTILO (para la barra de herramientas flotante / hoja inferior) ---
 export function TextStyleEditor({
   data,

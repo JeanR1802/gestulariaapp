@@ -4,36 +4,19 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import { BLOCKS, BlockType, BlockData, Block } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
-import { ComputerDesktopIcon, DeviceTabletIcon, DevicePhoneMobileIcon, SparklesIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
+
+import { ComputerDesktopIcon, DeviceTabletIcon, DevicePhoneMobileIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
+
 import { cn } from '@/lib/utils';
 import { PreviewModeContext } from '@/app/contexts/PreviewModeContext';
 import { TextareaField } from '@/app/components/editor/blocks/InputField';
 import { Transition } from '@headlessui/react';
+import { InlineEditorPanel } from '@/app/components/editor/controls/InlineEditorPanel';
+import { MobileToolbar } from '@/app/components/editor/controls/MobileToolbar';
 
 // --- Tipos y sModales ---
 
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
-
-function GenerateAllModal({ onClose, onGenerate, isLoading }: { onClose: () => void, onGenerate: (desc: string) => void, isLoading: boolean }) {
-  const [userDescription, setUserDescription] = useState('');
-  return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg m-4" onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b flex justify-between items-center"><h3 className="text-xl font-semibold text-slate-800">Generar Contenido con IA</h3><button onClick={onClose} className="text-slate-500 hover:text-slate-800 text-2xl">&times;</button></div>
-        <div className="p-6 space-y-4">
-          <p className="text-sm text-slate-600">Describe tu negocio o la idea principal para generar todo el contenido de la página.</p>
-          <TextareaField label="Descripción del negocio" value={userDescription} rows={5} onChange={(e) => setUserDescription(e.target.value)} />
-        </div>
-        <div className="p-6 border-t flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200">Cancelar</button>
-          <button onClick={() => onGenerate(userDescription)} disabled={isLoading || !userDescription} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
-            {isLoading ? 'Generando...' : <><SparklesIcon className="w-5 h-5" />Generar contenido</>}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function MobileAddComponentPanel({ onClose, onSelectBlock }: { onClose: () => void, onSelectBlock: (type: BlockType) => void }) {
     return (
@@ -115,9 +98,12 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
   const [activeBlockType, setActiveBlockType] = useState<BlockType | null>(null);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [showGenerateAllModal, setShowGenerateAllModal] = useState(false);
-  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const [isMobileEdit, setIsMobileEdit] = useState(false);
+
   const [isAddComponentPanelOpen, setAddComponentPanelOpen] = useState(false);
+
+  const editingBlock = editingBlockId ? blocks.find(b => b.id === editingBlockId) : null;
+  const editingBlockIndex = editingBlock ? blocks.findIndex(b => b.id === editingBlock.id) : -1;
 
   const previewContextValue = { mode: previewMode, isMobile: previewMode === 'mobile', isTablet: previewMode === 'tablet', isDesktop: previewMode === 'desktop' };
 
@@ -180,9 +166,15 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     setActiveBlockType(null);
   };
   
-  const updateBlock = (blockId: number, key: string, value: unknown) => {
-    setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, data: { ...b.data, [key]: value } } : b));
-  };
+  const updateBlockData = useCallback((blockId: number, newData: BlockData) => {
+    setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, data: newData } : b));
+  }, []);
+
+  const handleDataChange = useCallback((newData: BlockData) => {
+    if (editingBlockId) {
+      updateBlockData(editingBlockId, newData);
+    }
+  }, [editingBlockId, updateBlockData]);
 
   const deleteBlock = (blockId: number) => {
     setBlocks(blocks.filter(block => block.id !== blockId));
@@ -196,26 +188,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     setBlocks(newBlocks);
   };
   
-  const handleGenerateAllContent = async (userDescription: string) => {
-      setIsGeneratingAll(true);
-      try {
-          const res = await fetch('/api/ai/generate-page-content', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userDescription, blocks }),
-          });
-          const result = await res.json();
-          if (res.ok && result.blocks) {
-              setBlocks(result.blocks);
-              showNotification('Contenido de la página generado con éxito');
-          } else { throw new Error(result.error || 'Error al generar contenido'); }
-      } catch (error) {
-          showNotification('Error al generar el contenido de la página', 'error');
-      } finally {
-          setIsGeneratingAll(false);
-          setShowGenerateAllModal(false);
-      }
-  };
+
 
   if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
 
@@ -232,7 +205,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setShowGenerateAllModal(true)} disabled={isGeneratingAll} className="px-3 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:opacity-50 flex items-center gap-1.5"><SparklesIcon className="h-4 w-4" />{isGeneratingAll ? 'Generando...' : 'Generar con IA'}</button>
               <button
                 onClick={() => {
                   const isLocal = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
@@ -279,17 +251,17 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
             <div className="p-4 md:p-8">
               <div className={cn("mx-auto bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-full transition-all duration-300 ease-in-out", { 'max-w-full': previewMode === 'desktop', 'max-w-screen-md': previewMode === 'tablet', 'max-w-sm': previewMode === 'mobile' })}>
                 <div className="p-4">
-                  {(editingBlockId ? blocks.filter(b => b.id === editingBlockId) : blocks).map((block, index) => (
+                  {blocks.map((block, index) => (
                     <BlockRenderer 
                         key={block.id} 
                         block={block} 
                         isEditing={editingBlockId === block.id} 
+                        isMobileEdit={isMobileEdit}
                         onDelete={() => deleteBlock(block.id)} 
-                        onEdit={() => setEditingBlockId(block.id)}
+                        onEdit={editingBlockId === null ? () => setEditingBlockId(block.id) : undefined}
                         onClose={() => setEditingBlockId(null)}
-                        onUpdate={(key, value) => updateBlock(block.id, key, value)}
-                        onMoveUp={editingBlockId === null && index > 0 ? () => moveBlock(index, index - 1) : undefined} 
-                        onMoveDown={editingBlockId === null && index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} 
+                        onMoveUp={editingBlockId === null && (previewMode !== 'mobile' || isMobileEdit) && index > 0 ? () => moveBlock(index, index - 1) : undefined} 
+                        onMoveDown={editingBlockId === null && (previewMode !== 'mobile' || isMobileEdit) && index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined}
                     />
                   ))}
                   {blocks.length === 0 && (
@@ -307,14 +279,18 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
           {activeBlockType && <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />}
         </main>
 
-        <div className="md:hidden fixed bottom-6 right-6 z-40">
-            <button
-                onClick={() => setAddComponentPanelOpen(true)}
-                className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform"
-            >
-                <PlusIcon className="w-7 h-7" />
-            </button>
-        </div>
+        <MobileToolbar isEditing={isMobileEdit} onToggleEditing={setIsMobileEdit} />
+
+        {isMobileEdit && (
+          <div className="md:hidden fixed bottom-6 right-6 z-40">
+              <button
+                  onClick={() => setAddComponentPanelOpen(true)}
+                  className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform"
+              >
+                  <PlusIcon className="w-7 h-7" />
+              </button>
+          </div>
+        )}
       </div>
 
       {isAddComponentPanelOpen && (
@@ -327,7 +303,23 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
           />
       )}
 
-      {showGenerateAllModal && <GenerateAllModal onClose={() => setShowGenerateAllModal(false)} onGenerate={handleGenerateAllContent} isLoading={isGeneratingAll} />}
+      {editingBlock && (
+        <InlineEditorPanel
+          key={editingBlock.id}
+          block={editingBlock}
+          onClose={() => setEditingBlockId(null)}
+          onDataChange={handleDataChange}
+          onDelete={() => deleteBlock(editingBlock.id)}
+          onMoveUp={editingBlockIndex > 0 ? () => {
+            moveBlock(editingBlockIndex, editingBlockIndex - 1);
+          } : undefined}
+          onMoveDown={editingBlockIndex < blocks.length - 1 ? () => {
+            moveBlock(editingBlockIndex, editingBlockIndex + 1);
+          } : undefined}
+        />
+      )}
+
+
     </PreviewModeContext.Provider>
   );
 }

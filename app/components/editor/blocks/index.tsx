@@ -18,9 +18,9 @@ import {
 } from '@heroicons/react/24/outline';
 
 // Importaciones de bloques y sus tipos de datos
-import { HeaderBlock, HeaderStyleEditor, HeaderData } from './HeaderBlock';
+import { HeaderBlock, HeaderContentEditor, HeaderStyleEditor, HeaderData } from './HeaderBlock';
 import { HeroBlock, HeroContentEditor, HeroStyleEditor, HeroData } from './HeroBlock';
-import { TextBlock, TextStyleEditor, TextData } from './TextBlock';
+import { TextBlock, TextContentEditor, TextStyleEditor, TextData } from './TextBlock';
 import { ImageBlock, ImageContentEditor, ImageStyleEditor, ImageData } from './ImageBlock';
 import { CardsBlock, CardsContentEditor, CardsStyleEditor, CardsData } from './CardsBlock';
 import { CtaBlock, CtaContentEditor, CtaStyleEditor, CtaData } from './CtaBlock';
@@ -113,7 +113,7 @@ export const BLOCKS: BlocksConfig = {
     icon: QueueListIcon,
     description: 'Barra de navegación principal.',
     renderer: HeaderBlock,
-    editor: HeaderStyleEditor,
+    editor: HeaderContentEditor,
     styleEditor: HeaderStyleEditor,
     theme: { bg: 'bg-sky-50', icon: 'text-sky-600' },
     variants: [
@@ -208,7 +208,7 @@ export const BLOCKS: BlocksConfig = {
     icon: ChatBubbleBottomCenterTextIcon,
     description: 'Párrafo de texto simple.',
     renderer: TextBlock,
-    editor: TextStyleEditor,
+    editor: TextContentEditor,
     styleEditor: TextStyleEditor,
     theme: { bg: 'bg-gray-50', icon: 'text-gray-600' },
     variants: [

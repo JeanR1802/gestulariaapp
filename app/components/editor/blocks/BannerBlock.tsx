@@ -30,6 +30,7 @@ const getBackgroundStyles = (color: string | undefined, defaultClass = 'bg-blue-
   return { className: '', style: { backgroundColor: color } };
 };
 
+// --- COMPONENTE DE RENDERIZADO DEL BLOQUE ---
 export const BannerBlock: React.FC<{ data: BannerData }> = ({ data }) => {
   const bg = getBackgroundStyles(data.bgColor, 'bg-blue-50');
   const text = getStyles(data.textColor, 'text-blue-900');
@@ -55,118 +56,119 @@ export const BannerBlock: React.FC<{ data: BannerData }> = ({ data }) => {
   );
 };
 
-export const BannerEditorPlaceholder: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: BannerData[keyof BannerData]) => void }> = () => (
-  <div className="text-gray-400 text-sm p-2">Editor de banner no implementado.</div>
-);
-
-export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: BannerData[keyof BannerData]) => void }> = ({ data, updateData }) => (
-  <div className="flex flex-col gap-2 p-2">
-    <label className="text-xs font-semibold text-gray-600">Texto del banner</label>
-    <input
-      className="border rounded px-2 py-1 text-sm"
-      value={data.text}
-      onChange={e => updateData('text', e.target.value)}
-      placeholder="Texto principal"
-    />
-    <label className="text-xs font-semibold text-gray-600">Color de fondo</label>
-    <input
-      className="border rounded px-2 py-1 text-sm"
-      value={data.bgColor}
-      onChange={e => updateData('bgColor', e.target.value)}
-      placeholder="Clase Tailwind o color"
-    />
-    <label className="text-xs font-semibold text-gray-600">Color de texto</label>
-    <input
-      className="border rounded px-2 py-1 text-sm"
-      value={data.textColor || ''}
-      onChange={e => updateData('textColor', e.target.value)}
-      placeholder="Clase Tailwind o color"
-    />
+// --- EDITOR DE CONTENIDO ---
+export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: any) => void }> = ({ data, updateData }) => (
+  <div className="space-y-4">
+    <div>
+      <label className="text-sm font-medium text-slate-700 mb-1 block">Texto del banner</label>
+      <input
+        className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        value={data.text}
+        onChange={e => updateData('text', e.target.value)}
+        placeholder="Texto principal"
+      />
+    </div>
     {data.variant === 'promo' && (
-      <>
-        <label className="text-xs font-semibold text-gray-600">Texto del botón (opcional)</label>
+      <div>
+        <label className="text-sm font-medium text-slate-700 mb-1 block">Texto del botón (opcional)</label>
         <input
-          className="border rounded px-2 py-1 text-sm"
+          className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           value={data.buttonText || ''}
           onChange={e => updateData('buttonText', e.target.value)}
-          placeholder="Texto del botón"
-        />
-      </>
-    )}
-  </div>
-);
-
-export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: BannerData[keyof BannerData]) => void }> = ({ data, updateData }) => (
-  <div className="space-y-3">
-    <div className="flex items-center gap-2">
-      <ColorPalette
-        label="Fondo"
-        selectedColor={data.bgColor || ''}
-        onChange={color => updateData('bgColor', color)}
-      />
-    </div>
-    <div className="flex items-center gap-2">
-      <TextColorPalette
-        label="Texto"
-        selectedColor={data.textColor || ''}
-        onChange={color => updateData('textColor', color)}
-      />
-    </div>
-    <div className="flex items-center gap-2">
-      <label className="text-xs font-semibold text-gray-600">Alto</label>
-      <select
-        className="border rounded px-2 py-1 text-sm"
-        value={data.height || 'h-12'}
-        onChange={e => updateData('height', e.target.value)}
-      >
-        <option value="h-8">Muy bajo</option>
-        <option value="h-10">Bajo</option>
-        <option value="h-12">Normal</option>
-        <option value="h-16">Medio</option>
-        <option value="h-20">Alto</option>
-        <option value="h-24">Muy alto</option>
-      </select>
-    </div>
-    <div className="flex items-center gap-2">
-      <label className="text-xs font-semibold text-gray-600">Tamaño texto</label>
-      <select
-        className="border rounded px-2 py-1 text-sm"
-        value={data.textSize || 'text-base'}
-        onChange={e => updateData('textSize', e.target.value)}
-      >
-        <option value="text-xs">XS</option>
-        <option value="text-sm">SM</option>
-        <option value="text-base">Base</option>
-        <option value="text-lg">LG</option>
-        <option value="text-xl">XL</option>
-        <option value="text-2xl">2XL</option>
-      </select>
-    </div>
-    <div className="flex items-center gap-2">
-      <label className="text-xs font-semibold text-gray-600">Alineación</label>
-      <select
-        className="border rounded px-2 py-1 text-sm"
-        value={data.textAlign || 'center'}
-        onChange={e => updateData('textAlign', e.target.value as 'left' | 'center' | 'right')}
-      >
-        <option value="left">Izquierda</option>
-        <option value="center">Centro</option>
-        <option value="right">Derecha</option>
-      </select>
-    </div>
-    {data.variant === 'promo' && (
-      <div className="flex items-center gap-2">
-        <ColorPalette
-          label="Fondo botón"
-          selectedColor={data.buttonBgColor || ''}
-          onChange={color => updateData('buttonBgColor', color)}
-        />
-        <TextColorPalette
-          label="Texto botón"
-          selectedColor={data.buttonTextColor || ''}
-          onChange={color => updateData('buttonTextColor', color)}
+          placeholder="Ej: Ver más"
         />
       </div>
     )}
   </div>
 );
+
+// --- EDITOR DE ESTILOS ---
+export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: any) => void }> = ({ data, updateData }) => {
+  const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <label className="text-sm font-medium text-slate-700 w-full sm:w-1/3 flex-shrink-0">{children}</label>
+  );
+
+  const ControlWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2">{children}</div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <ControlWrapper>
+        <Label>Color de Fondo</Label>
+        <ColorPalette
+          selectedColor={data.bgColor || ''}
+          onChange={color => updateData('bgColor', color)}
+        />
+      </ControlWrapper>
+      <ControlWrapper>
+        <Label>Color de Texto</Label>
+        <TextColorPalette
+          selectedColor={data.textColor || ''}
+          onChange={color => updateData('textColor', color)}
+        />
+      </ControlWrapper>
+      <hr />
+      <ControlWrapper>
+        <Label>Alto</Label>
+        <select
+          className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          value={data.height || 'h-12'}
+          onChange={e => updateData('height', e.target.value)}
+        >
+          <option value="h-8">Muy bajo</option>
+          <option value="h-10">Bajo</option>
+          <option value="h-12">Normal</option>
+          <option value="h-16">Medio</option>
+          <option value="h-20">Alto</option>
+          <option value="h-24">Muy alto</option>
+        </select>
+      </ControlWrapper>
+      <ControlWrapper>
+        <Label>Tamaño Texto</Label>
+        <select
+          className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          value={data.textSize || 'text-base'}
+          onChange={e => updateData('textSize', e.target.value)}
+        >
+          <option value="text-xs">XS</option>
+          <option value="text-sm">SM</option>
+          <option value="text-base">Base</option>
+          <option value="text-lg">LG</option>
+          <option value="text-xl">XL</option>
+          <option value="text-2xl">2XL</option>
+        </select>
+      </ControlWrapper>
+      <ControlWrapper>
+        <Label>Alineación</Label>
+        <select
+          className="border rounded-md px-2 py-1.5 text-sm w-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          value={data.textAlign || 'center'}
+          onChange={e => updateData('textAlign', e.target.value as 'left' | 'center' | 'right')}
+        >
+          <option value="left">Izquierda</option>
+          <option value="center">Centro</option>
+          <option value="right">Derecha</option>
+        </select>
+      </ControlWrapper>
+      {data.variant === 'promo' && (
+        <>
+          <hr />
+          <ControlWrapper>
+            <Label>Colores del Botón</Label>
+            <div className="flex items-center gap-2">
+              <ColorPalette
+                selectedColor={data.buttonBgColor || ''}
+                onChange={color => updateData('buttonBgColor', color)}
+              />
+              <TextColorPalette
+                selectedColor={data.buttonTextColor || ''}
+                onChange={color => updateData('buttonTextColor', color)}
+              />
+            </div>
+          </ControlWrapper>
+        </>
+      )}
+    </div>
+  );
+};
