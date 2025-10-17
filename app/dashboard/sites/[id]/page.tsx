@@ -9,7 +9,6 @@ import { ComputerDesktopIcon, DeviceTabletIcon, DevicePhoneMobileIcon, XMarkIcon
 
 import { cn } from '@/lib/utils';
 import { PreviewModeContext } from '@/app/contexts/PreviewModeContext';
-import { TextareaField } from '@/app/components/editor/blocks/InputField';
 import { Transition } from '@headlessui/react';
 import { InlineEditorPanel } from '@/app/components/editor/controls/InlineEditorPanel';
 import { MobileToolbar } from '@/app/components/editor/controls/MobileToolbar';
@@ -28,6 +27,7 @@ function MobileAddComponentPanel({ onClose, onSelectBlock, selectedCategory, set
       }
       acc[category].push({ key, ...blockInfo });
       return acc;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }, {} as Record<string, (BlockConfig<any> & { key: string })[]>);
     
     const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
@@ -139,6 +139,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     }
     acc[category].push({ key, ...blockInfo });
     return acc;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }, {} as Record<string, (BlockConfig<any> & { key: string })[]>);
 
   const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
@@ -447,7 +448,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
       {editingBlock && (
         <InlineEditorPanel
           key={editingBlock.id} // Re-montar si cambia el bloque
-          block={editingBlock}
+          block={editingBlock!}
           onClose={() => setEditingBlockId(null)}
           onDataChange={handleDataChange} // Para preview en tiempo real
           onDelete={() => deleteBlock(editingBlock.id)}
