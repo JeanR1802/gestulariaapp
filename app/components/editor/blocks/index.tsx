@@ -1,4 +1,4 @@
-// app/components/editor/blocks/index.tsx (REFACTORIZADO CON TIPOS)
+// app/components/editor/blocks/index.tsx (REFACTORIZADO CON CATEGORÍAS)
 'use client';
 import React from 'react';
 import {
@@ -73,6 +73,7 @@ export interface BlockConfig<T extends BlockData> {
   name: string;
   icon: React.ElementType;
   description: string;
+  category: 'Estructura' | 'Principal' | 'Contenido' | 'Comercio' | 'Interacción'; // <--- PROPIEDAD AÑADIDA
   renderer: BlockRendererComponent<T>;
   editor: React.FC<{ data: T; updateData: (key: keyof T, value: T[keyof T]) => void }>;
   styleEditor?: React.FC<{ data: T; updateData: (key: keyof T, value: T[keyof T]) => void }>;
@@ -112,6 +113,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Encabezado',
     icon: QueueListIcon,
     description: 'Barra de navegación principal.',
+    category: 'Estructura',
     renderer: HeaderBlock,
     editor: HeaderContentEditor,
     styleEditor: HeaderStyleEditor,
@@ -126,6 +128,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Héroe',
     icon: ViewfinderCircleIcon,
     description: 'Sección principal llamativa.',
+    category: 'Principal',
     renderer: HeroBlock,
     editor: HeroContentEditor,
     styleEditor: HeroStyleEditor,
@@ -140,6 +143,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Producto Destacado',
     icon: StarIcon,
     description: 'Destaca un producto con una sección especial.',
+    category: 'Principal',
     renderer: FeaturedProductBlock,
     editor: FeaturedProductContentEditor,
     styleEditor: FeaturedProductStyleEditor,
@@ -153,6 +157,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Catálogo',
     icon: ShoppingBagIcon,
     description: 'Muestra una cuadrícula de productos.',
+    category: 'Comercio',
     renderer: CatalogBlock,
     editor: CatalogContentEditor,
     styleEditor: CatalogStyleEditor,
@@ -167,6 +172,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Equipo',
     icon: UserGroupIcon,
     description: 'Presenta a los miembros de tu equipo.',
+    category: 'Interacción',
     renderer: TeamBlock,
     editor: TeamContentEditor,
     styleEditor: TeamStyleEditor,
@@ -180,6 +186,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Testimonios',
     icon: UserCircleIcon,
     description: 'Muestra reseñas de tus clientes.',
+    category: 'Interacción',
     renderer: TestimonialBlock,
     editor: TestimonialContentEditor,
     styleEditor: TestimonialStyleEditor,
@@ -194,6 +201,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Preguntas Frecuentes',
     icon: QuestionMarkCircleIcon,
     description: 'Responde las dudas de tus visitantes.',
+    category: 'Interacción',
     renderer: FaqBlock,
     editor: FaqContentEditor,
     styleEditor: FaqStyleEditor,
@@ -207,6 +215,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Texto',
     icon: ChatBubbleBottomCenterTextIcon,
     description: 'Párrafo de texto simple.',
+    category: 'Contenido',
     renderer: TextBlock,
     editor: TextContentEditor,
     styleEditor: TextStyleEditor,
@@ -221,6 +230,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Imagen',
     icon: PhotoIcon,
     description: 'Una sola imagen con pie de foto.',
+    category: 'Contenido',
     renderer: ImageBlock,
     editor: ImageContentEditor,
     styleEditor: ImageStyleEditor,
@@ -235,6 +245,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Galería',
     icon: PhotoIcon,
     description: 'Muestra una colección de imágenes.',
+    category: 'Contenido',
     renderer: GalleryBlock,
     editor: GalleryContentEditor,
     styleEditor: GalleryStyleEditor,
@@ -249,6 +260,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Tarjetas',
     icon: RectangleGroupIcon,
     description: 'Grupo de tarjetas de servicio.',
+    category: 'Contenido',
     renderer: CardsBlock,
     editor: CardsContentEditor,
     styleEditor: CardsStyleEditor,
@@ -263,6 +275,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Llamada a la Acción',
     icon: MegaphoneIcon,
     description: 'Invita a los usuarios a actuar.',
+    category: 'Interacción',
     renderer: CtaBlock,
     editor: CtaContentEditor,
     styleEditor: CtaStyleEditor,
@@ -277,6 +290,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Precios',
     icon: CurrencyDollarIcon,
     description: 'Muestra tus planes y precios.',
+    category: 'Comercio',
     renderer: PricingBlock,
     editor: PricingContentEditor,
     styleEditor: PricingStyleEditor,
@@ -360,6 +374,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Pie de Página',
     icon: CodeBracketIcon,
     description: 'Sección final con copyright y enlaces.',
+    category: 'Estructura',
     renderer: FooterBlock,
     editor: FooterContentEditor,
     styleEditor: FooterStyleEditor,
@@ -374,6 +389,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Contenido Flexible',
     icon: RectangleGroupIcon,
     description: 'Agrupa títulos, párrafos, imágenes y botones en un solo bloque apilable y ordenable.',
+    category: 'Contenido',
     renderer: StackBlock,
     editor: StackContentEditor,
     styleEditor: StackStyleEditor,
@@ -395,6 +411,7 @@ export const BLOCKS: BlocksConfig = {
     name: 'Banner',
     icon: MegaphoneIcon,
     description: 'Sección destacada con imagen, color y texto.',
+    category: 'Interacción',
     renderer: BannerBlock,
     editor: BannerContentEditor,
     styleEditor: BannerStyleEditor,

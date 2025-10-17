@@ -57,7 +57,7 @@ export const BannerBlock: React.FC<{ data: BannerData }> = ({ data }) => {
 };
 
 // --- EDITOR DE CONTENIDO ---
-export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: string) => void }> = ({ data, updateData }) => (
+export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: any) => void }> = ({ data, updateData }) => (
   <div className="space-y-4">
     <div>
       <label className="text-sm font-medium text-slate-700 mb-1 block">Texto del banner</label>
@@ -83,7 +83,7 @@ export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key:
 );
 
 // --- EDITOR DE ESTILOS ---
-export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: string) => void }> = ({ data, updateData }) => {
+export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: any) => void }> = ({ data, updateData }) => {
   const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <label className="text-sm font-medium text-slate-700 w-full sm:w-1/3 flex-shrink-0">{children}</label>
   );
@@ -94,16 +94,20 @@ export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: k
 
   return (
     <div className="space-y-4">
-      <ColorPalette
-        label="Color de Fondo"
-        selectedColor={data.bgColor || ''}
-        onChange={color => updateData('bgColor', color)}
-      />
-      <TextColorPalette
-        label="Color de Texto"
-        selectedColor={data.textColor || ''}
-        onChange={color => updateData('textColor', color)}
-      />
+      <ControlWrapper>
+        <Label>Color de Fondo</Label>
+        <ColorPalette
+          selectedColor={data.bgColor || ''}
+          onChange={color => updateData('bgColor', color)}
+        />
+      </ControlWrapper>
+      <ControlWrapper>
+        <Label>Color de Texto</Label>
+        <TextColorPalette
+          selectedColor={data.textColor || ''}
+          onChange={color => updateData('textColor', color)}
+        />
+      </ControlWrapper>
       <hr />
       <ControlWrapper>
         <Label>Alto</Label>
@@ -150,16 +154,19 @@ export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: k
       {data.variant === 'promo' && (
         <>
           <hr />
-          <ColorPalette
-            label="Fondo del Botón"
-            selectedColor={data.buttonBgColor || ''}
-            onChange={color => updateData('buttonBgColor', color)}
-          />
-          <TextColorPalette
-            label="Texto del Botón"
-            selectedColor={data.buttonTextColor || ''}
-            onChange={color => updateData('buttonTextColor', color)}
-          />
+          <ControlWrapper>
+            <Label>Colores del Botón</Label>
+            <div className="flex items-center gap-2">
+              <ColorPalette
+                selectedColor={data.buttonBgColor || ''}
+                onChange={color => updateData('buttonBgColor', color)}
+              />
+              <TextColorPalette
+                selectedColor={data.buttonTextColor || ''}
+                onChange={color => updateData('buttonTextColor', color)}
+              />
+            </div>
+          </ControlWrapper>
         </>
       )}
     </div>

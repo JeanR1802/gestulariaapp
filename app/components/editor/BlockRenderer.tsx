@@ -15,34 +15,37 @@ import { CardsData } from './blocks/CardsBlock';
 import { CtaData } from './blocks/CtaBlock';
 import { PricingData } from './blocks/PricingBlock';
 import { FooterData } from './blocks/FooterBlock';
-import { BlockWrapper } from './blocks/BlockWrapper';
+import { BlockWrapper } from './blocks/BlockWrapper'; // Asegúrate que la importación esté
 
-
-
-interface BlockRendererProps { 
-  block: Block; 
-  isEditing: boolean; 
+// --- INTERFAZ DE PROPS ACTUALIZADA ---
+interface BlockRendererProps {
+  block: Block;
+  isEditing: boolean;
   isMobileEdit: boolean;
+  isHighlighted?: boolean; // <-- PROP AÑADIDA
   onEdit?: () => void;
-  onDelete: () => void; 
+  onDelete: () => void;
   onClose: () => void;
   onUpdate: (key: string, value: unknown) => void;
-  onMoveUp?: () => void; 
+  onMoveUp?: () => void;
   onMoveDown?: () => void;
 }
 
-export function BlockRenderer({ 
-    block, 
-    isEditing, 
+// --- COMPONENTE ACTUALIZADO CON forwardRef ---
+export const BlockRenderer = React.forwardRef<HTMLDivElement, BlockRendererProps>(({
+    block,
+    isEditing,
     isMobileEdit,
-    onEdit, 
-    onDelete, 
+    isHighlighted, // <-- PROP RECIBIDA
+    onEdit,
+    onDelete,
     onClose,
     onUpdate,
-    onMoveUp, 
-    onMoveDown 
-}: BlockRendererProps) {
-  
+    onMoveUp,
+    onMoveDown
+}, ref) => { // <-- REF RECIBIDA
+
+  // La lógica interna de renderBlockContent permanece igual
   const renderBlockContent = () => {
     switch (block.type) {
       case 'header': {
@@ -103,23 +106,29 @@ export function BlockRenderer({
       }
       case 'stack': {
         const Component = BLOCKS.stack.renderer;
+        // La importación dinámica requiere manejo especial si se usa, pero aquí parece directa
         return <Component data={block.data as import('./blocks/StackBlock').StackData} isEditing={isEditing} onUpdate={onUpdate} />;
       }
       case 'banner': {
         const Component = BLOCKS.banner.renderer;
+        // La importación dinámica requiere manejo especial si se usa, pero aquí parece directa
         return <Component data={block.data as import('./blocks/BannerBlock').BannerData} isEditing={isEditing} onUpdate={onUpdate} />;
       }
       default:
+        // Considera devolver null o un placeholder más discreto en producción
         return <div>Error: Bloque de tipo &apos;{block.type}&apos; no reconocido.</div>;
     }
   };
 
+  // Pasa la ref y la prop isHighlighted al BlockWrapper
   return (
-    <BlockWrapper 
+    <BlockWrapper
+      ref={ref} // <-- PASAR LA REF
+      isHighlighted={isHighlighted} // <-- PASAR LA PROP
       block={block}
-      isEditing={isEditing} 
+      isEditing={isEditing}
       isMobileEdit={isMobileEdit}
-      onEdit={onEdit} 
+      onEdit={onEdit}
       onClose={onClose}
       onDelete={onDelete}
       onUpdate={onUpdate}
@@ -129,4 +138,6 @@ export function BlockRenderer({
       {renderBlockContent()}
     </BlockWrapper>
   );
-}
+});
+
+BlockRenderer.displayName = 'BlockRenderer'; // Necesario para `forwardRef`

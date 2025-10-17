@@ -8,6 +8,9 @@ import { cn } from '@/lib/utils';
 const useMediaQuery = (query: string) => {
   const [matches, setMatches] = useState(false);
   useEffect(() => {
+    // Asegurarse de que window está definido (evitar errores en SSR)
+    if (typeof window === 'undefined') return;
+
     const media = window.matchMedia(query);
     if (media.matches !== matches) {
       setMatches(media.matches);
@@ -40,6 +43,7 @@ interface BlockWrapperProps extends ToolbarProps {
   children: React.ReactNode;
   isEditing: boolean;
   isMobileEdit?: boolean;
+  isHighlighted?: boolean; // <-- NUEVA PROP
   block: Block;
   onClose?: () => void;
   onUpdate?: (key: string, value: unknown) => void;
@@ -95,22 +99,27 @@ const MobileMenu: React.FC<ToolbarProps> = ({ onEdit, onDelete, onMoveUp, onMove
   );
 };
 
-// --- Componente Principal del Wrapper ---
-export const BlockWrapper = ({ 
-    children, 
+// --- Componente Principal del Wrapper (MODIFICADO) ---
+export const BlockWrapper = React.forwardRef<HTMLDivElement, BlockWrapperProps>(({
+    children,
     isEditing,
     isMobileEdit,
+    isHighlighted, // <-- Prop de resalte
     onEdit,
     onDelete,
-    onMoveUp, 
+    onMoveUp,
     onMoveDown,
-}: BlockWrapperProps) => {
-  const isMobile = useMediaQuery('(max-width: 799px)');
+    // Las props onClose y onUpdate no se usan directamente aquí, pero se aceptan
+    onClose,
+    onUpdate,
+    block // Se necesita para pasarla si no se usan onClose/onUpdate
+}, ref) => { // <-- Recibe la ref
+  const isMobile = useMediaQuery('(max-width: 799px)'); // Ajustado el breakpoint si es necesario
 
   // En modo de edición, el panel se encarga de todo. El wrapper solo dibuja un anillo.
   if (isEditing) {
     return (
-      <div className="relative">
+      <div ref={ref} className="relative"> {/* <-- Aplica la ref aquí */}
         <div className="ring-2 ring-blue-500 ring-offset-2 rounded-lg">
           {children}
         </div>
@@ -118,15 +127,15 @@ export const BlockWrapper = ({
     );
   }
 
-  // En modo normal, el wrapper gestiona el hover/click para mostrar controles.
+  // En modo normal, el wrapper gestiona el hover/click y el resalte.
   return (
-    <div className="relative group rounded-lg">
+    <div ref={ref} className={cn('relative group rounded-lg', { 'animate-highlight': isHighlighted })}> {/* <-- Aplica la ref y la clase de animación */}
       {children}
       {isMobile ? (
         isMobileEdit ? <MobileMenu onEdit={onEdit} onDelete={onDelete} onMoveUp={onMoveUp} onMoveDown={onMoveDown} /> : null
       ) : (
         <>
-          <div 
+          <div
             className="absolute inset-0 rounded-lg cursor-pointer transition-all duration-300 opacity-0 group-hover:opacity-100 ring-2 ring-transparent group-hover:ring-blue-400"
             onClick={(e) => { e.stopPropagation(); onEdit && onEdit(); }}
           />
@@ -135,4 +144,6 @@ export const BlockWrapper = ({
       )}
     </div>
   );
-};
+});
+
+BlockWrapper.displayName = 'BlockWrapper'; // Necesario para `forwardRef`

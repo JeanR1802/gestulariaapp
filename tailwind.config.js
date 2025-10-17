@@ -29,9 +29,28 @@ module.exports = {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-3px)' },
         },
+        // --- ANIMACIÓN AÑADIDA ---
+        'highlight-pulse': {
+          '0%': {
+            'box-shadow': '0 0 0 4px rgba(59, 130, 246, 0.4)', // Anillo azul semi-transparente
+            'background-color': 'rgba(59, 130, 246, 0.05)'
+          },
+          '70%': {
+            'box-shadow': '0 0 0 4px rgba(59, 130, 246, 0)',
+            'background-color': 'rgba(59, 130, 246, 0)'
+          },
+          '100%': {
+            'box-shadow': '0 0 0 0 rgba(59, 130, 246, 0)',
+            'background-color': 'transparent'
+          }
+        },
+        // --- FIN DE LA ANIMACIÓN AÑADIDA ---
       },
       animation: {
         'dot-bounce': 'dot-bounce 1.2s infinite ease-in-out',
+        // --- ANIMACIÓN AÑADIDA ---
+        'highlight': 'highlight-pulse 1.5s ease-out',
+        // --- FIN DE LA ANIMACIÓN AÑADIDA ---
       },
     },
   },
