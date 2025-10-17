@@ -376,7 +376,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
               </div>
             </div>
             
-            {/* Contenedor del Lienzo */}
+            {/* Contenedor del Lieneo */}
             <div className="p-4 md:p-8">
               <div className={cn("mx-auto bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-full transition-all duration-300 ease-in-out", { 'max-w-full': previewMode === 'desktop', 'max-w-screen-md': previewMode === 'tablet', 'max-w-sm': previewMode === 'mobile' })}>
                 {/* Renderizado de Bloques */}
