@@ -57,7 +57,7 @@ export const BannerBlock: React.FC<{ data: BannerData }> = ({ data }) => {
 };
 
 // --- EDITOR DE CONTENIDO ---
-export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: any) => void }> = ({ data, updateData }) => (
+export const BannerContentEditor: React.FC<{ data: BannerData; updateData: <K extends keyof BannerData>(key: K, value: BannerData[K]) => void }> = ({ data, updateData }) => (
   <div className="space-y-4">
     <div>
       <label className="text-sm font-medium text-slate-700 mb-1 block">Texto del banner</label>
@@ -83,7 +83,7 @@ export const BannerContentEditor: React.FC<{ data: BannerData; updateData: (key:
 );
 
 // --- EDITOR DE ESTILOS ---
-export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: keyof BannerData, value: any) => void }> = ({ data, updateData }) => {
+export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: <K extends keyof BannerData>(key: K, value: BannerData[K]) => void }> = ({ data, updateData }) => {
   const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <label className="text-sm font-medium text-slate-700 w-full sm:w-1/3 flex-shrink-0">{children}</label>
   );
@@ -97,6 +97,7 @@ export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: k
       <ControlWrapper>
         <Label>Color de Fondo</Label>
         <ColorPalette
+          label="Color de Fondo"
           selectedColor={data.bgColor || ''}
           onChange={color => updateData('bgColor', color)}
         />
@@ -104,6 +105,7 @@ export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: k
       <ControlWrapper>
         <Label>Color de Texto</Label>
         <TextColorPalette
+          label="Color de Texto"
           selectedColor={data.textColor || ''}
           onChange={color => updateData('textColor', color)}
         />
@@ -158,10 +160,12 @@ export const BannerStyleEditor: React.FC<{ data: BannerData; updateData: (key: k
             <Label>Colores del Botón</Label>
             <div className="flex items-center gap-2">
               <ColorPalette
+                label="Fondo del Botón"
                 selectedColor={data.buttonBgColor || ''}
                 onChange={color => updateData('buttonBgColor', color)}
               />
               <TextColorPalette
+                label="Texto del Botón"
                 selectedColor={data.buttonTextColor || ''}
                 onChange={color => updateData('buttonTextColor', color)}
               />
