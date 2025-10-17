@@ -384,8 +384,8 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
                   {blocks.map((block, index) => (
                     <BlockRenderer 
                         key={block.id} 
-                        ref={el => (blockRefs.current[block.id] = el)} // Asignar ref
-                        isHighlighted={block.id === newBlockId}      // Pasar prop de resalte
+                        ref={el => { blockRefs.current[block.id] = el; }} // Corregido: no retorna nada
+                        isHighlighted={block.id === newBlockId}
                         block={block} 
                         isEditing={editingBlockId === block.id} 
                         isMobileEdit={isMobileEdit}
