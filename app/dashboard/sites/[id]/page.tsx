@@ -153,7 +153,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
   const [activeBlockType, setActiveBlockType] = useState<BlockType | null>(null);
-  const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isMobileEdit, setIsMobileEdit] = useState(false);
   const [isAddComponentPanelOpen, setAddComponentPanelOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Todos'); 
@@ -163,7 +162,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   // Calculados
   const editingBlock = editingBlockId ? blocks.find(b => b.id === editingBlockId) : null;
   const editingBlockIndex = editingBlock ? blocks.findIndex(b => b.id === editingBlock.id) : -1;
-  const previewContextValue = { mode: previewMode, isMobile: previewMode === 'mobile', isTablet: previewMode === 'tablet', isDesktop: previewMode === 'desktop' };
 
   // Funciones de notificación y carga/guardado
   const showNotification = useCallback((message: string, type: 'success' | 'error' = 'success') => {
@@ -286,7 +284,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
 
   return (
-    <PreviewModeContext.Provider value={previewContextValue}>
+    <>
       <div className="flex flex-col h-screen bg-slate-100 font-sans">
         {/* Header */}
         <header className="bg-white border-b border-slate-200 z-30 shrink-0">
@@ -366,51 +364,36 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
 
           {/* Lienzo Principal */}
           <div className="flex-1 overflow-y-auto">
-            {/* Controles de Vista Previa */}
-            <div className="sticky top-0 z-20 bg-slate-100/80 backdrop-blur-sm py-2 border-b border-slate-200">
-              <div className="flex justify-center">
-                  <div className="flex items-center gap-2 bg-white p-1 rounded-full shadow-sm border">
-                      <button onClick={() => setPreviewMode('desktop')} title="Vista de Escritorio" className={cn( "p-2 rounded-full transition-colors", previewMode === 'desktop' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100' )}><ComputerDesktopIcon className="w-5 h-5" /></button>
-                      <button onClick={() => setPreviewMode('tablet')} title="Vista de Tableta" className={cn("p-2 rounded-full transition-colors", previewMode === 'tablet' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100' )}><DeviceTabletIcon className="w-5 h-5" /></button>
-                      <button onClick={() => setPreviewMode('mobile')} title="Vista de Móvil" className={cn("p-2 rounded-full transition-colors", previewMode === 'mobile' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-100' )}><DevicePhoneMobileIcon className="w-5 h-5" /></button>
-                  </div>
-              </div>
-            </div>
-            
-            {/* Contenedor del Lieneo */}
+            {/* Contenedor del Lienzo responsivo, sin simulación ni escalado */}
             <div className="p-4 md:p-8">
-              <div className={cn("mx-auto bg-white rounded-lg shadow-sm ring-1 ring-slate-200 min-h-full transition-all duration-300 ease-in-out", { 'max-w-full': previewMode === 'desktop', 'max-w-screen-md': previewMode === 'tablet', 'max-w-sm': previewMode === 'mobile' })}>
-                {/* Renderizado de Bloques */}
-                <div className="p-4">
-                  {blocks.map((block, index) => (
-                    <BlockRenderer 
-                        key={block.id} 
-                        ref={el => { blockRefs.current[block.id] = el; }} // Corregido: no retorna nada
-                        isHighlighted={block.id === newBlockId}
-                        block={block} 
-                        isEditing={editingBlockId === block.id} 
-                        isMobileEdit={isMobileEdit}
-                        onUpdate={(key, value) => updateBlockProperty(block.id, key, value)}
-                        onDelete={() => deleteBlock(block.id)} 
-                        onEdit={editingBlockId === null ? () => setEditingBlockId(block.id) : undefined}
-                        onClose={() => setEditingBlockId(null)}
-                        onMoveUp={editingBlockId === null && (previewMode !== 'mobile' || isMobileEdit) && index > 0 ? () => moveBlock(index, index - 1) : undefined} 
-                        onMoveDown={editingBlockId === null && (previewMode !== 'mobile' || isMobileEdit) && index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined}
-                    />
-                  ))}
-                  {/* Placeholder si no hay bloques */}
-                  {blocks.length === 0 && (
-                    <div className="text-center py-24 border-2 border-dashed rounded-lg">
-                      <p className="text-5xl mb-4">🎨</p>
-                      <p className={cn("font-semibold text-slate-700 mb-1", {'text-lg': previewMode === 'desktop', 'text-base': previewMode === 'tablet', 'text-sm': previewMode === 'mobile'})}>Tu lienzo está en blanco</p>
-                      <p className={cn("text-slate-500", {'text-sm': previewMode === 'desktop', 'text-xs': previewMode === 'mobile'})}>Añade un componente desde la barra lateral para empezar.</p>
-                    </div>
-                  )}
-                </div>
+              <div className="mx-auto w-full max-w-4xl bg-white rounded-2xl shadow-lg p-4 md:p-8 min-h-[60vh] flex flex-col gap-6">
+                {blocks.map((block, index) => (
+                  <BlockRenderer 
+                      key={block.id} 
+                      ref={el => { blockRefs.current[block.id] = el; }}
+                      isHighlighted={block.id === newBlockId}
+                      block={block} 
+                      isEditing={editingBlockId === block.id} 
+                      isMobileEdit={isMobileEdit}
+                      onUpdate={(key, value) => updateBlockProperty(block.id, key, value)}
+                      onDelete={() => deleteBlock(block.id)} 
+                      onEdit={editingBlockId === null ? () => setEditingBlockId(block.id) : undefined}
+                      onClose={() => setEditingBlockId(null)}
+                      onMoveUp={editingBlockId === null && index > 0 ? () => moveBlock(index, index - 1) : undefined} 
+                      onMoveDown={editingBlockId === null && index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined}
+                  />
+                ))}
+                {/* Placeholder si no hay bloques */}
+                {blocks.length === 0 && (
+                  <div className="text-center py-24 border-2 border-dashed rounded-lg">
+                    <p className="text-5xl mb-4">🎨</p>
+                    <p className="font-semibold text-slate-700 mb-1 text-lg">Tu lienzo está en blanco</p>
+                    <p className="text-slate-500 text-sm">Añade un componente desde la barra lateral para empezar.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-          
           {/* Panel Modal para Añadir Bloque (variantes) */}
           {activeBlockType && <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />}
         </main>
@@ -462,8 +445,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
           } : undefined}
         />
       )}
-
-
-    </PreviewModeContext.Provider>
+    </>
   );
 }
