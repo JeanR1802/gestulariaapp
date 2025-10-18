@@ -24,8 +24,7 @@ function MobileAddComponentPanel({ onClose, onSelectBlock, selectedCategory, set
       }
       acc[category].push({ key, ...blockInfo });
       return acc;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }, {} as Record<string, (BlockConfig<any> & { key: string })[]>);
+    }, {} as Record<string, (BlockConfig<BlockData> & { key: string })[]>);
     
     const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
 
@@ -136,7 +135,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     }
     acc[category].push({ key, ...blockInfo });
     return acc;
-  }, {} as Record<string, (BlockConfig<any> & { key: string })[]>);
+  }, {} as Record<string, (BlockConfig<BlockData> & { key: string })[]>);
 
   const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
   
