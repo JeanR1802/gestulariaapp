@@ -1,14 +1,11 @@
 'use client';
-import { useState, useEffect, useCallback, use, Fragment, useRef } from 'react'; // Importar useRef
+import { useState, useEffect, useCallback, use, Fragment, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import { BLOCKS, BlockType, BlockData, Block, BlockConfig } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
-
-import { ComputerDesktopIcon, DeviceTabletIcon, DevicePhoneMobileIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
-
+import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
-import { PreviewModeContext } from '@/app/contexts/PreviewModeContext';
 import { Transition } from '@headlessui/react';
 import { InlineEditorPanel } from '@/app/components/editor/controls/InlineEditorPanel';
 import { MobileToolbar } from '@/app/components/editor/controls/MobileToolbar';
@@ -139,7 +136,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     }
     acc[category].push({ key, ...blockInfo });
     return acc;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }, {} as Record<string, (BlockConfig<any> & { key: string })[]>);
 
   const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
@@ -307,7 +303,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
                 }}
                 className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200"
               >
-                Vista Previa
+                Ir al sitio
               </button>
               <button onClick={saveTenant} disabled={saving} className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">{saving ? 'Guardando...' : 'Guardar'}</button>
             </div>
@@ -364,7 +360,6 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
 
           {/* Lienzo Principal */}
           <div className="flex-1 overflow-y-auto">
-            {/* Contenedor del Lienzo responsivo, sin simulación ni escalado */}
             <div className="p-4 md:p-8">
               <div className="mx-auto w-full max-w-4xl bg-white rounded-2xl shadow-lg p-4 md:p-8 min-h-[60vh] flex flex-col gap-6">
                 {blocks.map((block, index) => (
