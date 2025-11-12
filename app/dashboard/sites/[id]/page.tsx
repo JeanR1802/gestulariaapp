@@ -4,11 +4,11 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import { BLOCKS, BlockType, BlockData, Block, BlockConfig } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
+import { MobileToolbar } from '@/app/components/editor/controls/MobileToolbar';
 import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { Transition } from '@headlessui/react';
-import { InlineEditorPanel } from '@/app/components/editor/controls/InlineEditorPanel';
-import { MobileToolbar } from '@/app/components/editor/controls/MobileToolbar';
+import { PreviewModeContext } from '@/app/contexts/PreviewModeContext';
 
 // --- Tipos y Modales ---
 
@@ -22,9 +22,9 @@ function MobileAddComponentPanel({ onClose, onSelectBlock, selectedCategory, set
       if (!acc[category]) {
         acc[category] = [];
       }
-      acc[category].push({ key, ...blockInfo });
+      acc[category].push({ key, ...(blockInfo as any) });
       return acc;
-    }, {} as Record<string, (BlockConfig<BlockData> & { key: string })[]>);
+    }, {} as Record<string, any[]>);
     
     const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
 
@@ -126,6 +126,21 @@ function AddBlockPanel({ blockType, onAddBlock, onClose }: { blockType: BlockTyp
 // --- COMPONENTE PRINCIPAL: VisualEditor ---
 export default function VisualEditor({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  
+  // Preview mode (desktop/tablet/mobile) for blocks to adapt their rendering
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+
+  useEffect(() => {
+    const compute = () => {
+      const w = window.innerWidth;
+      if (w < 768) setPreviewMode('mobile');
+      else if (w < 1024) setPreviewMode('tablet');
+      else setPreviewMode('desktop');
+    };
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, []);
 
   // Lógica de categorización DENTRO del componente
   const categorizedBlocks = Object.entries(BLOCKS).reduce((acc, [key, blockInfo]) => {
@@ -133,9 +148,9 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     if (!acc[category]) {
       acc[category] = [];
     }
-    acc[category].push({ key, ...blockInfo });
+    acc[category].push({ key, ...(blockInfo as any) });
     return acc;
-  }, {} as Record<string, (BlockConfig<BlockData> & { key: string })[]>);
+  }, {} as Record<string, any[]>);
 
   const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
   
@@ -279,7 +294,8 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
 
   return (
-    <>
+    <PreviewModeContext.Provider value={{ mode: previewMode, isMobile: previewMode === 'mobile', isTablet: previewMode === 'tablet', isDesktop: previewMode === 'desktop' }}>
+      <>
       <div className="flex flex-col h-screen bg-slate-100 font-sans">
         {/* Header */}
         <header className="bg-white border-b border-slate-200 z-30 shrink-0">
@@ -360,7 +376,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
           {/* Lienzo Principal */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-4 md:p-8">
-              <div className="mx-auto w-full max-w-4xl bg-white rounded-2xl shadow-lg p-4 md:p-8 min-h-[60vh] flex flex-col gap-6">
+              <div id="editor-canvas" className="mx-auto w-full max-w-4xl bg-white rounded-2xl shadow-lg p-4 md:p-8 min-h-[60vh] flex flex-col gap-0">
                 {blocks.map((block, index) => (
                   <BlockRenderer 
                       key={block.id} 
@@ -390,6 +406,14 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
           </div>
           {/* Panel Modal para Añadir Bloque (variantes) */}
           {activeBlockType && <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />}
+          {isAddComponentPanelOpen && (
+          <MobileAddComponentPanel
+            onClose={() => setAddComponentPanelOpen(false)}
+            onSelectBlock={(type) => { setActiveBlockType(type); setAddComponentPanelOpen(false); }}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+          />
+        )}
         </main>
 
         {/* Barra de Herramientas Móvil (Edición/Preview) */}
@@ -407,38 +431,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
           </div>
         )}
       </div>
-
-      {/* Panel Lateral Móvil para Añadir Componente (CON FILTROS) */}
-      {isAddComponentPanelOpen && (
-          <MobileAddComponentPanel 
-            onClose={() => setAddComponentPanelOpen(false)}
-            onSelectBlock={(type) => {
-                setActiveBlockType(type); // Abre el modal de variantes
-                setAddComponentPanelOpen(false); // Cierra este panel
-            }}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-          />
-      )}
-
-      {/* Panel de Edición Inline */}
-      {editingBlock && (
-        <InlineEditorPanel
-          key={editingBlock.id} // Re-montar si cambia el bloque
-          block={editingBlock!}
-          onClose={() => setEditingBlockId(null)}
-          onDataChange={handleDataChange} // Para preview en tiempo real
-          onDelete={() => deleteBlock(editingBlock.id)}
-          onMoveUp={editingBlockIndex > 0 ? () => {
-            moveBlock(editingBlockIndex, editingBlockIndex - 1);
-            // No cerramos el editor, solo movemos
-          } : undefined}
-          onMoveDown={editingBlockIndex < blocks.length - 1 ? () => {
-            moveBlock(editingBlockIndex, editingBlockIndex + 1);
-             // No cerramos el editor, solo movemos
-          } : undefined}
-        />
-      )}
-    </>
+      </>
+    </PreviewModeContext.Provider>
   );
 }

@@ -36,7 +36,7 @@ import { BannerBlock, BannerData, BannerContentEditor, BannerStyleEditor } from 
 import { GalleryBlock, GalleryContentEditor, GalleryStyleEditor, GalleryData } from './GalleryBlock';
 
 // Importaciones de todas las vistas previas de variantes
-import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview } from './Header/HeaderPreviews';
+import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview, HeaderVariantSticky } from './Header/HeaderPreviews';
 import { HeroPreviewDefault, HeroPreviewLeftImage, HeroPreviewDarkMinimal } from './Hero/HeroPreviews';
 import { TextPreviewDefault, TextPreviewQuote, TextPreviewHighlighted } from './Text/TextPreviews';
 import { ImagePreviewDefault, ImagePreviewBordered, ImagePreviewFullWidth } from './Image/ImagePreviews';
@@ -122,6 +122,7 @@ export const BLOCKS: BlocksConfig = {
         { name: 'Estándar', description: 'Logo a la izquierda, enlaces a la derecha.', preview: HeaderVariantDefault, defaultData: { variant: 'default', logoText: 'MiLogo', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto', backgroundColor: 'bg-white', logoColor: 'text-slate-800', linkColor: 'text-slate-600', buttonText: '', buttonBgColor: '', buttonTextColor: '' } as HeaderData },
         { name: 'Centrado', description: 'Logo y enlaces centrados.', preview: HeaderVariantCentered, defaultData: { variant: 'centered', logoText: 'MiLogo', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto', backgroundColor: 'bg-white', logoColor: 'text-slate-800', linkColor: 'text-slate-600', buttonText: '', buttonBgColor: '', buttonTextColor: '' } as HeaderData },
         { name: 'Con Botón', description: 'Ideal para dirigir a una acción clave.', preview: HeaderVariantButtonPreview, defaultData: { variant: 'withButton', logoText: 'MiLogo', link1: 'Producto', link2: 'Precios', buttonText: 'Registrarse', backgroundColor: 'bg-white', logoColor: 'text-slate-800', linkColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as HeaderData },
+        { name: 'Sticky', description: 'Barra fija al hacer scroll; fondo semitransparente.', preview: HeaderVariantSticky, defaultData: { variant: 'sticky', logoText: 'MiLogo', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto', buttonText: 'Empezar', backgroundColor: 'bg-white/90', logoColor: 'text-slate-800', linkColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as HeaderData },
     ]
   } as BlockConfig<HeaderData>,
   hero: {
