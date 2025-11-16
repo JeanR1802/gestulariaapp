@@ -33,26 +33,257 @@ export function renderBlocksToHTML(blocks) {
         const headerId = `header-${block.id}`;
         const mobileMenuId = `mobile-menu-${block.id}`;
         const toggleButtonId = `toggle-button-${block.id}`;
+        const closeButtonId = `close-button-${block.id}`;
         let headerHtml = '';
         const bg = getClassOrStyle(data.backgroundColor, 'bg-white', 'background-color');
         const logo = getClassOrStyle(data.logoColor, 'text-slate-800', 'color');
         const link = getClassOrStyle(data.linkColor, 'text-slate-600', 'color');
         const buttonBg = getClassOrStyle(data.buttonBgColor, 'bg-blue-600', 'background-color');
         const buttonText = getClassOrStyle(data.buttonTextColor, 'text-white', 'color');
+        const menuMaxHeight = 'max-h-[70vh] overflow-y-auto';
+        const menuInlineStyle = 'max-height:70vh; overflow-y:auto;';
+
         switch (data.variant) {
           case 'centered':
-            headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center md:flex-col md:gap-3"><h1 class="text-xl md:text-2xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1><nav class="hidden md:flex items-center space-x-6 text-sm ${link.class}" style="${link.style}"><a href="#" class="hover:opacity-100">${data.link1 || 'Inicio'}</a><a href="#" class="hover:opacity-100">${data.link2 || 'Servicios'}</a><a href="#" class="hover:opacity-100">${data.link3 || 'Contacto'}</a></nav><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${logo.class}" style="${logo.style}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a></nav>`;
+            headerHtml = `
+              <div class="max-w-5xl mx-auto flex justify-between items-center md:flex-col md:gap-3">
+                <h1 class="text-xl md:text-2xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1>
+                <nav class="hidden md:flex items-center space-x-6 text-sm ${link.class}" style="${link.style}">
+                  <a href="#" class="hover:opacity-100">${data.link1 || 'Inicio'}</a>
+                  <a href="#" class="hover:opacity-100">${data.link2 || 'Servicios'}</a>
+                  <a href="#" class="hover:opacity-100">${data.link3 || 'Contacto'}</a>
+                </nav>
+                <div class="md:hidden">
+                  <button id="${toggleButtonId}" aria-controls="${mobileMenuId}" aria-expanded="false" aria-label="Abrir menú" class="${logo.class}" style="${logo.style}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <nav id="${mobileMenuId}" class="hidden md:hidden fixed inset-x-0 top-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4 ${menuMaxHeight}" style="${menuInlineStyle}" role="dialog" aria-modal="true" aria-hidden="true">
+                <button id="${closeButtonId}" aria-label="Cerrar menú" class="self-end mr-4 text-slate-600">×</button>
+                <a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a>
+                <a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a>
+                <a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a>
+              </nav>
+            `;
             break;
+
           case 'withButton':
-            headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center"><h1 class="text-xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1><div class="hidden md:flex items-center gap-6"><nav class="flex items-center space-x-6 text-sm ${link.class}" style="${link.style}"><a href="#" class="hover:opacity-100">${data.link1 || 'Producto'}</a><a href="#" class="hover:opacity-100">${data.link2 || 'Precios'}</a></nav><a href="#" class="px-4 py-1.5 rounded-md text-sm font-semibold ${buttonBg.class}" style="${buttonBg.style}">${data.buttonText || 'Acción'}</a></div><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${logo.class}" style="${logo.style}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Producto'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Precios'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.buttonText || 'Acción'}</a></nav>`;
+            headerHtml = `
+              <div class="max-w-5xl mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1>
+                <div class="hidden md:flex items-center gap-6">
+                  <nav class="flex items-center space-x-6 text-sm ${link.class}" style="${link.style}">
+                    <a href="#" class="hover:opacity-100">${data.link1 || 'Producto'}</a>
+                    <a href="#" class="hover:opacity-100">${data.link2 || 'Precios'}</a>
+                  </nav>
+                  <a href="#" class="px-4 py-1.5 rounded-md text-sm font-semibold ${buttonBg.class}" style="${buttonBg.style}">${data.buttonText || 'Acción'}</a>
+                </div>
+                <div class="md:hidden">
+                  <button id="${toggleButtonId}" aria-controls="${mobileMenuId}" aria-expanded="false" aria-label="Abrir menú" class="${logo.class}" style="${logo.style}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <nav id="${mobileMenuId}" class="hidden md:hidden fixed inset-x-0 top-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4 ${menuMaxHeight}" style="${menuInlineStyle}" role="dialog" aria-modal="true" aria-hidden="true">
+                <button id="${closeButtonId}" aria-label="Cerrar menú" class="self-end mr-4 text-slate-600">×</button>
+                <a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Producto'}</a>
+                <a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Precios'}</a>
+                <a href="#" class="text-slate-800 hover:text-blue-600">${data.buttonText || 'Acción'}</a>
+              </nav>
+            `;
             break;
+
+          case 'sticky':
+            // Live site can have a sticky header; mobile menu is an off-canvas panel
+            headerHtml = `
+              <div class="max-w-5xl mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1>
+                <nav class="hidden md:flex items-center space-x-6 text-sm ${link.class}" style="${link.style}">
+                  <a href="#" class="hover:opacity-100">${data.link1 || 'Inicio'}</a>
+                  <a href="#" class="hover:opacity-100">${data.link2 || 'Servicios'}</a>
+                  <a href="#" class="hover:opacity-100">${data.link3 || 'Contacto'}</a>
+                </nav>
+                <div class="md:hidden">
+                  <button id="${toggleButtonId}" aria-controls="${mobileMenuId}" aria-expanded="false" aria-label="Abrir menú" class="${logo.class}" style="${logo.style}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <nav id="${mobileMenuId}" class="fixed inset-y-0 right-0 w-72 bg-white z-50 transform translate-x-full transition-transform ${menuMaxHeight}" role="dialog" aria-modal="true" aria-hidden="true">
+                <div class="p-4 border-b flex items-center justify-between">
+                  <h3 class="font-semibold">Menu</h3>
+                  <button id="${closeButtonId}" aria-label="Cerrar menú" class="text-slate-600">×</button>
+                </div>
+                <div class="p-4 flex flex-col gap-4">
+                  <a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a>
+                  <a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a>
+                  <a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a>
+                </div>
+              </nav>
+            `;
+            break;
+
+          case 'nueva':
+            // Nueva: modern centered links and right-side action; mobile opens full-screen compact menu
+            headerHtml = `
+              <div class="max-w-5xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <h1 class="text-lg font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Marca'}</h1>
+                </div>
+                <nav class="hidden md:flex items-center gap-8 ${link.class}" style="${link.style}">
+                  <a href="#" class="text-sm">${data.link1 || 'Características'}</a>
+                  <a href="#" class="text-sm">${data.link2 || 'Precios'}</a>
+                  <a href="#" class="text-sm">${data.link3 || 'Soporte'}</a>
+                </nav>
+                <div class="hidden md:flex items-center gap-4">
+                  <a href="#" class="px-4 py-1.5 rounded-full text-sm font-semibold ${buttonBg.class}" style="${buttonBg.style}">${data.buttonText || 'Comenzar'}</a>
+                </div>
+                <div class="md:hidden">
+                  <button id="${toggleButtonId}" aria-controls="${mobileMenuId}" aria-expanded="false" aria-label="Abrir menú" class="${logo.class}" style="${logo.style}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                  </button>
+                </div>
+
+                <nav id="${mobileMenuId}" class="hidden md:hidden fixed inset-0 bg-white z-50 p-6 ${menuMaxHeight} overflow-y-auto">
+                  <div class="flex items-center justify-between mb-6">
+                    <h2 class="font-bold">${data.logoText || 'Mi Marca'}</h2>
+                    <button id="${closeButtonId}" aria-label="Cerrar menú" class="text-slate-600">×</button>
+                  </div>
+                  <div class="flex flex-col gap-4">
+                    <a href="#" class="text-lg font-semibold">${data.link1 || 'Características'}</a>
+                    <a href="#" class="text-lg font-semibold">${data.link2 || 'Precios'}</a>
+                    <a href="#" class="text-lg font-semibold">${data.link3 || 'Soporte'}</a>
+                    <a href="#" class="mt-4 inline-block px-4 py-2 rounded-md font-semibold ${buttonBg.class}" style="${buttonBg.style}">${data.buttonText || 'Comenzar'}</a>
+                  </div>
+                </nav>
+            `;
+            break;
+
           default:
-             headerHtml = `<div class="max-w-5xl mx-auto flex justify-between items-center"><h1 class="text-xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1><nav class="hidden md:flex items-center space-x-6 text-sm ${link.class}" style="${link.style}"><a href="#" class="hover:opacity-100">${data.link1 || 'Inicio'}</a><a href="#" class="hover:opacity-100">${data.link2 || 'Servicios'}</a><a href="#" class="hover:opacity-100">${data.link3 || 'Contacto'}</a></nav><div class="md:hidden"><button id="${toggleButtonId}" aria-label="Toggle Menu" class="${logo.class}" style="${logo.style}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></div><nav id="${mobileMenuId}" class="hidden md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4"><a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a><a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a></nav>`;
+            headerHtml = `
+              <div class="max-w-5xl mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold ${logo.class}" style="${logo.style}">${data.logoText || 'Mi Negocio'}</h1>
+                <nav class="hidden md:flex items-center space-x-6 text-sm ${link.class}" style="${link.style}">
+                  <a href="#" class="hover:opacity-100">${data.link1 || 'Inicio'}</a>
+                  <a href="#" class="hover:opacity-100">${data.link2 || 'Servicios'}</a>
+                  <a href="#" class="hover:opacity-100">${data.link3 || 'Contacto'}</a>
+                </nav>
+                <div class="md:hidden">
+                  <button id="${toggleButtonId}" aria-controls="${mobileMenuId}" aria-expanded="false" aria-label="Abrir menú" class="${logo.class}" style="${logo.style}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <nav id="${mobileMenuId}" class="hidden md:hidden fixed inset-x-0 top-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4 ${menuMaxHeight}" style="${menuInlineStyle}" role="dialog" aria-modal="true" aria-hidden="true">
+                <button id="${closeButtonId}" aria-label="Cerrar menú" class="self-end mr-4 text-slate-600">×</button>
+                <a href="#" class="text-slate-800 hover:text-blue-600">${data.link1 || 'Inicio'}</a>
+                <a href="#" class="text-slate-800 hover:text-blue-600">${data.link2 || 'Servicios'}</a>
+                <a href="#" class="text-slate-800 hover:text-blue-600">${data.link3 || 'Contacto'}</a>
+              </nav>
+            `;
             break;
         }
-        // Elimino border-b para evitar línea blanca debajo del header
-        // Aplica style en línea en el header
-        return `<header id="${headerId}" class="${bg.class} p-4 w-full sticky top-0 z-30" style="${bg.style}">${headerHtml}</header><script>(function(){var button=document.getElementById('${toggleButtonId}');var menu=document.getElementById('${mobileMenuId}');if(button&&menu){button.addEventListener('click',function(){menu.classList.toggle('hidden');});}})();</script>`;
+
+        // Script to handle mobile menu open/close and accessibility
+        const overlayId = `overlay-${block.id}`;
+        const script = `
+          <script>
+            (function(){
+              var toggle = document.getElementById('${toggleButtonId}');
+              var menu = document.getElementById('${mobileMenuId}');
+              var closeBtn = document.getElementById('${closeButtonId}');
+              if(!toggle || !menu) return;
+
+              // Move menu to document.body to avoid positioning issues inside constrained containers
+              try {
+                if(menu.parentElement !== document.body) {
+                  document.body.appendChild(menu);
+                  // ensure the menu is fixed and full-width when moved
+                  menu.style.position = menu.style.position || 'fixed';
+                  menu.style.left = menu.style.left || '0';
+                  menu.style.right = menu.style.right || '0';
+                  menu.style.zIndex = menu.style.zIndex || '50';
+                }
+              } catch (e) { /* noop */ }
+
+              // Create or reuse overlay backdrop
+              var overlay = document.getElementById('${overlayId}');
+              if(!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = '${overlayId}';
+                overlay.style.position = 'fixed';
+                overlay.style.inset = '0';
+                overlay.style.background = 'rgba(0,0,0,0.35)';
+                overlay.style.zIndex = '49';
+                overlay.style.display = 'none';
+                document.body.appendChild(overlay);
+              }
+
+              // Ensure menu starts hidden using inline styles (works without Tailwind)
+              if(menu.classList.contains('hidden') || getComputedStyle(menu).display === 'none') {
+                menu.style.display = 'none';
+              }
+              menu.style.transition = menu.style.transition || 'transform 0.28s ease, opacity 0.18s ease';
+
+              function openMenu(){
+                var isOffcanvas = menu.classList.contains('translate-x-full') || menu.classList.contains('translate-x-0') || menu.classList.contains('w-72');
+                var isFullscreen = menu.classList.contains('inset-0');
+                if(isOffcanvas){
+                  // ensure off-canvas slides in from right
+                  menu.style.display = 'block';
+                  menu.style.transform = 'translateX(0)';
+                } else if(isFullscreen){
+                  overlay.style.display = 'block';
+                  menu.style.display = 'block';
+                } else {
+                  menu.style.display = 'block';
+                }
+                menu.setAttribute('aria-hidden','false');
+                toggle.setAttribute('aria-expanded','true');
+                setTimeout(function(){
+                  var focusTarget = menu.querySelector('button') || menu.querySelector('a');
+                  if(focusTarget) try{ focusTarget.focus(); }catch(e){}
+                }, 60);
+              }
+
+              function closeMenu(){
+                var isOffcanvas = menu.classList.contains('translate-x-full') || menu.classList.contains('translate-x-0') || menu.classList.contains('w-72');
+                var isFullscreen = menu.classList.contains('inset-0');
+                if(isOffcanvas){
+                  menu.style.transform = 'translateX(100%)';
+                  setTimeout(function(){ menu.style.display = 'none'; }, 280);
+                } else if(isFullscreen){
+                  overlay.style.display = 'none';
+                  menu.style.display = 'none';
+                } else {
+                  menu.style.display = 'none';
+                }
+                menu.setAttribute('aria-hidden','true');
+                toggle.setAttribute('aria-expanded','false');
+                try{ toggle.focus(); } catch(e){}
+              }
+
+              toggle.addEventListener('click', function(e){
+                var expanded = toggle.getAttribute('aria-expanded') === 'true';
+                if(expanded) closeMenu(); else openMenu();
+              });
+
+              if(closeBtn) closeBtn.addEventListener('click', closeMenu);
+              overlay.addEventListener('click', closeMenu);
+
+              // close on Escape
+              document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+            })();
+          </script>
+        `;
+ 
+         // Return header + script
+         return `<header id="${headerId}" class="${bg.class} p-4 w-full ${data.variant === 'sticky' ? 'sticky top-0 z-40' : ''}" style="${bg.style}">${headerHtml}</header>${script}`;
       }
       case 'hero': {
         const titleClass = getClassOrStyle(data.titleColor, 'text-slate-800', 'color');

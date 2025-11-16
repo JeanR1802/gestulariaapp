@@ -169,6 +169,18 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   const [newBlockId, setNewBlockId] = useState<number | null>(null); // Estado para resalte
   const blockRefs = useRef<Record<number, HTMLDivElement | null>>({}); // Refs para los bloques
 
+  // Estado para el panel de edición (pestañas)
+  const [editorTab, setEditorTab] = useState<'content' | 'style'>('content');
+
+  // Ref para el primer input del editor para foco automático
+  const editorFirstFocusRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (editingBlockId) {
+      setTimeout(() => editorFirstFocusRef.current?.focus(), 50);
+    }
+  }, [editingBlockId]);
+
   // Calculados
   const editingBlock = editingBlockId ? blocks.find(b => b.id === editingBlockId) : null;
   const editingBlockIndex = editingBlock ? blocks.findIndex(b => b.id === editingBlock.id) : -1;
@@ -274,6 +286,17 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     setBlocks(newBlocks);
   };
   
+  // Helpers para aplicar cambios desde los editores internos (moved below so update functions exist)
+  const applyEditorUpdate = useCallback((key: string, value: any) => {
+    if (!editingBlockId) return;
+    updateBlockProperty(editingBlockId, key, value);
+  }, [editingBlockId, updateBlockProperty]);
+
+  const replaceEditorData = useCallback((newData: BlockData) => {
+    if (!editingBlockId) return;
+    updateBlockData(editingBlockId, newData);
+  }, [editingBlockId, updateBlockData]);
+
   // Efecto para scroll y resalte
   useEffect(() => {
     if (newBlockId && blockRefs.current[newBlockId]) {
@@ -292,6 +315,14 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
 
   // Renderizado
   if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
+
+  // Obtener el editor dinámico para el bloque en edición
+  const activeBlock = editingBlock;
+  const ActiveBlockConfig = activeBlock ? BLOCKS[activeBlock.type] : null;
+  const ActiveEditor = ActiveBlockConfig?.editor as any | undefined;
+  const ActiveStyleEditor = ActiveBlockConfig?.styleEditor as any | undefined;
+  // Safely pick the icon component to avoid optional-chaining directly in JSX
+  const ActiveIcon = ActiveBlockConfig?.icon as any | undefined;
 
   return (
     <PreviewModeContext.Provider value={{ mode: previewMode, isMobile: previewMode === 'mobile', isTablet: previewMode === 'tablet', isDesktop: previewMode === 'desktop' }}>
@@ -430,6 +461,84 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
               </button>
           </div>
         )}
+
+        {/* Editor lateral / modal para editar bloque seleccionado */}
+        {activeBlock && (
+          <>
+            {/* Desktop: right drawer */}
+            <div className="hidden md:block">
+              <aside className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-96 bg-white border-l border-slate-200 shadow-lg z-50 p-4 overflow-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-md flex items-center justify-center ${ActiveBlockConfig?.theme.bg}`}>
+                      {ActiveIcon && <ActiveIcon className={`w-6 h-6 ${ActiveBlockConfig?.theme.icon}`} />}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Editar {ActiveBlockConfig?.name}</h3>
+                      <p className="text-xs text-slate-500">Bloque #{activeBlock.id}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button ref={editorFirstFocusRef} onClick={() => { setEditingBlockId(null); }} className="text-slate-500 hover:text-slate-800">Cerrar</button>
+                  </div>
+                </div>
+                
+                <div className="mb-4 border-b pb-2">
+                  <nav className="flex gap-2">
+                    <button onClick={() => setEditorTab('content')} className={cn('px-3 py-1 rounded-md text-sm', editorTab === 'content' ? 'bg-slate-100 font-semibold' : 'text-slate-600')}>Contenido</button>
+                    <button onClick={() => setEditorTab('style')} className={cn('px-3 py-1 rounded-md text-sm', editorTab === 'style' ? 'bg-slate-100 font-semibold' : 'text-slate-600')}>Estilo</button>
+                  </nav>
+                </div>
+
+                <div>
+                  {editorTab === 'content' && ActiveEditor && (
+                    <ActiveEditor data={activeBlock.data as any} updateData={(k: any, v: any) => applyEditorUpdate(k as string, v)} />
+                  )}
+
+                  {editorTab === 'style' && ActiveStyleEditor && (
+                    <ActiveStyleEditor data={activeBlock.data as any} updateData={(k: any, v: any) => applyEditorUpdate(k as string, v)} />
+                  )}
+                </div>
+              </aside>
+            </div>
+
+            {/* Mobile: full screen modal when editing on small screens */}
+            <Transition show={!!activeBlock} as={Fragment}>
+              <div className="md:hidden">
+                <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+                  <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setEditingBlockId(null)} />
+                </Transition.Child>
+
+                <Transition.Child as={Fragment} enter="transform transition ease-in-out duration-200" enterFrom="translate-y-full" enterTo="translate-y-0" leave="transform transition ease-in-out duration-150" leaveFrom="translate-y-0" leaveTo="translate-y-full">
+                  <div className="fixed inset-x-0 bottom-0 z-50 h-[80vh] bg-white rounded-t-xl shadow-xl p-4 overflow-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold">Editar {ActiveBlockConfig?.name}</h3>
+                      <button onClick={() => setEditingBlockId(null)} className="text-slate-500">Cerrar</button>
+                    </div>
+
+                    <div className="mb-4 border-b pb-2">
+                      <nav className="flex gap-2">
+                        <button onClick={() => setEditorTab('content')} className={cn('px-3 py-1 rounded-md text-sm', editorTab === 'content' ? 'bg-slate-100 font-semibold' : 'text-slate-600')}>Contenido</button>
+                        <button onClick={() => setEditorTab('style')} className={cn('px-3 py-1 rounded-md text-sm', editorTab === 'style' ? 'bg-slate-100 font-semibold' : 'text-slate-600')}>Estilo</button>
+                      </nav>
+                    </div>
+
+                    <div>
+                      {editorTab === 'content' && ActiveEditor && (
+                        <ActiveEditor data={activeBlock.data as any} updateData={(k: any, v: any) => applyEditorUpdate(k as string, v)} />
+                      )}
+
+                      {editorTab === 'style' && ActiveStyleEditor && (
+                        <ActiveStyleEditor data={activeBlock.data as any} updateData={(k: any, v: any) => applyEditorUpdate(k as string, v)} />
+                      )}
+                    </div>
+                  </div>
+                </Transition.Child>
+              </div>
+            </Transition>
+          </>
+        )}
+
       </div>
       </>
     </PreviewModeContext.Provider>
