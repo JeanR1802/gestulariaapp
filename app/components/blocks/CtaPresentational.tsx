@@ -1,8 +1,9 @@
 import React from 'react';
 import Image from 'next/image';
 import type { BlockComponentProps } from '../editor/blocks/index';
+import type { CtaData } from '../editor/blocks/CtaBlock';
 
-const CtaPresentational: React.FC<BlockComponentProps<any>> = ({ data }) => {
+const CtaPresentational: React.FC<BlockComponentProps<CtaData>> = ({ data }) => {
   const buttonClasses = `inline-block px-6 py-2.5 rounded-md text-base font-semibold transition-transform hover:scale-105 ${data.buttonBgColor || 'bg-blue-600'} ${data.buttonTextColor || 'text-white'}`;
   if (data.variant === 'split') {
     return (
