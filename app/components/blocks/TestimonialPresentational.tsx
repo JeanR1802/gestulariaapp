@@ -1,15 +1,16 @@
 import React from 'react';
-import type { BlockComponentProps, BlockData } from '../editor/blocks/index';
+import type { BlockComponentProps } from '../editor/blocks/index';
+import type { TestimonialData } from '../editor/blocks/TestimonialBlock';
 
-const TestimonialPresentational: React.FC<BlockComponentProps<BlockData>> = ({ data }) => {
-  const testimonials = (data as any).testimonials || [];
-  if ((data as any).variant === 'grid') {
+const TestimonialPresentational: React.FC<BlockComponentProps<TestimonialData>> = ({ data }) => {
+  const testimonials = data.testimonials || [];
+  if (data.variant === 'grid') {
     return (
       <div className="bg-white py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          {(data as any).title ? <h2 className="text-3xl font-bold text-center mb-12 text-slate-800">{(data as any).title}</h2> : null}
+          {data.title ? <h2 className="text-3xl font-bold text-center mb-12 text-slate-800">{data.title}</h2> : null}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonials.map((t: any, i: number) => (
+            {testimonials.map((t, i: number) => (
               <figure key={i} className="bg-slate-50 p-8 rounded-lg">
                 <blockquote className="text-slate-700"><p>“{t.quote}”</p></blockquote>
                 <figcaption className="flex items-center gap-4 mt-6">

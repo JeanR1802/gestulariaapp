@@ -4,14 +4,19 @@ const buildTail = (initScript) => `${initScript}</body></html>`;
 
 let canUseReactServer = false;
 let React, ReactDOMServer, BlockRenderer;
-try {
-  React = require('react');
-  ReactDOMServer = require('react-dom/server');
-  BlockRenderer = require('../components/editor/BlockRenderer').default;
-  canUseReactServer = !!React && !!ReactDOMServer && !!BlockRenderer;
-} catch (e) {
-  canUseReactServer = false;
-}
+
+// Dynamic imports for server-side rendering  
+const initReactComponents = async () => {
+  try {
+    React = (await import('react')).default;
+    ReactDOMServer = (await import('react-dom/server')).default;
+    const BlockRendererModule = await import('../components/editor/BlockRenderer');
+    BlockRenderer = BlockRendererModule.default;
+    canUseReactServer = !!React && !!ReactDOMServer && !!BlockRenderer;
+  } catch {
+    canUseReactServer = false;
+  }
+};
 
 function legacyRender(blocks) {
   // --- Utilidades para colores personalizados ---
@@ -53,7 +58,6 @@ function legacyRender(blocks) {
         const logo = getClassOrStyle(data.logoColor, 'text-slate-800', 'color');
         const link = getClassOrStyle(data.linkColor, 'text-slate-600', 'color');
         const buttonBg = getClassOrStyle(data.buttonBgColor, 'bg-blue-600', 'background-color');
-        const buttonText = getClassOrStyle(data.buttonTextColor, 'text-white', 'color');
         const menuMaxHeight = 'max-h-[70vh] overflow-y-auto';
         const menuInlineStyle = 'max-height:70vh; overflow-y:auto;';
 
@@ -223,7 +227,7 @@ function legacyRender(blocks) {
                   menu.style.right = menu.style.right || '0';
                   menu.style.zIndex = menu.style.zIndex || '50';
                 }
-              } catch (e) { /* noop */ }
+              } catch { /* noop */ }
 
               // Create or reuse overlay backdrop
               var overlay = document.getElementById('${overlayId}');
@@ -701,10 +705,15 @@ function legacyRender(blocks) {
   }).join('');
 }
 
-exports.renderBlocksToHTML = function renderBlocksToHTML(blocks, opts = {}) {
+exports.renderBlocksToHTML = async function renderBlocksToHTML(blocks, opts = {}) {
   const envBase = (process.env.NEXT_PUBLIC_BASE_PATH || '').replace(/\/$/, '') || '';
   const defaultCss = envBase ? `${envBase}/_next/static/css/tailwind.css` : '/_next/static/css/tailwind.css';
   const cssUrl = opts.cssUrl || defaultCss;
+
+  // Initialize React components if not already done
+  if (!canUseReactServer) {
+    await initReactComponents();
+  }
 
   // minimalInitScript fallback (used to initialize after render)
   function minimalInitScript(){

@@ -1,7 +1,8 @@
 import React from 'react';
 import type { BlockComponentProps } from '../editor/blocks/index';
+import type { TeamData } from '../editor/blocks/TeamBlock';
 
-const TeamPresentational: React.FC<BlockComponentProps<any>> = ({ data }) => {
+const TeamPresentational: React.FC<BlockComponentProps<TeamData>> = ({ data }) => {
   const members = data.members || [];
   const titleHtml = <h2 className={`text-3xl font-bold text-center ${data.titleColor || 'text-slate-800'}`}>{data.title}</h2>;
   const subtitleHtml = <p className={`text-lg text-center mt-2 mb-12 max-w-2xl mx-auto ${data.subtitleColor || 'text-slate-600'}`}>{data.subtitle}</p>;
@@ -13,7 +14,7 @@ const TeamPresentational: React.FC<BlockComponentProps<any>> = ({ data }) => {
           {titleHtml}
           {subtitleHtml}
           <div className="space-y-8">
-            {members.map((member: any, i: number) => (
+            {members.map((member, i: number) => (
               <div className="flex items-center gap-6" key={i}>
                 <img className="w-20 h-20 rounded-full object-cover shadow-sm" src={member.imageUrl || 'https://placehold.co/100x100'} alt={member.name} />
                 <div>
@@ -34,7 +35,7 @@ const TeamPresentational: React.FC<BlockComponentProps<any>> = ({ data }) => {
         {titleHtml}
         {subtitleHtml}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {members.map((member: any, i: number) => (
+          {members.map((member, i: number) => (
             <div key={i}>
               <img className="w-32 h-32 rounded-full object-cover mx-auto mb-4 shadow-md" src={member.imageUrl || 'https://placehold.co/200x200'} alt={member.name} />
               <h3 className={`font-semibold text-lg ${data.nameColor || 'text-slate-900'}`}>{member.name}</h3>
