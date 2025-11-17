@@ -19,21 +19,30 @@ import {
 
 // Importaciones de bloques y sus tipos de datos
 import { HeaderBlock, HeaderContentEditor, HeaderStyleEditor, HeaderData } from './HeaderBlock';
+import HeaderPresentational from '../../blocks/HeaderPresentational';
 import { HeroBlock, HeroContentEditor, HeroStyleEditor, HeroData } from './HeroBlock';
+import HeroPresentational from '../../blocks/HeroPresentational';
 import { TextBlock, TextContentEditor, TextStyleEditor, TextData } from './TextBlock';
+import TextPresentational from '../../blocks/TextPresentational';
 import { ImageBlock, ImageContentEditor, ImageStyleEditor, ImageData } from './ImageBlock';
 import { CardsBlock, CardsContentEditor, CardsStyleEditor, CardsData } from './CardsBlock';
+import CardsPresentational from '../../blocks/CardsPresentational';
 import { CtaBlock, CtaContentEditor, CtaStyleEditor, CtaData } from './CtaBlock';
 import { PricingBlock, PricingContentEditor, PricingStyleEditor, PricingData } from './PricingBlock';
 import { FooterBlock, FooterContentEditor, FooterStyleEditor, FooterData } from './FooterBlock';
+import FooterPresentational from '../../blocks/FooterPresentational';
 import { TestimonialBlock, TestimonialContentEditor, TestimonialStyleEditor, TestimonialData } from './TestimonialBlock';
 import { FaqBlock, FaqContentEditor, FaqStyleEditor, FaqData } from './FaqBlock';
 import { TeamBlock, TeamContentEditor, TeamStyleEditor, TeamData } from './TeamBlock';
 import { CatalogBlock, CatalogContentEditor, CatalogStyleEditor, CatalogData } from './CatalogBlock';
+import CatalogPresentational from '../../blocks/CatalogPresentational';
 import { FeaturedProductBlock, FeaturedProductContentEditor, FeaturedProductStyleEditor, FeaturedProductData } from './FeaturedProductBlock';
 import { StackBlock, StackContentEditor, StackStyleEditor, StackData } from './StackBlock';
 import { BannerBlock, BannerData, BannerContentEditor, BannerStyleEditor } from './BannerBlock';
 import { GalleryBlock, GalleryContentEditor, GalleryStyleEditor, GalleryData } from './GalleryBlock';
+
+// Presentational components (shared renderer for live site and editor preview)
+import * as Presentational from '../../blocks/TestImportIndex';
 
 // Importaciones de todas las vistas previas de variantes
 import { HeaderVariantDefault, HeaderVariantCentered, HeaderVariantButtonPreview, HeaderVariantSticky } from './Header/HeaderPreviews';
@@ -114,7 +123,7 @@ export const BLOCKS: BlocksConfig = {
     icon: QueueListIcon,
     description: 'Barra de navegación principal.',
     category: 'Estructura',
-    renderer: HeaderBlock,
+    renderer: HeaderPresentational,
     editor: HeaderContentEditor,
     styleEditor: HeaderStyleEditor,
     theme: { bg: 'bg-sky-50', icon: 'text-sky-600' },
@@ -130,7 +139,7 @@ export const BLOCKS: BlocksConfig = {
     icon: ViewfinderCircleIcon,
     description: 'Sección principal llamativa.',
     category: 'Principal',
-    renderer: HeroBlock,
+    renderer: HeroPresentational,
     editor: HeroContentEditor,
     styleEditor: HeroStyleEditor,
     theme: { bg: 'bg-indigo-50', icon: 'text-indigo-600' },
@@ -145,7 +154,7 @@ export const BLOCKS: BlocksConfig = {
     icon: StarIcon,
     description: 'Destaca un producto con una sección especial.',
     category: 'Principal',
-    renderer: FeaturedProductBlock,
+    renderer: Presentational.FeaturedProductPresentational,
     editor: FeaturedProductContentEditor,
     styleEditor: FeaturedProductStyleEditor,
     theme: { bg: 'bg-amber-50', icon: 'text-amber-600' },
@@ -159,7 +168,7 @@ export const BLOCKS: BlocksConfig = {
     icon: ShoppingBagIcon,
     description: 'Muestra una cuadrícula de productos.',
     category: 'Comercio',
-    renderer: CatalogBlock,
+    renderer: CatalogPresentational,
     editor: CatalogContentEditor,
     styleEditor: CatalogStyleEditor,
     theme: { bg: 'bg-green-50', icon: 'text-green-600' },
@@ -174,7 +183,7 @@ export const BLOCKS: BlocksConfig = {
     icon: UserGroupIcon,
     description: 'Presenta a los miembros de tu equipo.',
     category: 'Interacción',
-    renderer: TeamBlock,
+    renderer: Presentational.TeamPresentational,
     editor: TeamContentEditor,
     styleEditor: TeamStyleEditor,
     theme: { bg: 'bg-pink-50', icon: 'text-pink-600' },
@@ -188,7 +197,7 @@ export const BLOCKS: BlocksConfig = {
     icon: UserCircleIcon,
     description: 'Muestra reseñas de tus clientes.',
     category: 'Interacción',
-    renderer: TestimonialBlock,
+    renderer: Presentational.TestimonialPresentational,
     editor: TestimonialContentEditor,
     styleEditor: TestimonialStyleEditor,
     theme: { bg: 'bg-yellow-50', icon: 'text-yellow-600' },
@@ -203,7 +212,7 @@ export const BLOCKS: BlocksConfig = {
     icon: QuestionMarkCircleIcon,
     description: 'Responde las dudas de tus visitantes.',
     category: 'Interacción',
-    renderer: FaqBlock,
+    renderer: Presentational.FaqPresentational,
     editor: FaqContentEditor,
     styleEditor: FaqStyleEditor,
     theme: { bg: 'bg-teal-50', icon: 'text-teal-600' },
@@ -217,7 +226,7 @@ export const BLOCKS: BlocksConfig = {
     icon: ChatBubbleBottomCenterTextIcon,
     description: 'Párrafo de texto simple.',
     category: 'Contenido',
-    renderer: TextBlock,
+    renderer: TextPresentational,
     editor: TextContentEditor,
     styleEditor: TextStyleEditor,
     theme: { bg: 'bg-gray-50', icon: 'text-gray-600' },
@@ -232,7 +241,7 @@ export const BLOCKS: BlocksConfig = {
     icon: PhotoIcon,
     description: 'Una sola imagen con pie de foto.',
     category: 'Contenido',
-    renderer: ImageBlock,
+    renderer: Presentational.ImagePresentational,
     editor: ImageContentEditor,
     styleEditor: ImageStyleEditor,
     theme: { bg: 'bg-fuchsia-50', icon: 'text-fuchsia-600' },
@@ -247,7 +256,7 @@ export const BLOCKS: BlocksConfig = {
     icon: PhotoIcon,
     description: 'Muestra una colección de imágenes.',
     category: 'Contenido',
-    renderer: GalleryBlock,
+    renderer: Presentational.GalleryPresentational,
     editor: GalleryContentEditor,
     styleEditor: GalleryStyleEditor,
     theme: { bg: 'bg-purple-50', icon: 'text-purple-600' },
@@ -262,7 +271,7 @@ export const BLOCKS: BlocksConfig = {
     icon: RectangleGroupIcon,
     description: 'Grupo de tarjetas de servicio.',
     category: 'Contenido',
-    renderer: CardsBlock,
+    renderer: CardsPresentational,
     editor: CardsContentEditor,
     styleEditor: CardsStyleEditor,
     theme: { bg: 'bg-orange-50', icon: 'text-orange-600' },
@@ -277,7 +286,7 @@ export const BLOCKS: BlocksConfig = {
     icon: MegaphoneIcon,
     description: 'Invita a los usuarios a actuar.',
     category: 'Interacción',
-    renderer: CtaBlock,
+    renderer: Presentational.CtaPresentational,
     editor: CtaContentEditor,
     styleEditor: CtaStyleEditor,
     theme: { bg: 'bg-lime-50', icon: 'text-lime-600' },
@@ -292,7 +301,7 @@ export const BLOCKS: BlocksConfig = {
     icon: CurrencyDollarIcon,
     description: 'Muestra tus planes y precios.',
     category: 'Comercio',
-    renderer: PricingBlock,
+    renderer: Presentational.PricingPresentational,
     editor: PricingContentEditor,
     styleEditor: PricingStyleEditor,
     theme: { bg: 'bg-emerald-50', icon: 'text-emerald-600' },
@@ -376,7 +385,7 @@ export const BLOCKS: BlocksConfig = {
     icon: CodeBracketIcon,
     description: 'Sección final con copyright y enlaces.',
     category: 'Estructura',
-    renderer: FooterBlock,
+    renderer: FooterPresentational,
     editor: FooterContentEditor,
     styleEditor: FooterStyleEditor,
     theme: { bg: 'bg-slate-50', icon: 'text-slate-600' },
@@ -391,7 +400,7 @@ export const BLOCKS: BlocksConfig = {
     icon: RectangleGroupIcon,
     description: 'Agrupa títulos, párrafos, imágenes y botones en un solo bloque apilable y ordenable.',
     category: 'Contenido',
-    renderer: StackBlock,
+    renderer: Presentational.StackPresentational,
     editor: StackContentEditor,
     styleEditor: StackStyleEditor,
     theme: { bg: 'bg-slate-50', icon: 'text-slate-700' },
@@ -413,7 +422,7 @@ export const BLOCKS: BlocksConfig = {
     icon: MegaphoneIcon,
     description: 'Sección destacada con imagen, color y texto.',
     category: 'Interacción',
-    renderer: BannerBlock,
+    renderer: Presentational.BannerPresentational,
     editor: BannerContentEditor,
     styleEditor: BannerStyleEditor,
     theme: { bg: 'bg-blue-50', icon: 'text-blue-600' },

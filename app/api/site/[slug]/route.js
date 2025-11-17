@@ -18,42 +18,22 @@ export async function GET(request, { params }) {
       return new NextResponse(`Sitio en construcción`, { status: 200 });
     }
 
-    let finalContent = '';
     try {
-      // CORRECCIÓN: Aseguramos que se intente parsear el JSON
       const blocks = JSON.parse(page.content);
       if (Array.isArray(blocks)) {
-        finalContent = renderBlocksToHTML(blocks);
-      } else {
-        // Si no es un array, tratamos el contenido como una cadena de texto HTML simple
-        finalContent = page.content;
+        // renderBlocksToHTML now returns a full HTML document
+        const fullHtml = renderBlocksToHTML(blocks, { cssUrl: '/_next/static/css/tailwind.css' });
+        return new NextResponse(fullHtml, {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0' }
+        });
       }
     } catch (e) {
-      // Si el parseo JSON falla, asumimos que el contenido es texto simple
-      finalContent = page.content;
+      // fall through to serve raw page.content below
     }
-
-    const html = `<!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${page.title || tenant.name}</title>
-      <meta name="description" content="${tenant.description || ''}">
-      <script src="https://cdn.tailwindcss.com"></script>
-      ${tenant.config && tenant.config.customCSS ? `<style>${tenant.config.customCSS}</style>` : ''}
-    </head>
-    <body>
-      ${finalContent}
-    </body>
-    </html>`;
-
-    return new NextResponse(html, {
-      headers: { 
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0'
-      }
-    });
+    
+    // Fallback: serve existing page.content embedded in a simple HTML shell
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${page.title || tenant.name}</title><meta name="description" content="${tenant.description || ''}"><script src="https://cdn.tailwindcss.com"></script>${tenant.config && tenant.config.customCSS ? `<style>${tenant.config.customCSS}</style>` : ''}</head><body>${page.content}</body></html>`;
+    return new NextResponse(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   } catch (error) {
     console.error('Site render error:', error);
     return new NextResponse(`Error en el servidor`, { status: 500 });

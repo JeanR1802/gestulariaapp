@@ -1,5 +1,19 @@
-// Archivo: app/lib/render-blocks-to-html.js (ACTUALIZADO CON EL DISEÑO FINAL)
-export function renderBlocksToHTML(blocks) {
+// app/lib/render-blocks-to-html.js
+const buildHead = (cssUrl) => `<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Preview</title><link rel="stylesheet" href="${cssUrl}"/></head><body>`;
+const buildTail = (initScript) => `${initScript}</body></html>`;
+
+let canUseReactServer = false;
+let React, ReactDOMServer, BlockRenderer;
+try {
+  React = require('react');
+  ReactDOMServer = require('react-dom/server');
+  BlockRenderer = require('../components/editor/BlockRenderer').default;
+  canUseReactServer = !!React && !!ReactDOMServer && !!BlockRenderer;
+} catch (e) {
+  canUseReactServer = false;
+}
+
+function legacyRender(blocks) {
   // --- Utilidades para colores personalizados ---
     function getClassOrStyle(color, tailwindDefault, cssProp) {
     if (!color) return { class: tailwindDefault, style: '' };
@@ -686,4 +700,33 @@ export function renderBlocksToHTML(blocks) {
     }
   }).join('');
 }
+
+exports.renderBlocksToHTML = function renderBlocksToHTML(blocks, opts = {}) {
+  const envBase = (process.env.NEXT_PUBLIC_BASE_PATH || '').replace(/\/$/, '') || '';
+  const defaultCss = envBase ? `${envBase}/_next/static/css/tailwind.css` : '/_next/static/css/tailwind.css';
+  const cssUrl = opts.cssUrl || defaultCss;
+
+  // minimalInitScript fallback (used to initialize after render)
+  function minimalInitScript(){
+    return `<script>if(window.blockBehaviors&&window.blockBehaviors.initAll){try{window.blockBehaviors.initAll();}catch(e){} }</script>`;
+  }
+
+  const loaderScript = `<script>/* block-behaviors loader */(function(){function load(){try{var s=document.createElement('script');s.src='${envBase}/block-behaviors.js'.replace('//block-behaviors.js','/block-behaviors.js');s.onload=function(){try{if(window.blockBehaviors && window.blockBehaviors.initAll){window.blockBehaviors.initAll();} }catch(e){} };document.head.appendChild(s);}catch(e){} } if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',load);}else load();})();</script>`;
+  const initScript = loaderScript + minimalInitScript();
+
+  if (canUseReactServer) {
+    try {
+      const BlocksApp = (props) => React.createElement(React.Fragment, null, props.blocks.map((block) => React.createElement(BlockRenderer, { block: block, key: block.id, isEditing: false })));
+      const inner = ReactDOMServer.renderToStaticMarkup(React.createElement(BlocksApp, { blocks }));
+      return buildHead(cssUrl) + inner + buildTail(initScript);
+    } catch (e) {
+      console.error('ReactDOMServer rendering failed, falling back to legacy renderer', e);
+      const inner = legacyRender(blocks);
+      return buildHead(cssUrl) + inner + buildTail(initScript);
+    }
+  }
+
+  const inner = legacyRender(blocks);
+  return buildHead(cssUrl) + inner + buildTail(initScript);
+};
 

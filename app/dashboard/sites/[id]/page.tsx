@@ -22,9 +22,9 @@ function MobileAddComponentPanel({ onClose, onSelectBlock, selectedCategory, set
       if (!acc[category]) {
         acc[category] = [];
       }
-      acc[category].push({ key, ...(blockInfo as any) });
+      acc[category].push({ key, ...(blockInfo as BlockConfig<BlockData>) });
       return acc;
-    }, {} as Record<string, any[]>);
+    }, {} as Record<string, Array<{ key: string } & BlockConfig<BlockData>>>);
     
     const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
 
@@ -148,9 +148,9 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
     if (!acc[category]) {
       acc[category] = [];
     }
-    acc[category].push({ key, ...(blockInfo as any) });
+    acc[category].push({ key, ...(blockInfo as BlockConfig<BlockData>) });
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, Array<{ key: string } & BlockConfig<BlockData>>>);
 
   const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
   
@@ -184,6 +184,19 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   // Calculados
   const editingBlock = editingBlockId ? blocks.find(b => b.id === editingBlockId) : null;
   const editingBlockIndex = editingBlock ? blocks.findIndex(b => b.id === editingBlock.id) : -1;
+
+  // NUEVA LÓGICA: Clase de ancho dinámico para el lienzo que simula el viewport
+  const canvasWidthClass = React.useMemo(() => {
+    switch (previewMode) {
+      case 'mobile':
+        return 'w-full max-w-[375px]';
+      case 'tablet':
+        return 'w-full max-w-[768px]';
+      case 'desktop':
+      default:
+        return 'w-full max-w-4xl';
+    }
+  }, [previewMode]);
 
   // Funciones de notificación y carga/guardado
   const showNotification = useCallback((message: string, type: 'success' | 'error' = 'success') => {
@@ -287,7 +300,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   };
   
   // Helpers para aplicar cambios desde los editores internos (moved below so update functions exist)
-  const applyEditorUpdate = useCallback((key: string, value: any) => {
+  const applyEditorUpdate = useCallback((key: string, value: unknown) => {
     if (!editingBlockId) return;
     updateBlockProperty(editingBlockId, key, value);
   }, [editingBlockId, updateBlockProperty]);
@@ -319,10 +332,10 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
   // Obtener el editor dinámico para el bloque en edición
   const activeBlock = editingBlock;
   const ActiveBlockConfig = activeBlock ? BLOCKS[activeBlock.type] : null;
-  const ActiveEditor = ActiveBlockConfig?.editor as any | undefined;
-  const ActiveStyleEditor = ActiveBlockConfig?.styleEditor as any | undefined;
+  const ActiveEditor = ActiveBlockConfig?.editor as React.FC<{ data: BlockData; updateData: (key: string, value: unknown) => void }> | undefined;
+  const ActiveStyleEditor = ActiveBlockConfig?.styleEditor as React.FC<{ data: BlockData; updateData: (key: string, value: unknown) => void }> | undefined;
   // Safely pick the icon component to avoid optional-chaining directly in JSX
-  const ActiveIcon = ActiveBlockConfig?.icon as any | undefined;
+  const ActiveIcon = ActiveBlockConfig?.icon as React.ElementType | undefined;
 
   return (
     <PreviewModeContext.Provider value={{ mode: previewMode, isMobile: previewMode === 'mobile', isTablet: previewMode === 'tablet', isDesktop: previewMode === 'desktop' }}>
@@ -407,7 +420,7 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
           {/* Lienzo Principal */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-4 md:p-8">
-              <div id="editor-canvas" className="mx-auto w-full max-w-4xl bg-white rounded-2xl shadow-lg p-4 md:p-8 min-h-[60vh] flex flex-col gap-0">
+              <div id="editor-canvas" className={cn("mx-auto bg-white rounded-2xl shadow-lg p-4 md:p-8 min-h-[60vh] flex flex-col gap-0", canvasWidthClass)}>
                 {blocks.map((block, index) => (
                   <BlockRenderer 
                       key={block.id} 
@@ -492,11 +505,11 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
 
                 <div>
                   {editorTab === 'content' && ActiveEditor && (
-                    <ActiveEditor data={activeBlock.data as any} updateData={(k: any, v: any) => applyEditorUpdate(k as string, v)} />
+                    <ActiveEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} />
                   )}
 
                   {editorTab === 'style' && ActiveStyleEditor && (
-                    <ActiveStyleEditor data={activeBlock.data as any} updateData={(k: any, v: any) => applyEditorUpdate(k as string, v)} />
+                    <ActiveStyleEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} />
                   )}
                 </div>
               </aside>
@@ -525,11 +538,11 @@ export default function VisualEditor({ params }: { params: Promise<{ id: string 
 
                     <div>
                       {editorTab === 'content' && ActiveEditor && (
-                        <ActiveEditor data={activeBlock.data as any} updateData={(k: any, v: any) => applyEditorUpdate(k as string, v)} />
+                        <ActiveEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} />
                       )}
 
                       {editorTab === 'style' && ActiveStyleEditor && (
-                        <ActiveStyleEditor data={activeBlock.data as any} updateData={(k: any, v: any) => applyEditorUpdate(k as string, v)} />
+                        <ActiveStyleEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} />
                       )}
                     </div>
                   </div>
