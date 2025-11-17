@@ -1,6 +1,7 @@
 // app/page.tsx
 "use client";
 import React, { useState, useEffect } from "react";
+import Greeting from "@/components/Greeting";
 
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
@@ -59,6 +60,10 @@ export default function HomePage() {
               <div className={`transition-all duration-1000 delay-300 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}>
+                <div className="mb-6">
+                  <Greeting className="text-gray-700 text-lg justify-center" />
+                </div>
+                
                 <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm font-medium text-gray-600 mb-8">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   Nuevo: Módulos de IA disponibles
