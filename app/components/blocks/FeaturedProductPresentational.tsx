@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import type { BlockComponentProps } from '../editor/blocks/index';
 
 const FeaturedProductPresentational: React.FC<BlockComponentProps<any>> = ({ data }) => {
@@ -10,7 +11,7 @@ const FeaturedProductPresentational: React.FC<BlockComponentProps<any>> = ({ dat
   if (data.variant === 'background') {
     return (
       <div className="relative text-white min-h-[500px] flex items-center">
-        <img src={data.imageUrl || 'https://placehold.co/1200x800'} alt={data.title} className="absolute inset-0 w-full h-full object-cover" />
+        <Image src={data.imageUrl || 'https://placehold.co/1200x800'} alt={data.title} className="absolute inset-0 w-full h-full object-cover" fill />
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-lg">
@@ -31,7 +32,7 @@ const FeaturedProductPresentational: React.FC<BlockComponentProps<any>> = ({ dat
   return (
     <div className={`${data.backgroundColor || 'bg-white'} py-20 px-4`}>
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-12">
-        <div className="rounded-lg overflow-hidden bg-slate-100"><img src={data.imageUrl || 'https://placehold.co/600x600'} alt={data.title} className="w-full h-full object-cover aspect-square" /></div>
+        <div className="rounded-lg overflow-hidden bg-slate-100"><Image src={data.imageUrl || 'https://placehold.co/600x600'} alt={data.title} className="w-full h-full object-cover aspect-square" width={600} height={600} /></div>
         <div className="text-left">
           <span className={`text-sm font-bold uppercase tracking-widest ${data.textColor || 'text-blue-600'}`}>{data.tag}</span>
           <h2 className={`font-bold my-4 text-4xl md:text-5xl ${data.textColor || 'text-slate-800'}`}>{data.title}</h2>

@@ -1,6 +1,6 @@
 'use client';
 import React, { forwardRef } from 'react';
-import { BLOCKS, Block, BlockComponentProps, BlockData } from './blocks';
+import { BLOCKS, Block, BlockComponentProps, BlockData, BlockConfig } from './blocks';
 
 export interface EditorBlockRendererProps {
   block: Block;
@@ -28,9 +28,11 @@ export const BlockRenderer = forwardRef<HTMLDivElement, EditorBlockRendererProps
   // Wrap the renderer in a div so the editor can attach refs and highlight styles.
   return (
     <div ref={ref} data-block-id={String(block.id)} className={isHighlighted ? 'ring-2 ring-blue-300 rounded-lg' : undefined}>
-      <Component data={block.data as BlockData} isEditing={isEditing} onUpdate={onUpdate} onDelete={onDelete} onEdit={onEdit} onClose={onClose} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
+      <Component data={block.data as BlockData} isEditing={isEditing} onUpdate={onUpdate} />
     </div>
   );
 });
+
+BlockRenderer.displayName = 'BlockRenderer';
 
 export default BlockRenderer;

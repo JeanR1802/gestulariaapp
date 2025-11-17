@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export interface HeroPresentationalData {
   variant?: 'default' | 'leftImage' | 'darkMinimal';
@@ -32,7 +33,7 @@ export default function HeroPresentational({ data }: { data: HeroPresentationalD
               <a href={data.buttonLink || '#'} className={`inline-block px-6 py-2.5 rounded-md text-base font-semibold ${btnClass} ${data.buttonTextColor || 'text-white'}`}>{data.buttonText}</a>
             </div>
             <div>
-              <img src={data.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'} alt={data.title || 'Imagen'} className="rounded-lg shadow-lg mx-auto" />
+              <Image src={data.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'} alt={data.title || 'Imagen'} className="rounded-lg shadow-lg mx-auto" width={600} height={400} />
             </div>
           </div>
         </section>

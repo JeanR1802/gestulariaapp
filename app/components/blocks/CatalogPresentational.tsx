@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export interface CatalogPresentationalData {
   variant?: 'grid' | 'minimalGrid' | 'carousel';
@@ -28,7 +29,7 @@ export default function CatalogPresentational({ data }: { data: CatalogPresentat
               {(data.products || []).map((p, i) => (
                 <a key={i} className="group">
                   <div className="relative overflow-hidden rounded-lg bg-slate-50 mb-4">
-                    <img src={p.imageUrl || 'https://placehold.co/400x400/e2e8f0/64748b?text=Producto'} alt={p.name} className="w-full aspect-square object-cover" />
+                    <Image src={p.imageUrl || 'https://placehold.co/400x400/e2e8f0/64748b?text=Producto'} alt={p.name} className="w-full aspect-square object-cover" width={400} height={400} />
                   </div>
                   <h3 className="font-semibold text-sm mb-1">{p.name}</h3>
                   <p className="text-sm text-slate-600">{p.price}</p>
@@ -46,7 +47,7 @@ export default function CatalogPresentational({ data }: { data: CatalogPresentat
               {(data.products || []).map((p, i) => (
                 <a key={i} className="group flex-shrink-0 w-64 snap-center">
                   <div className="relative overflow-hidden rounded-xl bg-slate-50 mb-4">
-                    <img src={p.imageUrl || 'https://placehold.co/400x400/e2e8f0/64748b?text=Producto'} alt={p.name} className="w-full aspect-square object-cover" />
+                    <Image src={p.imageUrl || 'https://placehold.co/400x400/e2e8f0/64748b?text=Producto'} alt={p.name} className="w-full aspect-square object-cover" width={400} height={400} />
                   </div>
                   <h3 className="font-semibold text-base">{p.name}</h3>
                   <p className="text-sm text-slate-600">{p.price}</p>
@@ -68,7 +69,7 @@ export default function CatalogPresentational({ data }: { data: CatalogPresentat
               {(data.products || []).map((p, i) => (
                 <div key={i} className="group rounded-xl overflow-hidden shadow-sm border transition-all duration-300 hover:shadow-lg">
                   <div className="relative overflow-hidden bg-slate-50">
-                    <img src={p.imageUrl || 'https://placehold.co/400x300/e2e8f0/64748b?text=Producto'} alt={p.name} className="w-full h-48 object-cover" />
+                    <Image src={p.imageUrl || 'https://placehold.co/400x300/e2e8f0/64748b?text=Producto'} alt={p.name} className="w-full h-48 object-cover" width={400} height={192} />
                   </div>
                   <div className="p-4">
                     <h3 className="font-semibold text-base mb-2">{p.name}</h3>

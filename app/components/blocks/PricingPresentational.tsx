@@ -14,10 +14,10 @@ const PricingPresentational: React.FC<BlockComponentProps<PricingData>> = ({ dat
           {subtitleHtml}
           <div className="grid md:grid-cols-2 gap-8">
             {(data.plans || []).map((plan, i: number) => (
-              <div key={i} className={`p-6 border rounded-lg ${plan.highlighted ? `border-2 ${data.highlightColor || 'border-blue-600'}` : 'border-slate-200'}`}>
+              <div key={i} className={`p-6 border rounded-lg ${plan.featured ? `border-2 ${data.featuredCardColor || 'border-blue-600'}` : 'border-slate-200'}`}>
                 <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
                 <p className="text-4xl font-bold mb-4">${plan.price}<span className="text-base font-normal text-slate-500">{plan.frequency}</span></p>
-                <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
+                <p className="text-slate-500 text-sm mb-4">Plan {plan.name}</p>
                 <a href="#" className="w-full block text-center py-2 rounded-md font-semibold bg-slate-800 text-white hover:bg-slate-700">{plan.buttonText}</a>
               </div>
             ))}

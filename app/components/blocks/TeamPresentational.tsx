@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import type { BlockComponentProps } from '../editor/blocks/index';
 import type { TeamData } from '../editor/blocks/TeamBlock';
 
@@ -16,7 +17,7 @@ const TeamPresentational: React.FC<BlockComponentProps<TeamData>> = ({ data }) =
           <div className="space-y-8">
             {members.map((member, i: number) => (
               <div className="flex items-center gap-6" key={i}>
-                <img className="w-20 h-20 rounded-full object-cover shadow-sm" src={member.imageUrl || 'https://placehold.co/100x100'} alt={member.name} />
+                <Image className="w-20 h-20 rounded-full object-cover shadow-sm" src={member.imageUrl || 'https://placehold.co/100x100'} alt={member.name} width={80} height={80} />
                 <div>
                   <h3 className={`font-semibold text-xl ${data.nameColor || 'text-slate-900'}`}>{member.name}</h3>
                   <p className={`${data.roleColor || 'text-slate-500'}`}>{member.role}</p>
@@ -37,7 +38,7 @@ const TeamPresentational: React.FC<BlockComponentProps<TeamData>> = ({ data }) =
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {members.map((member, i: number) => (
             <div key={i}>
-              <img className="w-32 h-32 rounded-full object-cover mx-auto mb-4 shadow-md" src={member.imageUrl || 'https://placehold.co/200x200'} alt={member.name} />
+              <Image className="w-32 h-32 rounded-full object-cover mx-auto mb-4 shadow-md" src={member.imageUrl || 'https://placehold.co/200x200'} alt={member.name} width={128} height={128} />
               <h3 className={`font-semibold text-lg ${data.nameColor || 'text-slate-900'}`}>{member.name}</h3>
               <p className={`text-sm ${data.roleColor || 'text-slate-500'}`}>{member.role}</p>
             </div>

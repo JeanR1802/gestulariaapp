@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import type { BlockComponentProps } from '../editor/blocks/index';
 
 const CtaPresentational: React.FC<BlockComponentProps<any>> = ({ data }) => {
@@ -13,7 +14,7 @@ const CtaPresentational: React.FC<BlockComponentProps<any>> = ({ data }) => {
             <a href="#" className={buttonClasses}>{data.buttonText}</a>
           </div>
           <div>
-            <img src={data.imageUrl || 'https://placehold.co/600x400'} alt={data.title} className="rounded-lg shadow-lg mx-auto" />
+            <Image src={data.imageUrl || 'https://placehold.co/600x400'} alt={data.title} className="rounded-lg shadow-lg mx-auto" width={600} height={400} />
           </div>
         </div>
       </div>

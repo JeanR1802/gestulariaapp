@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export interface CardsPresentationalData {
   variant?: 'default' | 'list' | 'imageTop';
@@ -22,7 +23,7 @@ export default function CardsPresentational({ data }: { data: CardsPresentationa
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {(data.cards || []).map((c, i) => (
             <div key={i} className={`rounded-xl overflow-hidden shadow-sm border transition-all duration-300 hover:shadow-lg`}> 
-              {c.imageUrl && <img src={c.imageUrl} className="w-full h-48 object-cover" alt={c.title} />}
+              {c.imageUrl && <Image src={c.imageUrl} className="w-full h-48 object-cover" alt={c.title} width={400} height={192} />}
               <div className="p-4">
                 <h3 className={`font-semibold ${data.cardTitleColor || 'text-slate-900'}`}>{c.title}</h3>
                 {c.description && <p className={`mt-2 text-sm ${data.cardDescriptionColor || 'text-slate-600'}`}>{c.description}</p>}

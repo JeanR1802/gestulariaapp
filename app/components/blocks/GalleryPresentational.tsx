@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import type { BlockComponentProps } from '../editor/blocks/index';
 import type { GalleryData } from '../editor/blocks/GalleryBlock';
 
@@ -14,7 +15,7 @@ const GalleryPresentational: React.FC<BlockComponentProps<GalleryData>> = ({ dat
         <div id={id} className={`flex overflow-x-auto snap-x snap-mandatory scroll-smooth ${spacing}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {images.map((img, i: number) => (
             <div key={i} className="snap-center flex-shrink-0 w-2/3 sm:w-1/2 md:w-1/3 lg:w-1/4">
-              <img src={img.url || 'https://placehold.co/400x400'} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" />
+              <Image src={img.url || 'https://placehold.co/400x400'} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" width={400} height={400} />
             </div>
           ))}
         </div>
@@ -28,10 +29,10 @@ const GalleryPresentational: React.FC<BlockComponentProps<GalleryData>> = ({ dat
     return (
       <div className={`grid grid-cols-1 md:grid-cols-3 ${spacing}`}>
         <div className="md:col-span-2">
-          {first && <img src={first.url || 'https://placehold.co/800x800'} alt={first.alt || ''} className="w-full aspect-square object-cover rounded-lg" />}
+          {first && <Image src={first.url || 'https://placehold.co/800x800'} alt={first.alt || ''} className="w-full aspect-square object-cover rounded-lg" width={800} height={800} />}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
-          {rest.map((img, idx: number) => <img key={idx} src={img.url || 'https://placehold.co/400x400'} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" />)}
+          {rest.map((img, idx: number) => <Image key={idx} src={img.url || 'https://placehold.co/400x400'} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" width={400} height={400} />)}
         </div>
       </div>
     );
@@ -40,7 +41,7 @@ const GalleryPresentational: React.FC<BlockComponentProps<GalleryData>> = ({ dat
   return (
     <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${spacing}`}>
       {images.map((img, i: number) => (
-        <img key={i} src={img.url || 'https://placehold.co/400x400'} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" />
+        <Image key={i} src={img.url || 'https://placehold.co/400x400'} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" width={400} height={400} />
       ))}
     </div>
   );
