@@ -7,27 +7,9 @@ import { ColorPalette } from '../controls/ColorPalette';
 import { cn } from '@/lib/utils';
 import { nanoid } from 'nanoid';
 import { TrashIcon, ArrowUpIcon, ArrowDownIcon, Heading, Type, Image, Circle } from 'lucide-react';
-
+import { StackElement, StackElementType } from './CustomStackElements';
 
 // --- 1. INTERFACES DE DATOS ---
-
-// Tipos para los elementos internos del Stack
-export type StackElementType = 'heading' | 'paragraph' | 'image' | 'button' | 'spacer';
-
-// Interfaz para cada elemento individual
-export interface StackElement {
-  id: string;
-  type: StackElementType;
-  data: {
-    content?: string;
-    level?: 'h2' | 'h3' | 'h4';
-    imageUrl?: string;
-    alt?: string;
-    buttonText?: string;
-    buttonLink?: string;
-    height?: number; // en píxeles para el espaciador
-  };
-}
 
 // Interfaz principal para los datos del bloque Stack
 export interface StackData {
@@ -101,6 +83,8 @@ export function StackContentEditor({ data, updateData }: { data: StackData; upda
             case 'spacer':
                 newElement = { id: nanoid(), type, data: { height: 20 }};
                 break;
+            default:
+                newElement = { id: nanoid(), type, data: {} };
         }
         updateElements([...(data.elements || []), newElement]);
     };
@@ -126,34 +110,56 @@ export function StackContentEditor({ data, updateData }: { data: StackData; upda
 
     return (
         <div className="space-y-4">
-            {/* Panel de Elementos */}
-            <div className="border p-3 rounded-lg bg-slate-50 space-y-3">
+            {/* Panel de Elementos (responsive, touch-friendly) */}
+            <div className="border p-3 rounded-lg bg-slate-50 space-y-3 max-h-[50vh] sm:max-h-none overflow-auto">
                 {(data.elements || []).map((element, index) => (
-                    <div key={element.id} className="p-2 border bg-white rounded-md">
-                        <div className="flex justify-between items-center mb-2">
-                             <span className="text-xs font-bold text-slate-500 uppercase">{element.type}</span>
-                            <div className="flex items-center gap-1">
-                                <button onClick={() => moveElement(index, 'up')} disabled={index === 0} className="p-1 disabled:opacity-30"><ArrowUpIcon className="w-4 h-4" /></button>
-                                <button onClick={() => moveElement(index, 'down')} disabled={index === data.elements.length - 1} className="p-1 disabled:opacity-30"><ArrowDownIcon className="w-4 h-4" /></button>
-                                <button onClick={() => removeElement(index)} className="p-1 text-red-500"><TrashIcon className="w-4 h-4" /></button>
+                    <details key={element.id} className="p-2 border bg-white rounded-md" open>
+                        <summary className="flex justify-between items-center cursor-pointer">
+                            <span className="text-xs font-bold text-slate-500 uppercase">{element.type}</span>
+                            <div className="flex items-center gap-2">
+                                <button onClick={(e) => { e.stopPropagation(); moveElement(index, 'up'); }} disabled={index === 0} aria-label="Mover arriba" className="p-2 sm:p-1 rounded-md disabled:opacity-30">
+                                    <ArrowUpIcon className="w-4 h-4" />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); moveElement(index, 'down'); }} disabled={index === (data.elements.length - 1)} aria-label="Mover abajo" className="p-2 sm:p-1 rounded-md disabled:opacity-30">
+                                    <ArrowDownIcon className="w-4 h-4" />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); removeElement(index); }} aria-label="Eliminar" className="p-2 rounded-md text-red-500">
+                                    <TrashIcon className="w-4 h-4" />
+                                </button>
                             </div>
+                        </summary>
+
+                        <div className="mt-2">
+                            {/* Editores específicos */}
+                            {element.type === 'heading' && (
+                                <InputField label="Texto" value={element.data.content || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateElementData(index, 'content', e.target.value)} />
+                            )}
+                            {element.type === 'paragraph' && (
+                                <TextareaField label="Texto" value={element.data.content || ''} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateElementData(index, 'content', e.target.value)} />
+                            )}
+                            {element.type === 'image' && (
+                                <InputField label="URL de Imagen" value={element.data.imageUrl || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateElementData(index, 'imageUrl', e.target.value)} />
+                            )}
+                            {element.type === 'button' && (
+                                <>
+                                    <InputField label="Texto del Botón" value={element.data.buttonText || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateElementData(index, 'buttonText', e.target.value)} />
+                                    <InputField label="Enlace" value={element.data.buttonLink || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateElementData(index, 'buttonLink', e.target.value)} />
+                                </>
+                            )}
+                            {element.type === 'spacer' && (
+                                <InputField label="Altura (px)" value={String(element.data.height || 20)} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateElementData(index, 'height', Number(e.target.value))} />
+                            )}
                         </div>
-                        {/* Editores específicos */}
-                        {element.type === 'heading' && <InputField label="Texto" value={element.data.content || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateElementData(index, 'content', e.target.value)} />}
-                        {element.type === 'paragraph' && <TextareaField label="Texto" value={element.data.content || ''} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateElementData(index, 'content', e.target.value)} />}
-                        {element.type === 'image' && <InputField label="URL de Imagen" value={element.data.imageUrl || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateElementData(index, 'imageUrl', e.target.value)} />}
-                        {element.type === 'button' && <InputField label="Texto del Botón" value={element.data.buttonText || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateElementData(index, 'buttonText', e.target.value)} />}
-                        {element.type === 'spacer' && <InputField label="Altura (px)" value={String(element.data.height) || '20'} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateElementData(index, 'height', Number(e.target.value))} />}
-                    </div>
+                    </details>
                 ))}
             </div>
 
-            {/* Botones para añadir elementos */}
-            <div className="grid grid-cols-3 gap-2">
-                <button onClick={() => addElement('heading')} className="flex items-center justify-center gap-2 p-2 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 text-sm"><Heading className="w-4 h-4" /> Título</button>
-                <button onClick={() => addElement('paragraph')} className="flex items-center justify-center gap-2 p-2 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 text-sm"><Type className="w-4 h-4" /> Párrafo</button>
-                <button onClick={() => addElement('image')} className="flex items-center justify-center gap-2 p-2 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 text-sm"><Image className="w-4 h-4" /> Imagen</button>
-                <button onClick={() => addElement('button')} className="flex items-center justify-center gap-2 p-2 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 text-sm"><Circle className="w-4 h-4" /> Botón</button>
+            {/* Botones para añadir elementos (responsive) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <button onClick={() => addElement('heading')} className="flex items-center justify-center gap-2 p-3 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 text-sm"><Heading className="w-4 h-4" /> Título</button>
+                <button onClick={() => addElement('paragraph')} className="flex items-center justify-center gap-2 p-3 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 text-sm"><Type className="w-4 h-4" /> Párrafo</button>
+                <button onClick={() => addElement('image')} className="flex items-center justify-center gap-2 p-3 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 text-sm"><Image className="w-4 h-4" /> Imagen</button>
+                <button onClick={() => addElement('button')} className="flex items-center justify-center gap-2 p-3 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 text-sm"><Circle className="w-4 h-4" /> Botón</button>
             </div>
         </div>
     );

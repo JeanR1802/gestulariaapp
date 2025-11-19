@@ -16,6 +16,7 @@ import {
   ShoppingBagIcon,
   StarIcon
 } from '@heroicons/react/24/outline';
+import { nanoid } from 'nanoid'; // <-- Asegurar que nanoid está disponible
 
 // Importaciones de bloques y sus tipos de datos
 import { HeaderBlock, HeaderContentEditor, HeaderStyleEditor, HeaderData } from './HeaderBlock';
@@ -40,6 +41,7 @@ import { FeaturedProductBlock, FeaturedProductContentEditor, FeaturedProductStyl
 import { StackBlock, StackContentEditor, StackStyleEditor, StackData } from './StackBlock';
 import { BannerBlock, BannerData, BannerContentEditor, BannerStyleEditor } from './BannerBlock';
 import { GalleryBlock, GalleryContentEditor, GalleryStyleEditor, GalleryData } from './GalleryBlock';
+import { StackElement } from './CustomStackElements'; // <-- NUEVA IMPORTACIÓN
 
 // Presentational components (shared renderer for live site and editor preview)
 import * as Presentational from '../../blocks/TestImportIndex';
@@ -132,6 +134,29 @@ export const BLOCKS: BlocksConfig = {
         { name: 'Centrado', description: 'Logo y enlaces centrados.', preview: HeaderVariantCentered, defaultData: { variant: 'centered', logoText: 'MiLogo', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto', backgroundColor: 'bg-white', logoColor: 'text-slate-800', linkColor: 'text-slate-600', buttonText: '', buttonBgColor: '', buttonTextColor: '' } as HeaderData },
         { name: 'Con Botón', description: 'Ideal para dirigir a una acción clave.', preview: HeaderVariantButtonPreview, defaultData: { variant: 'withButton', logoText: 'MiLogo', link1: 'Producto', link2: 'Precios', buttonText: 'Registrarse', backgroundColor: 'bg-white', logoColor: 'text-slate-800', linkColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as HeaderData },
         { name: 'Sticky', description: 'Barra fija al hacer scroll; fondo semitransparente.', preview: HeaderVariantSticky, defaultData: { variant: 'sticky', logoText: 'MiLogo', link1: 'Inicio', link2: 'Servicios', link3: 'Contacto', buttonText: 'Empezar', backgroundColor: 'bg-white/90', logoColor: 'text-slate-800', linkColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as HeaderData },
+        { 
+            name: 'Personalizado (Avanzado)', 
+            description: 'Define tu propio layout con sub-elementos.', 
+            preview: HeaderVariantDefault, 
+            defaultData: { 
+                variant: 'custom', 
+                logoText: 'MiLogo', 
+                link1: '', 
+                link2: '', 
+                link3: '', 
+                buttonText: '', 
+                backgroundColor: 'bg-white', 
+                logoColor: 'text-slate-800', 
+                linkColor: 'text-slate-600', 
+                buttonBgColor: 'bg-blue-600', 
+                buttonTextColor: 'text-white', 
+                customElements: [
+                    { id: nanoid(), type: 'logo', data: { content: 'MiLogo' } as StackElement['data'] }, 
+                    { id: nanoid(), type: 'link', data: { content: 'Inicio' } as StackElement['data'] }, 
+                    { id: nanoid(), type: 'actions', data: { buttonText: 'Acción', buttonLink: '#' } as StackElement['data'] }
+                ] 
+            } as HeaderData 
+        }, // NUEVA VARIANTE
     ]
   } as BlockConfig<HeaderData>,
   hero: {

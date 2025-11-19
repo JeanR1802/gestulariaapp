@@ -1,6 +1,7 @@
 'use client';
 import React, { forwardRef } from 'react';
 import { BLOCKS, Block, BlockComponentProps, BlockData, BlockConfig } from './blocks';
+import { BlockWrapper } from './blocks/BlockWrapper';
 
 export interface EditorBlockRendererProps {
   block: Block;
@@ -27,9 +28,21 @@ export const BlockRenderer = forwardRef<HTMLDivElement, EditorBlockRendererProps
 
   // Wrap the renderer in a div so the editor can attach refs and highlight styles.
   return (
-    <div ref={ref} data-block-id={String(block.id)} className={isHighlighted ? 'ring-2 ring-blue-300 rounded-lg' : undefined}>
+    <BlockWrapper
+      ref={ref}
+      block={block}
+      isEditing={isEditing}
+      isHighlighted={isHighlighted}
+      isMobileEdit={isMobileEdit}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      onMoveUp={onMoveUp}
+      onMoveDown={onMoveDown}
+      onClose={onClose}
+      onUpdate={onUpdate}
+    >
       <Component data={block.data as BlockData} isEditing={isEditing} onUpdate={onUpdate} />
-    </div>
+    </BlockWrapper>
   );
 });
 

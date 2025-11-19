@@ -34,7 +34,7 @@ const useMediaQuery = (query: string) => {
 // --- Tipos de Props para los componentes internos ---
 interface ToolbarProps {
   onEdit?: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 }
@@ -55,7 +55,7 @@ const DesktopToolbar: React.FC<ToolbarProps> = ({ onEdit, onDelete, onMoveUp, on
     {onMoveUp && <button title="Mover Arriba" onClick={(e) => { e.stopPropagation(); onMoveUp(); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowUpIcon className="w-5 h-5 text-gray-600" /></button>}
     {onMoveDown && <button title="Mover Abajo" onClick={(e) => { e.stopPropagation(); onMoveDown(); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><ArrowDownIcon className="w-5 h-5 text-gray-600" /></button>}
     {onEdit && <button title="Editar" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-100"><PencilIcon className="w-5 h-5 text-blue-600" /></button>}
-    <button title="Eliminar" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-100"><TrashIcon className="w-5 h-5 text-red-500" /></button>
+    {onDelete && <button title="Eliminar" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-100"><TrashIcon className="w-5 h-5 text-red-500" /></button>}
   </div>
 );
 
@@ -92,7 +92,7 @@ const MobileMenu: React.FC<ToolbarProps> = ({ onEdit, onDelete, onMoveUp, onMove
           {onMoveUp && <button onClick={handleAction(onMoveUp)} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"><ArrowUpIcon className="w-4 h-4" /> Mover Arriba</button>}
           {onMoveDown && <button onClick={handleAction(onMoveDown)} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-2"><ArrowDownIcon className="w-4 h-4" /> Mover Abajo</button>}
           <div className="h-px bg-slate-100 my-1"></div>
-          <button onClick={handleAction(onDelete)} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><TrashIcon className="w-4 h-4" /> Eliminar</button>
+          {onDelete && <button onClick={handleAction(onDelete)} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><TrashIcon className="w-4 h-4" /> Eliminar</button>}
         </div>
       )}
     </div>
