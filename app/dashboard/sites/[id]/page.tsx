@@ -268,7 +268,7 @@ function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorProps) {
 
     // Inicializar estructura si está vacía o no existe
     const customElements = React.useMemo(() => {
-        const existing = ((localData as any).customElements || []) as StackElement[];
+        const existing = ((localData as BlockData & { customElements?: StackElement[] }).customElements || []) as StackElement[];
         
         // Si es un header y no tiene elementos, crear estructura base
         if (block.type === 'header' && existing.length === 0) {
@@ -279,7 +279,7 @@ function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorProps) {
     }, [localData, block.type]) as StackElement[];
 
     const setCustomElements = (elements: StackElement[]) => {
-        setLocalData({ ...localData, customElements: elements } as any);
+        setLocalData({ ...localData, customElements: elements } as BlockData & { customElements: StackElement[] });
     };
 
     const addElement = (type: StackElementType) => {
@@ -363,7 +363,7 @@ function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorProps) {
         if (!insertingType) return;
         
         const generateId = () => Date.now().toString() + Math.random().toString(36).substr(2, 9);
-        let elementData: any;
+        let elementData: Record<string, unknown>;
         
         switch(insertingType) {
             case 'logo':
@@ -398,9 +398,7 @@ function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorProps) {
                     type: insertingType,
                     data: { 
                         ...el.data, 
-                        isEmpty: false, 
-                        content: elementData,
-                        ...elementData 
+                        isEmpty: false, ...elementData 
                     } 
                 } as StackElement
                 : el
@@ -532,8 +530,8 @@ function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorProps) {
                                     customElements.length <= 3 ? "grid-cols-3" : customElements.length === 4 ? "grid-cols-4" : "grid-cols-5"
                                 )}>
                                     {customElements.map((element, index) => {
-                                        const isSlot = element.type === 'slot' || (element.data as any).isEmpty;
-                                        const elementData = element.data as any;
+                                        const elementData = element.data as StackElement['data'] & { isEmpty?: boolean; slotType?: string; acceptedTypes?: string[]; placeholder?: string; content?: unknown };
+                                        const isSlot = element.type === 'slot' || elementData.isEmpty;
                                         const isCompatibleSlot = insertingType && (
                                             (elementData.slotType === 'logo' && ['logo', 'image'].includes(insertingType)) ||
                                             (elementData.slotType === 'navigation' && ['link', 'button'].includes(insertingType)) ||
@@ -1257,7 +1255,7 @@ export default function EditorPage() {
   const categoryOrder = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'] as const;
   const categorizedBlocks = React.useMemo(() => {
     return Object.entries(BLOCKS).reduce((acc, [key, blockInfo]) => {
-      const category = (blockInfo as any).category || 'General';
+      const category = (blockInfo as BlockConfig<BlockData> & { category?: string }).category || 'General';
       if (!acc[category]) acc[category] = [];
       acc[category].push({ key, ...(blockInfo as BlockConfig<BlockData>) });
       return acc;
