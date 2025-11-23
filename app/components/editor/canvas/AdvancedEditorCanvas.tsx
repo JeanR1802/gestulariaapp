@@ -34,6 +34,8 @@ export function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorP
     const [rowMinHeight, setRowMinHeight] = useState<number>(60);
     const [headerMode, setHeaderMode] = useState<'fijo' | 'dinamico'>('fijo');
     const [showProperties, setShowProperties] = useState<boolean>(false);
+    const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+    const [pendingMode, setPendingMode] = useState<'fijo' | 'dinamico' | null>(null);
 
     // Usar el hook personalizado para gestionar elementos
     const {
@@ -46,6 +48,7 @@ export function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorP
         updateElement,
         handleFillSlot,
         addElement,
+        clearAllElements,
     } = useEditorElements(block, localData, setLocalData);
 
     // Wrapper para compatibilidad con NormalBlockPreview: inserta en row 0
@@ -71,6 +74,49 @@ export function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorP
     const handleAddElementSelect = (type: StackElementType) => {
         setInsertingType(type);
         setMobilePanelOpen(null);
+    };
+
+    // Handler para cambiar el modo con confirmación
+    const handleModeChange = (newMode: 'fijo' | 'dinamico') => {
+        // Si ya está en ese modo, no hacer nada
+        if (headerMode === newMode) {
+            return;
+        }
+
+        // Si no hay elementos, cambiar directamente
+        if (customElements.length === 0) {
+            setHeaderMode(newMode);
+            // Cerrar panel de propiedades inmediatamente al cambiar
+            setShowProperties(false);
+            return;
+        }
+
+        // Si hay elementos, mostrar confirmación
+        setPendingMode(newMode);
+        setShowConfirmDialog(true);
+    };
+
+    // Confirmar cambio de modo y limpiar elementos
+    const confirmModeChange = () => {
+        if (pendingMode) {
+            // Limpiar todos los elementos
+            if (clearAllElements) {
+                clearAllElements();
+            }
+            // Cambiar el modo
+            setHeaderMode(pendingMode);
+            // Cerrar panel de propiedades al confirmar
+            setShowProperties(false);
+            // Cerrar diálogo
+            setShowConfirmDialog(false);
+            setPendingMode(null);
+        }
+    };
+
+    // Cancelar cambio de modo
+    const cancelModeChange = () => {
+        setShowConfirmDialog(false);
+        setPendingMode(null);
     };
 
     return (
@@ -108,6 +154,11 @@ export function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorP
                 {/* Bandeja de Elementos (Izquierda) - OCULTO EN MOBILE */}
                 <EditorSidebar
                     onAddElementSelect={handleAddElementSelect}
+                    onToggleProperties={() => setShowProperties(!showProperties)}
+                    showProperties={showProperties}
+                    headerMode={headerMode}
+                    onModeChange={(m) => handleModeChange(m)}
+                    onShowElements={() => setShowProperties(false)}
                 />
 
                 {/* Vista Previa (Derecha) - OCUPA TODO EL ANCHO EN MOBILE */}
@@ -116,94 +167,43 @@ export function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorP
                         "max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-6 relative transition-all duration-300",
                         { 'ring-2 ring-green-400 ring-offset-4': insertingType }
                     )}>
-                        {insertingType && (
-                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium z-10">
-                                💡 Haz clic donde quieras insertar: {insertingType}
-                            </div>
-                        )}
+                        {/* Aviso de inserción removido: ahora la bandeja muestra el tipo y el anillo visual indica el modo inserción */}
 
                         {/* EDITOR SIMPLE BASADO EN EL HTML */}
                         {block.type === 'header' ? (
                             <div className="space-y-4">
-                                {/* Pestaña de Propiedades */}
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setShowProperties(!showProperties)}
-                                        className={cn(
-                                            "px-4 py-2 text-sm font-medium rounded-lg transition-all",
-                                            showProperties 
-                                                ? "bg-blue-600 text-white shadow-md" 
-                                                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                        )}
-                                    >
-                                        ⚙️ Propiedades
-                                    </button>
-                                </div>
+                                {/* Editor del Header */}
+                                <SimpleHeaderEditor
+                                    elements={customElements}
+                                    insertingType={insertingType}
+                                    onAddElement={(zone) => {
+                                        // Sólo insertar si hay un tipo seleccionado desde la bandeja
+                                        if (!insertingType) {
+                                            // SimpleHeaderEditor ya mostrará un aviso; evitar doble acción
+                                            return;
+                                        }
+                                        if (addElement) {
+                                            addElement(insertingType, zone, 0);
+                                            // limpiar selección de inserción al finalizar
+                                            setInsertingType && setInsertingType(null);
+                                        }
+                                    }}
+                                    onRemoveElement={removeElement}
+                                    onOpenProperties={() => setShowProperties(true)}
+                                    mode={headerMode}
+                                />
 
-                                {/* Panel de Propiedades (desplegable) */}
-                                {showProperties && (
-                                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <h4 className="text-sm font-semibold text-slate-700 mb-3">Modo de Posicionamiento</h4>
-                                        
-                                        {/* Toggle Fijo/Dinámico */}
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => setHeaderMode('fijo')}
-                                                className={cn(
-                                                    "flex-1 px-4 py-3 rounded-lg font-medium text-sm transition-all",
-                                                    headerMode === 'fijo'
-                                                        ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-300"
-                                                        : "bg-white text-slate-600 border border-slate-300 hover:border-blue-400"
-                                                )}
-                                            >
-                                                <div className="flex flex-col items-center gap-1">
-                                                    <span className="text-lg">🔒</span>
-                                                    <span>Modo Fijo</span>
-                                                    <span className="text-xs opacity-75">Centro inamovible</span>
-                                                </div>
-                                            </button>
-                                            
-                                            <button
-                                                onClick={() => setHeaderMode('dinamico')}
-                                                className={cn(
-                                                    "flex-1 px-4 py-3 rounded-lg font-medium text-sm transition-all",
-                                                    headerMode === 'dinamico'
-                                                        ? "bg-green-600 text-white shadow-md ring-2 ring-green-300"
-                                                        : "bg-white text-slate-600 border border-slate-300 hover:border-green-400"
-                                                )}
-                                            >
-                                                <div className="flex flex-col items-center gap-1">
-                                                    <span className="text-lg">↔️</span>
-                                                    <span>Modo Dinámico</span>
-                                                    <span className="text-xs opacity-75">Empuje bilateral</span>
-                                                </div>
-                                            </button>
-                                        </div>
-
-                                        {/* Descripción del modo activo */}
-                                        <div className="mt-3 p-3 bg-white rounded-md border border-slate-200">
-                                            <p className="text-xs text-slate-600">
-                                                {headerMode === 'fijo' ? (
-                                                    <><strong>Modo Fijo:</strong> El centro siempre permanece en el medio. Los elementos laterales no pueden empujarlo ni tocarlo.</>
-                                                ) : (
-                                                    <><strong>Modo Dinámico:</strong> El centro se mueve si los elementos laterales lo empujan. Permite máxima flexibilidad.</>
-                                                )}
-                                            </p>
+                                {/* Hint de inserción: aparece centrado debajo del header cuando hay un tipo seleccionado */}
+                                {insertingType && (
+                                    <div className="mt-3 flex justify-center">
+                                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium shadow-sm">
+                                            <span>💡</span>
+                                            <span>Haz clic donde quieras insertar: {insertingType}</span>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Editor del Header */}
-                                <SimpleHeaderEditor
-                                    elements={customElements}
-                                    onAddElement={(zone) => {
-                                        if (addElement) {
-                                            addElement('logo', zone, 0);
-                                        }
-                                    }}
-                                    onRemoveElement={removeElement}
-                                    mode={headerMode}
-                                />
+                                {/* Propiedades ahora sólo se muestran en el panel lateral */}
                             </div>
                         ) : (
                             <div className="min-h-[400px] flex items-center justify-center border-2 border-dashed border-slate-300 rounded-lg">
@@ -268,6 +268,94 @@ export function AdvancedEditorCanvas({ block, onClose, onSave }: AdvancedEditorP
             </Transition>
 
             {/* Advanced Test Canvas removed — use HeaderPreview's built-in test mode to avoid duplicate test UIs */}
+
+            {/* Diálogo de Confirmación de Cambio de Modo */}
+            <Transition show={showConfirmDialog} as={Fragment}>
+                <div className="fixed inset-0 z-[200] flex items-center justify-center">
+                    {/* Overlay */}
+                    <Transition.Child
+                        as={Fragment}
+                        enter="ease-out duration-300"
+                        enterFrom="opacity-0"
+                        enterTo="opacity-100"
+                        leave="ease-in duration-200"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                    >
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={cancelModeChange} />
+                    </Transition.Child>
+
+                    {/* Modal */}
+                    <Transition.Child
+                        as={Fragment}
+                        enter="ease-out duration-300"
+                        enterFrom="opacity-0 scale-95"
+                        enterTo="opacity-100 scale-100"
+                        leave="ease-in duration-200"
+                        leaveFrom="opacity-100 scale-100"
+                        leaveTo="opacity-0 scale-95"
+                    >
+                        <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
+                            {/* Icono de advertencia */}
+                            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full">
+                                <span className="text-4xl">⚠️</span>
+                            </div>
+
+                            {/* Título */}
+                            <h3 className="text-xl font-bold text-center text-slate-800 mb-2">
+                                ¿Cambiar modo de posicionamiento?
+                            </h3>
+
+                            {/* Descripción */}
+                            <div className="text-center mb-6 space-y-2">
+                                <p className="text-sm text-slate-600">
+                                    Estás a punto de cambiar de <span className="font-semibold text-slate-800">{headerMode === 'fijo' ? 'Modo Fijo 🔒' : 'Modo Dinámico ↔️'}</span> a <span className="font-semibold text-slate-800">{pendingMode === 'fijo' ? 'Modo Fijo 🔒' : 'Modo Dinámico ↔️'}</span>.
+                                </p>
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-3">
+                                    <p className="text-sm text-red-700 font-medium">
+                                        ⚠️ Esta acción eliminará todos los elementos actuales del header.
+                                    </p>
+                                    <p className="text-xs text-red-600 mt-1">
+                                        Tendrás que empezar de nuevo con la configuración seleccionada.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Info del nuevo modo */}
+                            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-6">
+                                <p className="text-xs text-slate-600">
+                                    {pendingMode === 'fijo' ? (
+                                        <><strong className="text-blue-600">Modo Fijo:</strong> El centro permanecerá siempre centrado. Los elementos laterales no podrán empujarlo.</>
+                                    ) : (
+                                        <><strong className="text-green-600">Modo Dinámico:</strong> El centro se moverá si los elementos laterales lo empujan. Máxima flexibilidad.</>
+                                    )}
+                                </p>
+                            </div>
+
+                            {/* Botones */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={cancelModeChange}
+                                    className="flex-1 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={confirmModeChange}
+                                    className={cn(
+                                        "flex-1 px-4 py-3 text-sm font-bold text-white rounded-lg transition-all shadow-md hover:shadow-lg",
+                                        pendingMode === 'fijo'
+                                            ? "bg-blue-600 hover:bg-blue-700"
+                                            : "bg-green-600 hover:bg-green-700"
+                                    )}
+                                >
+                                    Sí, cambiar y reiniciar
+                                </button>
+                            </div>
+                        </div>
+                    </Transition.Child>
+                </div>
+            </Transition>
         </div>
     );
 }

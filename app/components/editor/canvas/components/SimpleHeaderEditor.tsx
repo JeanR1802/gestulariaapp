@@ -1,20 +1,24 @@
 "use client";
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { StackElement } from '@/app/components/editor/blocks/CustomStackElements';
+import { StackElement, StackElementType } from '@/app/components/editor/blocks/CustomStackElements';
 
 interface SimpleHeaderEditorProps {
     elements: StackElement[];
     onAddElement: (zone: 'left' | 'center' | 'right') => void;
     onRemoveElement: (id: string) => void;
     mode?: 'fijo' | 'dinamico';
+    insertingType?: StackElementType | null;
+    onOpenProperties?: () => void;
 }
 
 export function SimpleHeaderEditor({ 
     elements, 
     onAddElement, 
     onRemoveElement,
-    mode = 'fijo' 
+    mode = 'fijo',
+    insertingType = null,
+    onOpenProperties
 }: SimpleHeaderEditorProps) {
     
     // =========================================
@@ -100,54 +104,72 @@ export function SimpleHeaderEditor({
         }
         
         const W_Total = headerRef.current.clientWidth;
-        let W_Izq = grupoIzqRef.current.offsetWidth;
-        let W_Cen = grupoCenRef.current.offsetWidth;
-        let W_Der = grupoDerRef.current.offsetWidth;
+        const W_Izq_Actual = grupoIzqRef.current.offsetWidth;
+        let W_Cen_Actual = grupoCenRef.current.offsetWidth;
+        const W_Der_Actual = grupoDerRef.current.offsetWidth;
         
-        const W_Nuevo_Total = anchoNuevo + 8;
+        // ⚠️ CORRECCIÓN DEL BUG: Si el centro está vacío, su ancho real debería ser 0
+        // El offsetWidth incluye padding (20px) y el texto placeholder (~69px = 89px total)
+        // Pero para cálculos de inserción, un centro vacío debe contar como 0px
+        if (centerElements.length === 0) {
+            W_Cen_Actual = 0;
+            console.log('🔧 Centro vacío detectado, ajustando ancho a 0px (era ' + grupoCenRef.current.offsetWidth + 'px con padding/placeholder)');
+        }
         
-        if (zona === 'left') W_Izq += W_Nuevo_Total;
-        if (zona === 'center') W_Cen += W_Nuevo_Total;
-        if (zona === 'right') W_Der += W_Nuevo_Total;
+        const W_Nuevo_Total = anchoNuevo + 8; // ancho del elemento + gap
         
-        console.log('🔍 Verificando inserción:', { zona, W_Total, W_Izq, W_Cen, W_Der });
+        // Calcular anchos DESPUÉS de la inserción
+        const W_Izq_Futuro = zona === 'left' ? W_Izq_Actual + W_Nuevo_Total : W_Izq_Actual;
+        const W_Cen_Futuro = zona === 'center' ? W_Cen_Actual + W_Nuevo_Total : W_Cen_Actual;
+        const W_Der_Futuro = zona === 'right' ? W_Der_Actual + W_Nuevo_Total : W_Der_Actual;
+        
+        console.log('🔍 Verificando inserción:', { 
+            zona, 
+            W_Total, 
+            actual: { W_Izq_Actual, W_Cen_Actual, W_Der_Actual },
+            futuro: { W_Izq_Futuro, W_Cen_Futuro, W_Der_Futuro }
+        });
         
         // MODO FIJO
         if (mode === 'fijo') {
-            const Inicio_Centro = (W_Total / 2) - (W_Cen / 2);
-            const Fin_Centro = (W_Total / 2) + (W_Cen / 2);
+            // El centro SIEMPRE está en el medio, basado en su ancho futuro
+            const Inicio_Centro = (W_Total / 2) - (W_Cen_Futuro / 2);
+            const Fin_Centro = (W_Total / 2) + (W_Cen_Futuro / 2);
             
-            // Izquierda no puede tocar inicio centro
-            if (W_Izq + GAP > Inicio_Centro) {
-                console.log('❌ Bloqueado: Izquierda tocaría el centro');
+            console.log('📍 Posición centro (modo fijo):', { Inicio_Centro, Fin_Centro });
+            
+            // Verificar que izquierda no toque el centro
+            const Fin_Izquierda = W_Izq_Futuro;
+            if (Fin_Izquierda + GAP > Inicio_Centro) {
+                console.log('❌ Bloqueado: Izquierda tocaría el centro', { 
+                    Fin_Izquierda, 
+                    necesita_hasta: Inicio_Centro - GAP,
+                    diferencia: (Inicio_Centro - GAP) - Fin_Izquierda
+                });
                 return false;
             }
             
-            // Derecha no puede tocar fin centro
-            if ((W_Total - W_Der - GAP) < Fin_Centro) {
-                console.log('❌ Bloqueado: Derecha tocaría el centro');
+            // Verificar que derecha no toque el centro
+            const Inicio_Derecha = W_Total - W_Der_Futuro;
+            if (Inicio_Derecha - GAP < Fin_Centro) {
+                console.log('❌ Bloqueado: Derecha tocaría el centro', { 
+                    Inicio_Derecha, 
+                    necesita_desde: Fin_Centro + GAP,
+                    diferencia: Inicio_Derecha - (Fin_Centro + GAP)
+                });
                 return false;
             }
             
-            // Si insertamos en centro, verificar que no toque lados
-            if (zona === 'center') {
-                if (Inicio_Centro < W_Izq + GAP) {
-                    console.log('❌ Bloqueado: Centro tocaría izquierda');
-                    return false;
-                }
-                if (Fin_Centro > (W_Total - W_Der - GAP)) {
-                    console.log('❌ Bloqueado: Centro tocaría derecha');
-                    return false;
-                }
-            }
-            
+            console.log('✅ Inserción permitida en modo fijo');
             return true;
         }
         
         // MODO DINÁMICO
         if (mode === 'dinamico') {
-            const Espacio_Ocupado = W_Izq + W_Cen + W_Der + (GAP * 2);
-            return Espacio_Ocupado <= W_Total;
+            const Espacio_Ocupado = W_Izq_Futuro + W_Cen_Futuro + W_Der_Futuro + (GAP * 2);
+            const cabe = Espacio_Ocupado <= W_Total;
+            console.log('🔍 Modo dinámico:', { Espacio_Ocupado, W_Total, cabe });
+            return cabe;
         }
         
         return false;
@@ -171,6 +193,137 @@ export function SimpleHeaderEditor({
         
         // Recalcular layout después de insertar
         setTimeout(() => actualizarLayout(), 50);
+    };
+    
+    // =========================================
+    // DIAGNÓSTICO: Generar reporte JSON
+    // =========================================
+    const generarDiagnostico = () => {
+        if (!headerRef.current || !grupoIzqRef.current || !grupoCenRef.current || !grupoDerRef.current) {
+            alert('⚠️ Referencias no disponibles. Espera un momento e intenta de nuevo.');
+            return;
+        }
+        
+        const W_Total = headerRef.current.clientWidth;
+        const W_Izq_Actual = grupoIzqRef.current.offsetWidth;
+        const W_Cen_DOM = grupoCenRef.current.offsetWidth; // Ancho real del DOM (con padding)
+        let W_Cen_Actual = W_Cen_DOM;
+        const W_Der_Actual = grupoDerRef.current.offsetWidth;
+        
+        // Ajustar ancho del centro si está vacío (mismo ajuste que en puedeInsertar)
+        if (centerElements.length === 0) {
+            W_Cen_Actual = 0;
+        }
+        
+        // Calcular posición del centro
+        const Inicio_Centro = (W_Total / 2) - (W_Cen_Actual / 2);
+        const Fin_Centro = (W_Total / 2) + (W_Cen_Actual / 2);
+        
+        // Calcular espacios libres
+        const Espacio_Libre_Izq = Inicio_Centro - W_Izq_Actual - GAP;
+        const Espacio_Libre_Der = (W_Total - W_Der_Actual) - Fin_Centro - GAP;
+        
+        // Calcular cuántos logos más cabrían
+        const anchoLogo = 148; // 140 + 8 de gap
+        const logosCabenIzq = Math.floor(Espacio_Libre_Izq / anchoLogo);
+        const logosCabenDer = Math.floor(Espacio_Libre_Der / anchoLogo);
+        const logosCabenCen = Math.floor(Math.min(Espacio_Libre_Izq, Espacio_Libre_Der) / anchoLogo);
+        
+        const diagnostico = {
+            timestamp: new Date().toISOString(),
+            modo: mode,
+            dimensiones: {
+                anchoTotalHeader: W_Total,
+                gap: GAP,
+                anchoLogo: anchoLogo
+            },
+            elementos: {
+                izquierda: {
+                    cantidad: leftElements.length,
+                    anchoTotal: W_Izq_Actual,
+                    elementos: leftElements.map(el => el.id)
+                },
+                centro: {
+                    cantidad: centerElements.length,
+                    anchoTotal: W_Cen_Actual,
+                    anchoDOM: W_Cen_DOM,
+                    ajustado: centerElements.length === 0,
+                    nota: centerElements.length === 0 
+                        ? `El ancho DOM era ${W_Cen_DOM}px (padding+placeholder) pero se ajustó a 0px para cálculos`
+                        : 'Ancho real de los elementos',
+                    posicionInicio: Inicio_Centro,
+                    posicionFin: Fin_Centro,
+                    elementos: centerElements.map(el => el.id)
+                },
+                derecha: {
+                    cantidad: rightElements.length,
+                    anchoTotal: W_Der_Actual,
+                    posicionInicio: W_Total - W_Der_Actual,
+                    elementos: rightElements.map(el => el.id)
+                }
+            },
+            espaciosLibres: {
+                izquierda: {
+                    pixeles: Espacio_Libre_Izq,
+                    logosQueCaben: logosCabenIzq,
+                    porcentaje: ((Espacio_Libre_Izq / W_Total) * 100).toFixed(2) + '%'
+                },
+                derecha: {
+                    pixeles: Espacio_Libre_Der,
+                    logosQueCaben: logosCabenDer,
+                    porcentaje: ((Espacio_Libre_Der / W_Total) * 100).toFixed(2) + '%'
+                },
+                centro: {
+                    nota: mode === 'fijo' 
+                        ? 'En modo fijo, el centro acepta elementos si no toca los lados'
+                        : 'En modo dinámico, el centro acepta elementos si hay espacio total',
+                    logosQueCabenAproximado: mode === 'fijo' ? logosCabenCen : '∞ (se empuja)',
+                    espacioMinimoRequerido: anchoLogo
+                }
+            },
+            verificacionModoFijo: mode === 'fijo' ? {
+                izquierdaPuedeCrecer: Espacio_Libre_Izq > 0,
+                derechaPuedeCrecer: Espacio_Libre_Der > 0,
+                centroPuedeCrecer: W_Cen_Actual < W_Total - W_Izq_Actual - W_Der_Actual - (GAP * 2),
+                limiteIzquierda: Inicio_Centro - GAP,
+                limiteDerecha: Fin_Centro + GAP
+            } : null,
+            verificacionModoDinamico: mode === 'dinamico' ? {
+                espacioOcupado: W_Izq_Actual + W_Cen_Actual + W_Der_Actual + (GAP * 2),
+                espacioDisponible: W_Total,
+                espacioLibreTotal: W_Total - (W_Izq_Actual + W_Cen_Actual + W_Der_Actual + (GAP * 2)),
+                logosQueCabenTotal: Math.floor((W_Total - (W_Izq_Actual + W_Cen_Actual + W_Der_Actual + (GAP * 2))) / anchoLogo)
+            } : null,
+            resumen: {
+                totalElementos: elements.length,
+                espacioUsado: W_Izq_Actual + W_Cen_Actual + W_Der_Actual,
+                espacioUsadoPorcentaje: (((W_Izq_Actual + W_Cen_Actual + W_Der_Actual) / W_Total) * 100).toFixed(2) + '%',
+                espacioLibreTotal: mode === 'fijo' 
+                    ? Espacio_Libre_Izq + Espacio_Libre_Der
+                    : W_Total - (W_Izq_Actual + W_Cen_Actual + W_Der_Actual + (GAP * 2))
+            }
+        };
+        
+        // Copiar al clipboard y descargar
+        const json = JSON.stringify(diagnostico, null, 2);
+        navigator.clipboard.writeText(json).then(() => {
+            console.log('📋 Diagnóstico copiado al clipboard:', diagnostico);
+            alert('✅ Diagnóstico copiado al clipboard y mostrado en consola!\n\nRevisa la consola del navegador para ver el reporte completo.');
+        }).catch(() => {
+            console.log('📋 Diagnóstico generado:', diagnostico);
+            alert('📋 Diagnóstico mostrado en consola del navegador.');
+        });
+        
+        // También crear descarga
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `diagnostico-header-${mode}-${new Date().getTime()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     };
     
     // =========================================
@@ -210,17 +363,30 @@ export function SimpleHeaderEditor({
     // =========================================
     return (
         <div className="space-y-4">
-            {/* Badge del Modo Actual */}
+            {/* Badge del Modo Actual (clicable para abrir Propiedades) y Botón de Diagnóstico */}
             <div className="flex items-center justify-between">
-                <div className={cn(
-                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold",
-                    mode === 'fijo' 
-                        ? "bg-blue-100 text-blue-700 border border-blue-300"
-                        : "bg-green-100 text-green-700 border border-green-300"
-                )}>
+                <button
+                    onClick={() => onOpenProperties && onOpenProperties()}
+                    className={cn(
+                        "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold focus:outline-none transition-shadow",
+                        mode === 'fijo'
+                            ? "bg-blue-100 text-blue-700 border border-blue-300 hover:shadow"
+                            : "bg-green-100 text-green-700 border border-green-300 hover:shadow"
+                    )}
+                    title="Abrir Propiedades del Header"
+                >
                     <span>{mode === 'fijo' ? '🔒' : '↔️'}</span>
                     <span>Modo {mode === 'fijo' ? 'Fijo' : 'Dinámico'} Activo</span>
-                </div>
+                </button>
+                
+                <button
+                    onClick={generarDiagnostico}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+                    title="Generar reporte JSON con medidas y espacios"
+                >
+                    <span>📊</span>
+                    <span>Diagnóstico JSON</span>
+                </button>
             </div>
 
             {/* Mensaje del sistema */}
@@ -248,7 +414,23 @@ export function SimpleHeaderEditor({
                         borderRight: '2px solid rgba(37, 99, 235, 0.2)',
                         cursor: 'pointer'
                     }}
-                    onClick={() => intentarInsertar('left')}
+                    onClick={() => {
+                        // UX change: sólo permitir insertar si hay un tipo seleccionado desde la bandeja
+                        if (!insertingType) {
+                            setMessage('⚠️ Selecciona un elemento desde la bandeja antes de insertar.');
+                            setMessageType('error');
+                            setTimeout(() => {
+                                setMessageType('info');
+                                if (mode === 'fijo') {
+                                    setMessage('🔒 Modo Fijo: El centro permanece centrado. Los laterales no pueden tocarlo.');
+                                } else {
+                                    setMessage('↔️ Modo Dinámico: El centro se mueve si los laterales lo empujan.');
+                                }
+                            }, 1600);
+                            return;
+                        }
+                        intentarInsertar('left');
+                    }}
                 >
                     {leftElements.map((el, idx) => (
                         <div 
@@ -281,15 +463,31 @@ export function SimpleHeaderEditor({
                         background: mode === 'dinamico' 
                             ? 'rgba(220, 38, 38, 0.08)' 
                             : 'rgba(220, 38, 38, 0.05)',
-                        border: mode === 'dinamico'
+                        borderLeft: mode === 'dinamico'
                             ? '2px solid rgba(220, 38, 38, 0.4)'
                             : '2px solid rgba(220, 38, 38, 0.2)',
-                        borderTop: 'none',
-                        borderBottom: 'none',
+                        borderRight: mode === 'dinamico'
+                            ? '2px solid rgba(220, 38, 38, 0.4)'
+                            : '2px solid rgba(220, 38, 38, 0.2)',
                         cursor: 'pointer',
                         boxShadow: mode === 'dinamico' ? '0 0 12px rgba(220, 38, 38, 0.15)' : 'none'
                     }}
-                    onClick={() => intentarInsertar('center')}
+                    onClick={() => {
+                        if (!insertingType) {
+                            setMessage('⚠️ Selecciona un elemento desde la bandeja antes de insertar.');
+                            setMessageType('error');
+                            setTimeout(() => {
+                                setMessageType('info');
+                                if (mode === 'fijo') {
+                                    setMessage('🔒 Modo Fijo: El centro permanece centrado. Los laterales no pueden tocarlo.');
+                                } else {
+                                    setMessage('↔️ Modo Dinámico: El centro se mueve si los laterales lo empujan.');
+                                }
+                            }, 1600);
+                            return;
+                        }
+                        intentarInsertar('center');
+                    }}
                 >
                     {centerElements.map((el, idx) => (
                         <div 
@@ -323,7 +521,22 @@ export function SimpleHeaderEditor({
                         borderLeft: '2px solid rgba(22, 163, 74, 0.2)',
                         cursor: 'pointer'
                     }}
-                    onClick={() => intentarInsertar('right')}
+                    onClick={() => {
+                        if (!insertingType) {
+                            setMessage('⚠️ Selecciona un elemento desde la bandeja antes de insertar.');
+                            setMessageType('error');
+                            setTimeout(() => {
+                                setMessageType('info');
+                                if (mode === 'fijo') {
+                                    setMessage('🔒 Modo Fijo: El centro permanece centrado. Los laterales no pueden tocarlo.');
+                                } else {
+                                    setMessage('↔️ Modo Dinámico: El centro se mueve si los laterales lo empujan.');
+                                }
+                            }, 1600);
+                            return;
+                        }
+                        intentarInsertar('right');
+                    }}
                 >
                     {rightElements.map((el, idx) => (
                         <div 

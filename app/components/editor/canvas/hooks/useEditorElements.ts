@@ -317,6 +317,12 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
         setInsertingType(null);
     };
 
+    // Limpiar todos los elementos
+    const clearAllElements = () => {
+        console.log('[useEditorElements] clearAllElements - removing all elements');
+        setCustomElements([]);
+    };
+
     return {
         customElements,
         insertingType,
@@ -327,5 +333,6 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
         moveElement,
         updateElement,
         handleFillSlot,
+        clearAllElements,
     };
 }
