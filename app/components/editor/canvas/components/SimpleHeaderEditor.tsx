@@ -22,7 +22,7 @@ export function SimpleHeaderEditor({
 }: SimpleHeaderEditorProps) {
     
     // =========================================
-    // CONFIGURACIÓN (Del HTML)
+    // CONFIGeURACIeÓN (Del HTML)
     // =========================================
     const GAP = 10;
     const PADDING_CAJA = 20;
