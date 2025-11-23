@@ -15,15 +15,20 @@ export interface StackElement {
     buttonText?: string;
     buttonLink?: string;
     height?: number; // en píxeles para el espaciador
-    
+
     // Propiedades específicas de Header (usadas para tipar los sub-elementos)
     href?: string;
     platform?: string; // Para links o acciones sociales
-    
+
     // Propiedades específicas de slots
     slotType?: string;
     isEmpty?: boolean;
     placeholder?: string;
     acceptedTypes?: StackElementType[]; // Array de tipos que acepta el slot
+
+    // Propiedades de layout
+    zone?: 'left' | 'center' | 'right';
+    // Fila (row) para el layout de headers que soportan múltiples filas
+    row?: number;
   };
 }
