@@ -3,33 +3,53 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  LayoutDashboard, 
-  Globe, 
-  BarChart3, 
-  Settings, 
-  FileText,
-  Users
-} from 'lucide-react';
+  Squares2X2Icon, 
+  GlobeAltIcon, 
+  UsersIcon, 
+  ChartBarIcon,
+  Cog6ToothIcon,
+  ArrowTrendingUpIcon
+} from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { useTheme } from '../contexts/ThemeContext';
+import { colorPalettes } from '../lib/colors';
 
 const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/sites', label: 'Mis Sitios', icon: Globe },
-  { href: '/dashboard/pages', label: 'Páginas', icon: FileText, disabled: true }, // Ejemplo de deshabilitado
-  { href: '/dashboard/analytics', label: 'Estadísticas', icon: BarChart3, disabled: true },
-  { href: '/dashboard/team', label: 'Equipo', icon: Users, disabled: true },
-  { href: '/dashboard/settings', label: 'Configuración', icon: Settings, disabled: true },
+  // Dashboard muestra métricas rápidas — icono cambiado a flecha de tendencias
+  { href: '/dashboard', label: 'Dashboard', icon: ArrowTrendingUpIcon },
+  // Sitios ahora se muestra como Módulos (mantener ruta /dashboard/sites)
+  { href: '/dashboard/sites', label: 'Módulos', icon: Squares2X2Icon },
+  { href: '/dashboard/analytics', label: 'Analíticas', icon: ChartBarIcon, disabled: true },
+  { href: '/dashboard/team', label: 'Equipo', icon: UsersIcon, disabled: true },
+  { href: '/dashboard/settings', label: 'Ajustes', icon: Cog6ToothIcon, disabled: true },
 ];
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const { theme, palette } = useTheme();
+  const c = colorPalettes[palette][theme];
+  const isLight = theme === 'light';
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex-col flex-shrink-0 hidden md:flex">
-      <div className="h-16 flex items-center px-6 border-b border-slate-200">
-        <h2 className="text-xl font-bold text-slate-900">Modublo</h2>
-      </div>
-      <nav className="flex-1 px-4 py-6 space-y-2">
+    <aside 
+      className="w-20 border-r flex flex-col items-center py-6 gap-8 z-20 flex-shrink-0 transition-colors duration-200"
+      style={{ 
+        // Usar el color de acento de la paleta seleccionada
+        backgroundColor: isLight ? c.accent.primary : c.bg.primary,
+        borderRightColor: c.border.secondary
+      }}
+    >
+      {/* Botón al dashboard con logo lgc sin fondo */}
+      <Link 
+        href="/dashboard" 
+        className="w-10 h-10 rounded-xl grid place-items-center hover:scale-110 transition-all overflow-hidden"
+      >
+        <img src="/lgc.png" alt="Logo" className="w-8 h-8 object-contain" />
+      </Link>
+      {/* Logo lgc sin fondo */}
+
+      {/* Navegación con iconos */}
+      <nav className="flex flex-col gap-6 w-full items-center">
         {menuItems.map((item) => {
           const isActive = (item.href === '/dashboard' && pathname === item.href) || 
                            (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -38,23 +58,50 @@ export function DashboardSidebar() {
             <Link
               key={item.href}
               href={item.disabled ? '#' : item.href}
-              className={cn(
-                'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-blue-50 text-blue-600'
-                  : item.disabled
-                  ? 'text-slate-400 cursor-not-allowed'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-              )}
+              title={item.label}
+              className="p-3 rounded-xl cursor-pointer transition-all relative group"
+              style={{
+                backgroundColor: isActive ? `${c.accent.primary}22` : 'transparent',
+                color: isActive ? (isLight ? c.bg.primary : c.accent.primary) : (item.disabled ? c.text.muted : (isLight ? c.bg.primary : c.text.tertiary)),
+                opacity: item.disabled ? 0.4 : 1,
+                cursor: item.disabled ? 'not-allowed' : 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                if (!item.disabled && !isActive) {
+                  e.currentTarget.style.backgroundColor = `${c.accent.primary}0A`;
+                  e.currentTarget.style.color = isLight ? c.bg.primary : c.text.primary;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!item.disabled && !isActive) {
+                   e.currentTarget.style.backgroundColor = 'transparent'
+                   e.currentTarget.style.color = isLight ? c.bg.primary : c.text.tertiary
+                 }
+               }}
             >
-              <item.icon className="w-5 h-5" />
-              <span>{item.label}</span>
-              {item.disabled && <span className="ml-auto text-xs bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">Pronto</span>}
+              <item.icon className="w-6 h-6" />
+              
+              {/* Tooltip al hacer hover */}
+              <span 
+                className="absolute left-full ml-4 px-3 py-2 text-sm rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-xl"
+                style={{ 
+                  backgroundColor: c.bg.secondary,
+                  color: c.text.primary,
+                  borderColor: c.border.primary,
+                  borderWidth: '1px'
+                }}
+              >
+                {item.label}
+                {item.disabled && (
+                  <span className="ml-2 text-[10px]" style={{ color: c.text.muted }}>
+                    (Próximamente)
+                  </span>
+                )}
+              </span>
             </Link>
           );
         })}
       </nav>
-      {/* Puedes agregar un pie de página a la sidebar aquí, como el perfil del usuario */}
     </aside>
   );
 }

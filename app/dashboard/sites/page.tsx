@@ -1,298 +1,479 @@
-'use client'
+// app/dashboard/sites/page.tsx
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { PlusIcon, PencilIcon, ArrowTopRightOnSquareIcon, TrashIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
-import { generateSlug } from '@/lib/utils' // Importamos la utilidad para generar slugs
+import React, { useState, useCallback, useMemo, Fragment, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Transition } from '@headlessui/react';
+import { 
+  GlobeAltIcon, UsersIcon, ClipboardDocumentListIcon, 
+  BanknotesIcon, ChartBarIcon, XMarkIcon, PlusIcon, 
+  Squares2X2Icon, ArrowRightIcon, CheckIcon
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
+import { useTheme } from '@/app/contexts/ThemeContext';
+import { colorPalettes } from '@/app/lib/colors';
 
-interface Tenant {
-  id: string
-  name: string
-  slug: string
-  createdAt: string
-}
+// --- TYPES ---
+type ModuleType = 'sites' | 'crm' | 'projects' | 'sales' | 'analytics';
 
-// --- INICIO DE LA CORRECCIÓN: AÑADIMOS EL MODAL PARA CREAR SITIOS ---
-interface CreateSiteModalProps {
-  onClose: () => void;
-  onSiteCreated: (siteId: string) => void;
-}
-
-function CreateSiteModal({ onClose, onSiteCreated }: CreateSiteModalProps) {
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value;
-    setName(newName);
-    setSlug(generateSlug(newName));
+type ModuleDef = {
+  id: string;
+  type: ModuleType;
+  title: string;
+  description: string;
+  Icon: React.ElementType;
+  theme: {
+    color: string;
+    shadow: string;
+    shapeClass: string;
   };
+  status?: 'Próximamente';
+};
 
-  const handleCreateSite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/tenants/create', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({ name, slug }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        onSiteCreated(data.tenant.id); // Redirigir al nuevo sitio
-      } else {
-        setError(data.error || 'No se pudo crear el sitio.');
-      }
-    } catch (err) {
-      setError('Ocurrió un error de red.');
-    } finally {
-      setLoading(false);
+// --- MODULE DEFINITIONS ---
+const MODULE_DEFINITIONS: Record<ModuleType, Omit<ModuleDef, 'id'>> = {
+  sites: {
+    type: 'sites',
+    title: 'Editor Visual',
+    description: 'Crea y edita tus sitios web visualmente.',
+    Icon: GlobeAltIcon,
+    theme: {
+      color: '#14B8A6',
+      shadow: 'shadow-[0_10px_40px_-10px_rgba(20,184,166,0.18)]',
+      shapeClass: 'geo-editor'
     }
-  };
+  },
+  crm: {
+    type: 'crm',
+    title: 'Base de Datos',
+    description: 'Gestiona clientes y colecciones de contenido.',
+    Icon: UsersIcon,
+    theme: {
+      color: '#FF6B35',
+      shadow: 'shadow-[0_10px_40px_-10px_rgba(255,107,53,0.2)]',
+      shapeClass: 'geo-cms'
+    },
+    status: 'Próximamente'
+  },
+  projects: {
+    type: 'projects',
+    title: 'Proyectos',
+    description: 'Organiza tareas y colabora con tu equipo.',
+    Icon: ClipboardDocumentListIcon,
+    theme: {
+      color: '#E91E63',
+      shadow: 'shadow-[0_10px_40px_-10px_rgba(233,30,99,0.2)]',
+      shapeClass: 'geo-auth'
+    },
+    status: 'Próximamente'
+  },
+  sales: {
+    type: 'sales',
+    title: 'Ventas & API',
+    description: 'Facturación, pasarelas de pago e integraciones.',
+    Icon: BanknotesIcon,
+    theme: {
+      color: '#6C5CE7',
+      shadow: 'shadow-[0_10px_40px_-10px_rgba(108,92,231,0.2)]',
+      shapeClass: 'geo-forms'
+    },
+    status: 'Próximamente'
+  },
+  analytics: {
+    type: 'analytics',
+    title: 'Métricas',
+    description: 'Analiza el rendimiento y SEO de tus sitios.',
+    Icon: ChartBarIcon,
+    theme: {
+      color: '#0984E3',
+      shadow: 'shadow-[0_10px_40px_-10px_rgba(9,132,227,0.2)]',
+      shapeClass: 'geo-settings'
+    },
+    status: 'Próximamente'
+  }
+};
+
+// --- MAIN COMPONENT ---
+export default function DashboardHomePage() {
+  const router = useRouter();
+  const { theme, palette } = useTheme();
+  const c = colorPalettes[palette][theme];
+  const [activeModules, setActiveModules] = useState<ModuleDef[]>([
+    { id: 'initial-sites', ...MODULE_DEFINITIONS.sites }
+  ]);
+  const [isToolboxOpen, setIsToolboxOpen] = useState(false);
+  const [tenant, setTenant] = useState<{ name: string; slug: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Fetch tenant data on component mount
+  useEffect(() => {
+    async function fetchTenant() {
+      try {
+        const token = localStorage.getItem('token'); // Obtener el token de sesión
+        if (!token) {
+          console.error('No se encontró el token de sesión');
+          return;
+        }
+
+        const res = await fetch('/api/tenants', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setTenant(data);
+        } else {
+          console.error('Error fetching tenant:', res.status);
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    }
+
+    fetchTenant();
+  }, []);
+
+  // Handlers optimizados con useCallback
+  const addModule = useCallback((type: ModuleType) => {
+    const def = MODULE_DEFINITIONS[type];
+    setActiveModules(prev => {
+      if (prev.some(m => m.type === type)) return prev;
+      return [...prev, { id: `${type}-${Date.now()}`, ...def }];
+    });
+    setIsToolboxOpen(false);
+  }, []);
+
+  const removeModule = useCallback((id: string) => {
+    setActiveModules(prev => prev.filter(m => m.id !== id));
+  }, []);
+
+  const handleCardClick = useCallback((module: ModuleDef) => {
+    if (!module.status) {
+      // Si es el módulo de sites, ir a la lista de sitios
+      if (module.type === 'sites') {
+        router.push('/dashboard/sites/list');
+      } else {
+        router.push(`/dashboard/${module.type}`);
+      }
+    }
+  }, [router]);
+
+  const handleToolboxToggle = useCallback(() => {
+    setIsToolboxOpen(prev => !prev);
+  }, []);
+
+  // Memoizar lista de módulos disponibles
+  const availableModules = useMemo(() => Object.values(MODULE_DEFINITIONS), []);
+
+  // Guardar cambios de tenant
+  const saveTenant = useCallback(async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/tenants', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tenant)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTenant(data);
+        alert('Cambios guardados');
+      } else {
+        console.error('Error guardando tenant:', res.status);
+      }
+    } catch (error) {
+      console.error('Error en la solicitud:', error);
+    } finally {
+      setSaving(false);
+    }
+  }, [tenant]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
-        <div className="p-6 border-b flex justify-between items-center">
-          <h3 className="text-xl font-semibold text-slate-800">Crear Nuevo Sitio Web</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
+    <div 
+      className="relative min-h-full p-6 sm:p-10 font-sans transition-colors duration-200" 
+      style={{ 
+        position: 'relative',
+        backgroundColor: c.bg.primary,
+        color: c.text.primary
+      }}
+    >
+      {/* --- GRID / EMPTY STATE --- */}
+      {activeModules.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 pb-20">
+          {activeModules.map((module) => (
+            <DashboardCard 
+              key={module.id} 
+              module={module} 
+              onRemove={() => removeModule(module.id)}
+              onClick={() => handleCardClick(module)}
+            />
+          ))}
         </div>
-        <form onSubmit={handleCreateSite}>
-          <div className="p-6 space-y-4">
-            <div>
-              <label htmlFor="siteName" className="block text-sm font-medium text-gray-700">Nombre del Sitio</label>
-              <input type="text" id="siteName" value={name} onChange={handleNameChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Mi increíble negocio"/>
-            </div>
-            <div>
-              <label htmlFor="siteSlug" className="block text-sm font-medium text-gray-700">URL del Sitio</label>
-              <div className="flex items-center mt-1">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">gestularia.com/</span>
-                <input type="text" id="siteSlug" value={slug} onChange={e => setSlug(generateSlug(e.target.value))} className="flex-1 block w-full px-3 py-2 border border-gray-300 rounded-r-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="mi-negocio"/>
-              </div>
-            </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-          </div>
-          <div className="p-6 border-t flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200">Cancelar</button>
-            <button type="submit" disabled={loading || !name || !slug} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
-              {loading ? 'Creando...' : 'Crear Sitio'}
-            </button>
-          </div>
-        </form>
-      </div>
+      ) : (
+        <EmptyState onOpenToolbox={handleToolboxToggle} />
+      )}
+
+      {/* --- TOOLBOX MODAL --- */}
+      <ToolboxModal 
+        isOpen={isToolboxOpen}
+        onClose={() => setIsToolboxOpen(false)}
+        modules={availableModules}
+        activeModules={activeModules}
+        onAddModule={addModule}
+      />
+
+      {/* --- FAB (Floating Action Button) --- */}
+      <button
+        onClick={handleToolboxToggle}
+        className="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 z-40"
+        style={{
+          backgroundColor: c.accent.primary,
+          color: c.bg.primary,
+          boxShadow: `0 8px 32px ${c.accent.glow}`,
+        }}
+        title="Agregar módulo"
+      >
+        <PlusIcon className="w-6 h-6" />
+      </button>
+
     </div>
   );
 }
-// --- FIN DEL MODAL ---
 
-interface DeleteSiteModalProps {
-  tenant: Tenant
-  onClose: () => void
-  onDelete: (id: string) => void
-}
+// --- SUB-COMPONENTS (Memoizados para mejor rendimiento) ---
 
-function DeleteSiteModal({ tenant, onClose, onDelete }: DeleteSiteModalProps) {
+const EmptyState = React.memo(({ onOpenToolbox }: { onOpenToolbox: () => void }) => {
+  const { theme, palette } = useTheme();
+  const c = colorPalettes[palette][theme];
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 w-full max-w-md m-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Eliminar Sitio</h2>
-        <p className="text-gray-600 mb-6">
-          ¿Estás seguro de que quieres eliminar &quot;{tenant.name}&quot;? Esta acción es permanente y no se puede deshacer.
-        </p>
-        <div className="flex gap-4">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 font-semibold transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={() => onDelete(tenant.id)}
-            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-semibold transition-colors"
-          >
-            Eliminar
-          </button>
-        </div>
-      </div>
+    <div className="h-96 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center" style={{ borderColor: c.border.primary, backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', color: c.text.tertiary }}>
+      <Squares2X2Icon className="w-16 h-16 mb-4 opacity-20" />
+      <h3 className="text-lg font-medium mb-2" style={{ color: c.text.secondary }}>Espacio Vacío</h3>
+      <p className="text-sm mb-6">Añade herramientas para empezar a trabajar.</p>
+      <button onClick={onOpenToolbox} className="hover:underline" style={{ color: c.accent.primary }}>
+        Abrir librería de módulos
+      </button>
     </div>
-  )
-}
+  );
+});
+EmptyState.displayName = 'EmptyState';
 
-export default function SitesPage() {
-  const [tenants, setTenants] = useState<Tenant[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showDeleteModal, setShowDeleteModal] = useState<Tenant | null>(null)
-  const [isCreateModalOpen, setCreateModalOpen] = useState(false); // Estado para el nuevo modal
-  const router = useRouter()
-
-  useEffect(() => {
-    const loadTenants = async () => {
-      try {
-        const token = localStorage.getItem('token')
-        const res = await fetch('/api/tenants', {
-          headers: { Authorization: `Bearer ${token ?? ''}` }
-        })
-
-        type TenantsResponse = { tenants: Tenant[] }
-        const data: TenantsResponse = await res.json()
-
-        setTenants(data.tenants || [])
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadTenants()
-  }, [])
-
-  const deleteTenant = async (tenantId: string) => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`/api/tenants/${tenantId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token ?? ''}` }
-      })
-
-      if (res.ok) {
-        setTenants((prev) => prev.filter((t) => t.id !== tenantId))
-        setShowDeleteModal(null)
-      } else {
-        alert('Error al eliminar el sitio')
-      }
-    } catch (err) {
-      console.error(err)
-      alert('Error al eliminar el sitio')
-    }
-  }
-
-  // Función para redirigir al editor después de crear el sitio
-  const handleSiteCreated = (newSiteId: string) => {
-    router.push(`/dashboard/sites/${newSiteId}`);
-  };
-
-  if (loading) {
-    return (
-        <div className="flex items-center justify-center h-96">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-        </div>
-    )
-  }
-
+const ToolboxModal = React.memo(({ 
+  isOpen, 
+  onClose, 
+  modules, 
+  activeModules, 
+  onAddModule 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  modules: Omit<ModuleDef, 'id'>[];
+  activeModules: ModuleDef[];
+  onAddModule: (type: ModuleType) => void;
+}) => {
+  const { theme, palette } = useTheme();
+  const c = colorPalettes[palette][theme];
   return (
-    <>
-      <div className="px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mis Sitios Web</h1>
-            <p className="text-gray-600">Gestiona todos tus sitios desde aquí.</p>
-          </div>
-          {/* --- INICIO DE LA CORRECCIÓN DEL BOTÓN --- */}
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-all shadow-sm flex items-center gap-2"
+    <Transition show={isOpen} as={Fragment}>
+      <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="toolbox-title">
+        {/* Backdrop */}
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="absolute inset-0 backdrop-blur-sm" style={{ backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.4)' }} onClick={onClose} />
+        </Transition.Child>
+
+        {/* Panel */}
+        <div className="fixed inset-y-0 right-0 max-w-full flex">
+          <Transition.Child
+            as={Fragment}
+            enter="transform transition ease-in-out duration-300"
+            enterFrom="translate-x-full"
+            enterTo="translate-x-0"
+            leave="transform transition ease-in-out duration-300"
+            leaveFrom="translate-x-0"
+            leaveTo="translate-x-full"
           >
-            <PlusIcon className="h-5 w-5" />
-            Crear Sitio
-          </button>
-          {/* --- FIN DE LA CORRECCIÓN DEL BOTÓN --- */}
-        </div>
-
-        {tenants.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed rounded-xl bg-gray-50">
-              <GlobeAltIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-lg font-medium text-gray-900">Aún no tienes sitios web</h3>
-              <p className="mt-1 text-sm text-gray-500">Empieza por crear tu primer sitio para mostrarlo al mundo.</p>
-              <div className="mt-6">
-                  <button
-                      onClick={() => setCreateModalOpen(true)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                      <PlusIcon className="h-5 w-5 mr-2" />
-                      Crear mi primer sitio
-                  </button>
+            <div className="w-screen max-w-sm shadow-2xl flex flex-col h-full" style={{ backgroundColor: c.bg.secondary, borderLeft: `1px solid ${c.border.primary}` }}>
+              <div className="p-6 flex justify-between items-center" style={{ borderBottom: `1px solid ${c.border.secondary}` }}>
+                <h2 id="toolbox-title" className="text-lg font-bold" style={{ color: c.text.primary }}>Librería de Módulos</h2>
+                <button 
+                  onClick={onClose} 
+                  className="transition-colors"
+                  style={{ color: c.text.tertiary }}
+                  aria-label="Cerrar"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
               </div>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {tenants.map((tenant) => (
-              <div key={tenant.id} className="bg-white rounded-xl shadow-sm border group transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                <div className="h-32 bg-gray-50 rounded-t-xl flex items-center justify-center border-b">
-                   <GlobeAltIcon className="h-12 w-12 text-gray-300 group-hover:text-blue-500 transition-colors" />
-                </div>
-                <div className="p-5">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 truncate">{tenant.name}</h3>
-                      <p className="text-sm text-gray-500">/{tenant.slug}</p>
-                    </div>
-                     <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                        Activo
-                      </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-4">
-                    Creado: {new Date(tenant.createdAt).toLocaleDateString('es-ES')}
-                  </p>
-                  <div className="flex gap-2">
-                    <Link
-                      href={`/dashboard/sites/${tenant.id}`}
-                      className="flex-1 text-center bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 text-sm font-semibold flex items-center justify-center gap-2"
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                      Editar
-                    </Link>
-                    <button
-                      onClick={() => {
-                        const protocol = window.location.protocol;
-                        const host = window.location.host.includes('localhost')
-                          ? 'localhost:3000'
-                          : 'gestularia.com';
-                        window.open(`${protocol}//${tenant.slug}.${host}`, '_blank');
+              <div className="flex-1 overflow-y-auto p-6 space-y-3">
+                {modules.map((def) => {
+                  const isActive = activeModules.some(m => m.type === def.type);
+                  const isDisabled = isActive || !!def.status;
+                  
+                  return (
+                    <div 
+                      key={def.type} 
+                      className="group flex items-center gap-4 p-4 rounded-xl transition-all"
+                      style={{
+                        backgroundColor: c.bg.tertiary,
+                        borderColor: c.border.primary,
+                        borderWidth: '1px'
                       }}
-                      className="p-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                      title="Ver Sitio en una nueva pestaña"
                     >
-                      <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteModal(tenant)}
-                      className="p-2 text-gray-400 hover:bg-red-100 hover:text-red-600 rounded-md"
-                      title="Eliminar Sitio"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+                      <div 
+                        className="w-10 h-10 rounded-lg flex items-center justify-center" 
+                        style={{ backgroundColor: `${def.theme.color}20`, color: def.theme.color }}
+                      >
+                        <def.Icon className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium" style={{ color: c.text.primary }}>{def.title}</h4>
+                        <p className="text-xs line-clamp-1" style={{ color: c.text.tertiary }}>{def.description}</p>
+                      </div>
+                      <button 
+                        onClick={() => onAddModule(def.type as ModuleType)}
+                        disabled={isDisabled}
+                        className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                        style={{
+                          backgroundColor: isActive 
+                            ? 'rgba(34, 197, 94, 0.2)' 
+                            : def.status 
+                            ? c.bg.primary
+                            : `${c.accent.primary}1A`,
+                          color: isActive 
+                            ? '#22c55e' 
+                            : def.status 
+                            ? c.text.muted
+                            : c.accent.primary,
+                          cursor: isDisabled ? 'not-allowed' : 'pointer'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isDisabled && !isActive) {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = c.accent.primary;
+                            (e.currentTarget as HTMLElement).style.color = theme === 'dark' ? '#0D1222' : '#FFFFFF';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isDisabled && !isActive) {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = `${c.accent.primary}1A`;
+                            (e.currentTarget as HTMLElement).style.color = c.accent.primary;
+                          }
+                        }}
+                        aria-label={isActive ? 'Módulo activo' : def.status ? 'Próximamente' : 'Agregar módulo'}
+                      >
+                        {isActive ? <CheckIcon className="w-4 h-4" /> : <PlusIcon className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          </Transition.Child>
+        </div>
+      </div>
+    </Transition>
+  );
+});
+ToolboxModal.displayName = 'ToolboxModal';
 
-        {showDeleteModal && (
-          <DeleteSiteModal
-            tenant={showDeleteModal}
-            onClose={() => setShowDeleteModal(null)}
-            onDelete={deleteTenant}
-          />
+const DashboardCard = React.memo(({ 
+  module, 
+  onRemove, 
+  onClick 
+}: { 
+  module: ModuleDef; 
+  onRemove: () => void; 
+  onClick: () => void;
+}) => {
+  const { theme, palette } = useTheme();
+  const c = colorPalettes[palette][theme];
+  return (
+    <div
+      onClick={onClick}
+      className={cn("relative rounded-[24px] p-8 min-h-[240px] flex flex-col justify-between overflow-hidden group cursor-pointer transition-all duration-300", module.theme.shadow)}
+      data-module-id={module.id}
+      style={{ backgroundColor: c.bg.secondary, border: `1px solid ${c.border.primary}`, color: c.text.primary }}
+    >
+      {/* Icon */}
+      <div className="absolute top-7 right-7 opacity-80 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+        <module.Icon className="w-8 h-8" style={{ color: module.theme.color }} />
+      </div>
+
+      {/* Remove Button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        className="absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 active:scale-90 touch-manipulation pointer-events-auto"
+        aria-label="Eliminar módulo"
+        style={{ backgroundColor: c.bg.primary, color: c.text.tertiary }}
+      >
+        <XMarkIcon className="w-4 h-4" />
+      </button>
+
+      {/* Content */}
+      <div className="relative z-10 mt-2">
+        <h3 className="text-2xl font-bold mb-2 tracking-tight" style={{ color: c.text.primary }}>{module.title}</h3>
+        <p className="text-sm leading-relaxed opacity-80 max-w-[85%]" style={{ color: c.text.secondary }}>{module.description}</p>
+        {module.status && (
+          <span className="inline-block mt-3 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.03)', color: c.text.tertiary, border: `1px solid ${c.border.primary}` }}>{module.status}</span>
         )}
       </div>
 
-      {/* Renderizar el modal de creación si está abierto */}
-      {isCreateModalOpen && (
-        <CreateSiteModal 
-          onClose={() => setCreateModalOpen(false)} 
-          onSiteCreated={handleSiteCreated} 
-        />
-      )}
-    </>
-  )
-}
+      {/* Arrow */}
+      <div className="relative z-10 mt-4 self-start text-lg transition-transform duration-300 group-hover:translate-x-2" style={{ color: module.theme.color }}>
+        <ArrowRightIcon className="w-6 h-6" />
+      </div>
 
+      {/* Geometric Art */}
+      <GeometricShape shapeClass={module.theme.shapeClass} color={module.theme.color} />
+    </div>
+  );
+});
+DashboardCard.displayName = 'DashboardCard';
+
+// Componente separado para formas geométricas (más limpio)
+const GeometricShape = React.memo(({ shapeClass, color }: { shapeClass: string; color: string }) => (
+  <div className="absolute bottom-[-20px] right-[-20px] w-[150px] h-[150px] z-0 pointer-events-none opacity-20">
+    {shapeClass === 'geo-editor' && (
+      <>
+        <div className="absolute bottom-2 right-10 w-20 h-20 rounded-full bg-white/10 blur-[2px]" />
+        <div className="absolute bottom-12 right-0 w-14 h-14 rounded-full border-4 border-white/20" />
+      </>
+    )}
+    {shapeClass === 'geo-cms' && (
+      <>
+        <div className="absolute bottom-0 right-0 w-14 h-20 rounded-tl-[40px] bg-current" style={{ color }} />
+        <div className="absolute bottom-0 right-16 w-10 h-10 rounded-full bg-current opacity-50" style={{ color }} />
+      </>
+    )}
+    {shapeClass === 'geo-auth' && (
+      <>
+        <div className="absolute bottom-0 right-0 w-20 h-10 rounded-t-[20px] bg-current" style={{ color }} />
+        <div className="absolute bottom-6 right-10 w-10 h-10 rounded-full border-4 border-current opacity-50" style={{ color }} />
+      </>
+    )}
+    {shapeClass === 'geo-forms' && (
+      <>
+        <div className="absolute bottom-6 right-0 w-12 h-12 rounded-full bg-current" style={{ color }} />
+        <div className="absolute bottom-0 right-8 w-14 h-8 rounded-t-[30px] bg-current opacity-50" style={{ color }} />
+      </>
+    )}
+    {shapeClass === 'geo-settings' && (
+      <div 
+        className="absolute bottom-[-5px] right-[-5px] w-0 h-0 border-l-[40px] border-l-transparent border-r-[40px] border-r-transparent border-b-[70px] border-b-current opacity-30 transform rotate-12" 
+        style={{ color }} 
+      />
+    )}
+  </div>
+));
+GeometricShape.displayName = 'GeometricShape';

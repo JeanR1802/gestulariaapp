@@ -1,334 +1,202 @@
 // app/page.tsx
-"use client";
-import React, { useState, useEffect } from "react";
+'use client';
 
-export default function HomePage() {
-  const [scrollY, setScrollY] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
+import React, { useEffect, useRef, useState } from 'react';
+import { EnvelopeIcon, CheckCircleIcon, SparklesIcon, ArrowRightIcon, UserIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
+import { useAuth } from './hooks/useAuth';
+import { useTheme } from './contexts/ThemeContext';
+import { colorPalettes } from './lib/colors';
 
+export default function LandingPage() {
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  const { theme } = useTheme();
+  const c = colorPalettes.teal[theme];
+
+  // Lógica del cursor optimizada
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    
-    // Trigger animations
-    setTimeout(() => setIsVisible(true), 200);
-    
-    return () => window.removeEventListener('scroll', handleScroll);
+    const cursor = cursorRef.current;
+    if (!cursor) return;
+
+    // No activar el cursor personalizado en dispositivos táctiles
+    const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    if (isTouch) {
+      cursor.style.display = 'none';
+      return;
+    }
+
+    const moveCursor = (e: MouseEvent) => {
+      // Usamos translate3d para aceleración por GPU
+      cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+    };
+
+    window.addEventListener('mousemove', moveCursor);
+    return () => window.removeEventListener('mousemove', moveCursor);
   }, []);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setStatus('loading');
+    setTimeout(() => {
+      setStatus('success');
+      setEmail('');
+    }, 1500);
+  };
+
   return (
-    <div className="bg-white text-gray-900 font-sans antialiased">
-      {/* Header */}
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrollY > 20 ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'
-      }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className={`transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-            <h1 className="text-2xl font-bold text-gray-900">Gestularia</h1>
-          </div>
-          
-          <nav className={`hidden md:flex items-center space-x-8 transition-all duration-700 delay-100 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-          }`}>
-            {['Inicio', 'Funciones', 'Precios', 'Contacto'].map((item, i) => (
-              <a key={item} href={i === 0 ? "#" : `#${item.toLowerCase()}`} 
-                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                {item}
-              </a>
+    // Contenedor principal con estilos globales para ocultar el cursor nativo
+    <div className="min-h-screen bg-[#000814] text-white font-sans overflow-hidden flex flex-col relative selection:bg-[#14B8A6] selection:text-[#001A33] cursor-none">
+      
+      {/* --- CURSOR PERSONALIZADO --- */}
+      <div 
+        ref={cursorRef}
+        className="fixed top-0 left-0 w-2.5 h-2.5 bg-white rounded-full pointer-events-none z-[9999] mix-blend-difference will-change-transform -ml-[5px] -mt-[5px]"
+        style={{
+          boxShadow: `
+            0 0 10px rgba(255, 255, 255, 0.8),
+            0 0 30px ${c.accent.primary},
+            0 0 60px ${c.accent.primary}
+          `
+        }}
+      />
+
+      {/* --- FONDO CON DEGRADADO --- */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_#001A33_0%,_#000d1a_60%,_#000000_100%)]"></div>
+
+      {/* --- HEADER --- */}
+      <header className="flex justify-between items-center px-6 py-8 md:px-16 relative z-50">
+        <div className="flex items-center gap-3">
+          {/* Logo: usa el .ico público */}
+          <img src="/lgo.png" alt="Gestularia logo" className="w-6 h-6 object-contain rounded-md" />
+          <span className="font-bold tracking-widest text-sm md:text-base">GESTULARIA</span>
+          <span className="border border-white/20 px-2 py-0.5 text-[10px] rounded text-slate-400 uppercase tracking-wider ml-2">Beta Access</span>
+        </div>
+        
+        <nav className="hidden md:flex items-center gap-8">
+          <ul className="flex gap-8 list-none">
+            {['Módulos', 'Recursos', 'Blog'].map((item) => (
+              <li key={item}>
+                <a href="#" className="text-slate-400 text-sm font-medium hover:text-white transition-colors">{item}</a>
+              </li>
             ))}
-          </nav>
-          
-          <div className={`flex items-center gap-4 transition-all duration-700 delay-200 ${
-            isVisible ? 'opacity-100' : 'opacity-0'
-          }`}>
-            <a href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-              Iniciar sesión
-            </a>
-            <a href="/register" className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-all">
-              Empezar gratis
-            </a>
+          </ul>
+
+          {/* Botón de auth en escritorio (dentro del nav) */}
+          <div className="ml-6 hidden md:block">
+            {loading ? (
+              <button disabled className="px-4 py-2 rounded-md bg-white/5 text-white/60 text-sm">Comprobando...</button>
+            ) : user ? (
+              <button onClick={() => router.push('/dashboard')} className="px-4 py-2 rounded-md bg-[#14B8A6] text-[#001A33] font-semibold hover:bg-[#0F766E] transition">
+                <Squares2X2Icon className="inline-block w-4 h-4 mr-2" /> Dashboard
+              </button>
+            ) : (
+              <button onClick={() => router.push('/login')} className="px-4 py-2 rounded-md bg-transparent border border-white/10 text-slate-200 hover:bg-white/5 transition flex items-center gap-2">
+                <UserIcon className="w-4 h-4" /> Login
+              </button>
+            )}
           </div>
+        </nav>
+
+        {/* Botón de auth móvil: colocado fuera del nav para que sea visible en pantallas pequeñas */}
+        <div className="md:hidden ml-4">
+          {loading ? (
+            <button disabled className="px-3 py-2 rounded-md bg-white/5 text-white/60 text-sm">Comprobando...</button>
+          ) : user ? (
+            <button onClick={() => router.push('/dashboard')} className="px-3 py-2 rounded-md bg-[#14B8A6] text-[#001A33] font-semibold hover:bg-[#0F766E] transition">Dashboard</button>
+          ) : (
+            <button onClick={() => router.push('/login')} className="px-3 py-2 rounded-md bg-transparent border border-white/10 text-slate-200 hover:bg-white/5 transition">Login</button>
+          )}
         </div>
       </header>
 
-      <main>
-        {/* Hero */}
-        <section className="pt-24 pb-16 md:pt-32 md:pb-24">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center max-w-4xl mx-auto">
-              <div className={`transition-all duration-1000 delay-300 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}>
-                <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm font-medium text-gray-600 mb-8">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  Nuevo: Módulos de IA disponibles
+      {/* --- MAIN HERO --- */}
+      <main className="flex-1 flex items-center px-6 md:px-16 relative z-10">
+        <div className="w-full md:w-[55%] relative z-10">
+          <h1 className="text-5xl md:text-7xl font-normal leading-[1.1] mb-6 tracking-tight">
+            <span className="font-light block text-slate-300">Tu negocio,</span>
+            <strong className="font-bold block text-white">Modular</strong>
+            <span className="font-light block text-slate-300">y sin relleno.</span>
+          </h1>
+          <p className="text-slate-400 text-lg leading-relaxed max-w-lg font-light mb-10">
+            La plataforma donde activas solo lo que necesitas. CRM, Proyectos o Ventas. Sin complicaciones, diseñado para crecer contigo.
+          </p>
+
+           {/* Formulario integrado al estilo del ejemplo */}
+           <div className="w-full max-w-md relative z-30">
+            {status === 'success' ? (
+              <div className="p-4 rounded-full bg-[#14B8A6]/10 border border-[#14B8A6]/30 text-[#14B8A6] flex items-center justify-center gap-3 animate-fade-in-up backdrop-blur-md">
+                <CheckCircleIcon className="w-6 h-6" />
+                <span className="font-medium">¡Anotado! Te avisaremos.</span>
+              </div>
+            ) : (
+                <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-[#14B8A6] to-[#0F766E] rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                    <form onSubmit={handleSubmit} className="relative flex items-center p-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-lg transition-all">
+                        <EnvelopeIcon className="h-5 w-5 text-slate-400 absolute left-5 pointer-events-none" />
+                        <input
+                            type="email"
+                            required
+                            className="block w-full pl-12 pr-40 py-4 bg-transparent border-none rounded-full leading-5 text-white placeholder-slate-500 focus:outline-none focus:ring-0 transition-all font-medium cursor-none"
+                            placeholder="tu@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <button
+                            type="submit"
+                            disabled={status === 'loading'}
+                            className="absolute right-1 top-1 bottom-1 px-8 py-2 text-sm font-bold rounded-full text-[#000814] bg-white hover:bg-[#14B8A6] focus:outline-none transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(20,184,166,0.6)] disabled:opacity-70 cursor-none"
+                        >
+                            {status === 'loading' ? '...' : 'ÚNETE'}
+                        </button>
+                    </form>
                 </div>
-                
-                <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6">
-                  Gestiona tu negocio
-                  <br />
-                  <span className="text-blue-600">sin complicaciones</span>
-                </h1>
-                
-                <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto">
-                  La plataforma SaaS modular que crece contigo. Solo paga por lo que necesitas, 
-                  cuando lo necesitas.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <a href="/register" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all hover:scale-105 shadow-lg">
-                    Prueba gratuita de 14 días
-                  </a>
-                  <a href="#demo" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                    </svg>
-                    Ver demo
-                  </a>
-                </div>
-              </div>
-              
-              {/* --- INICIO DE LA SECCIÓN MODIFICADA --- */}
-              {/* Dashboard Preview Modular */}
-              <div className={`mt-16 transition-all duration-1000 delay-700 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10"></div>
-                  <div className="bg-gray-50 rounded-2xl p-6 shadow-2xl border">
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                        <div className="flex items-center gap-3">
-                          <div className="flex gap-2">
-                            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                          </div>
-                          <div className="text-sm font-medium text-gray-600">Tu Dashboard Modular</div>
-                        </div>
-                      </div>
-                      <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                           {[
-                            {
-                              icon: "🌐",
-                              title: "Gestor de Sitios",
-                              desc: "Crea y edita tus páginas."
-                            },
-                            {
-                              icon: "👥",
-                              title: "Clientes (CRM)",
-                              desc: "Gestiona tus contactos."
-                            },
-                            {
-                              icon: "📋",
-                              title: "Proyectos",
-                              desc: "Organiza tus tareas."
-                            },
-                          ].map((module, i) => (
-                            <div key={i} className="bg-gray-50 rounded-lg p-4 text-left">
-                               <div className="text-2xl mb-2">{module.icon}</div>
-                               <h4 className="font-semibold text-gray-800">{module.title}</h4>
-                               <p className="text-sm text-gray-500">{module.desc}</p>
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-center text-gray-500 text-xs mt-6">...y activa más módulos cuando los necesites.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-               {/* --- FIN DE LA SECCIÓN MODIFICADA --- */}
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section className="py-24 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Todo lo que necesitas, nada que no
-              </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Módulos independientes que se integran perfectamente
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: "👥",
-                  title: "CRM Inteligente",
-                  desc: "Gestiona clientes, leads y ventas desde un solo lugar"
-                },
-                {
-                  icon: "📊",
-                  title: "Analytics en Tiempo Real",
-                  desc: "Métricas y reportes que importan para tu negocio"
-                },
-                {
-                  icon: "💰",
-                  title: "Facturación Automática",
-                  desc: "Genera facturas, controla pagos y gestiona finanzas"
-                },
-                {
-                  icon: "📋",
-                  title: "Gestión de Proyectos",
-                  desc: "Organiza tareas, tiempos y recursos eficientemente"
-                },
-                {
-                  icon: "🔒",
-                  title: "Seguridad Bancaria",
-                  desc: "Encriptación de grado militar para tus datos"
-                },
-                {
-                  icon: "🚀",
-                  title: "API Abierta",
-                  desc: "Integra con tus herramientas favoritas fácilmente"
-                }
-              ].map((feature, i) => (
-                <div key={i} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl mb-4">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Social Proof */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-500 mb-8">
-                Más de 2,500 empresas confían en Gestularia
-              </p>
-              <div className="flex items-center justify-center gap-12 opacity-40">
-                {['Empresa A', 'Startup B', 'Corp C', 'Tech D', 'Biz E'].map((company, i) => (
-                  <div key={i} className="text-lg font-bold text-gray-400">{company}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonial */}
-        <section className="py-24 bg-blue-600">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-          <blockquote className="text-3xl font-medium text-white mb-8 leading-relaxed">
-          &quot;Gestularia eliminó el caos de nuestras operaciones. 
-          Ahora nos enfocamos en crecer, no en administrar herramientas.&quot;
-          </blockquote>
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white font-bold">
-                M
-              </div>
-              <div className="text-left text-white">
-                <div className="font-semibold">María Fernández</div>
-                <div className="text-blue-200 text-sm">CEO, TechStart</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing CTA */}
-        <section className="py-24">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Comienza hoy mismo
-            </h2>
-            <p className="text-xl text-gray-600 mb-10">
-              14 días gratis. Sin tarjeta de crédito. Cancela cuando quieras.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <a href="/register" className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-all hover:scale-105">
-                Empezar prueba gratuita
-              </a>
-              <a href="/precios" className="text-gray-600 hover:text-gray-900 font-medium">
-                Ver planes y precios →
-              </a>
-            </div>
-            
-            <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Sin compromisos
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Soporte incluido
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Migración gratuita
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-50 border-t">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Gestularia</h3>
-              <p className="text-gray-600 text-sm">
-                La plataforma SaaS que simplifica la gestión empresarial
-              </p>
-            </div>
-            
-            {[
-              {
-                title: "Producto",
-                links: ["Funciones", "Precios", "Integraciones", "API"]
-              },
-              {
-                title: "Empresa",
-                links: ["Sobre nosotros", "Blog", "Carreras", "Contacto"]
-              },
-              {
-                title: "Soporte",
-                links: ["Ayuda", "Documentación", "Estado", "Comunidad"]
-              }
-            ].map((section, i) => (
-              <div key={i}>
-                <h4 className="font-semibold text-gray-900 mb-4">{section.title}</h4>
-                <ul className="space-y-2">
-                  {section.links.map((link, j) => (
-                    <li key={j}>
-                      <a href="#" className="text-sm text-gray-600 hover:text-gray-900">{link}</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          
-          <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-500">
-              © 2025 Gestularia. Todos los derechos reservados.
-            </p>
-            <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="text-sm text-gray-500 hover:text-gray-900">Privacidad</a>
-              <a href="#" className="text-sm text-gray-500 hover:text-gray-900">Términos</a>
-              <a href="#" className="text-sm text-gray-500 hover:text-gray-900">Cookies</a>
-            </div>
+            )}
           </div>
         </div>
-      </footer>
+
+        {/* --- CAPAS DE BRILLO (GLOWS) ADAPTADAS A GESTULARIA --- */}
+        <div className="absolute top-0 right-0 bottom-0 left-0 overflow-hidden z-0 pointer-events-none">
+             {/* Capa Profunda (Azul Real) */}
+             <div className="absolute top-1/2 -translate-y-1/2 -right-[40%] w-[140vh] h-[140vh] rounded-full blur-[120px] opacity-60" 
+                  style={{ background: 'radial-gradient(circle, rgba(20,184,166,0.4) 0%, transparent 70%)' }}></div>
+             
+             {/* Capa Media (Teal suave) */}
+             <div className="absolute top-1/2 -translate-y-1/2 -right-[20%] w-[100vh] h-[100vh] rounded-full blur-[80px] opacity-80"
+                  style={{ background: 'radial-gradient(circle at center, rgba(45,212,191,0.3) 10%, rgba(15,118,110,0.1) 50%, transparent 80%)' }}></div>
+             
+             {/* Núcleo (Blanco/Teal) */}
+             <div className="absolute top-1/2 -translate-y-1/2 right-[5%] w-[70vh] h-[70vh] rounded-full blur-[60px] opacity-60"
+                  style={{ background: 'radial-gradient(circle at center, rgba(200, 255, 255, 0.5) 0%, rgba(45,212,191,0.2) 40%, transparent 70%)' }}></div>
+         </div>
+        
+        {/* --- VISUALIZACIÓN MODULAR FLOTANTE --- */}
+        <div className="absolute right-[10%] top-1/2 -translate-y-1/2 z-20 hidden md:block">
+            <a href="#" className="group block relative">
+                <div className="absolute inset-0 bg-[#14B8A6] blur-[48px] opacity-20 group-hover:opacity-45 transition-opacity duration-500"></div>
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 text-white px-12 py-5 md:px-16 md:py-6 rounded-full md:rounded-xl font-semibold text-base md:text-xl tracking-wide md:tracking-wider shadow-[0_32px_60px_-20px_rgba(20,184,166,0.18)] transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_40px_80px_-24px_rgba(20,184,166,0.36)] group-hover:bg-white/10 flex items-center gap-4">
+                    <Squares2X2Icon className="w-6 h-6 md:w-7 md:h-7 text-[#14B8A6]" />
+                    <span className="uppercase">Explorar Módulos</span>
+                </div>
+            </a>
+        </div>
+      </main>
+
+      {/* Estilos CSS para forzar cursor none en todo el body si es necesario */}
+      <style jsx global>{`
+        body {
+            cursor: none;
+        }
+        @media (max-width: 900px) {
+            body { cursor: auto; }
+            .cursor-none { cursor: auto; }
+            #cursor-glow { display: none; }
+        }
+      `}</style>
     </div>
   );
 }

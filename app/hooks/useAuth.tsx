@@ -3,26 +3,58 @@
 
 import { useState, useEffect } from 'react';
 
-// Simple hook de ejemplo; adapta según tu autenticación real
+type User = {
+  email: string;
+  key: string;
+} | null;
+
 export function useAuth() {
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      if (token) {
-        setUser({ email: 'user@example.com' });
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    }, 300);
+    const validateAuth = async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        
+        if (!token) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
 
-    return () => clearTimeout(t);
+        // Decodificar el JWT para obtener email y key
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        
+        if (payload && payload.email && payload.key) {
+          setUser({ 
+            email: payload.email,
+            key: payload.key 
+          });
+        } else {
+          // Token inválido
+          localStorage.removeItem('token');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error validando auth:', error);
+        localStorage.removeItem('token');
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    validateAuth();
   }, []);
 
-  return { user, loading };
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    window.location.href = '/login';
+  };
+
+  return { user, loading, logout };
 }
 
 export default useAuth;

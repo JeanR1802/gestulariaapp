@@ -188,14 +188,14 @@ export default function EditorPage() {
         <PreviewModeContext.Provider value={{ mode: previewMode, isMobile: previewMode === 'mobile', isTablet: previewMode === 'tablet', isDesktop: previewMode === 'desktop' }}>
             <>
                 <ToastContainer position="top-right" autoClose={3500} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
-                <div className="flex flex-col h-screen bg-slate-100 font-sans">
-                    <header className="bg-white border-b border-slate-200 z-30 shrink-0">
+                <div className="flex flex-col h-screen bg-slate-50 font-sans">
+                    <header className="bg-white border-b border-teal-100 shadow-sm z-30 shrink-0">
                         <div className="max-w-screen-xl mx-auto px-4 py-3 flex justify-between items-center">
                             <div className="flex items-center gap-4">
-                                <button onClick={() => router.push('/dashboard/sites')} className="text-slate-500 hover:text-slate-800 text-xl">←</button>
+                                <button onClick={() => router.push('/dashboard/sites')} className="text-teal-600 hover:text-teal-700 text-xl font-semibold transition-colors">←</button>
                                 <div>
                                     <h1 className="font-semibold text-slate-800">{tenant?.name}</h1>
-                                    <p className="text-xs text-slate-500">{tenant?.slug}.gestularia.com</p>
+                                    <p className="text-xs text-teal-600">{tenant?.slug}.gestularia.com</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -207,18 +207,18 @@ export default function EditorPage() {
                                             : `https://${tenant?.slug}.gestularia.com`;
                                         window.open(url, '_blank');
                                     }}
-                                    className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200"
+                                    className="px-3 py-1.5 text-sm font-medium text-teal-700 bg-teal-50 rounded-md hover:bg-teal-100 transition-colors"
                                 >
                                     Ir al sitio
                                 </button>
-                                <button onClick={saveTenant} disabled={saving} className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">{saving ? 'Guardando...' : 'Guardar'}</button>
+                                <button onClick={saveTenant} disabled={saving} className="px-4 py-1.5 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:opacity-50 transition-colors shadow-sm">{saving ? 'Guardando...' : 'Guardar'}</button>
                             </div>
                         </div>
                     </header>
 
                     <main className="flex flex-1 overflow-hidden">
-                        <aside className="w-80 bg-white border-r border-slate-200 p-4 flex flex-col hidden md:flex">
-                            <h2 className="font-semibold text-slate-800 px-2 pb-2 flex-shrink-0">Componentes</h2>
+                        <aside className="w-80 bg-white border-r border-teal-100 p-4 flex flex-col hidden md:flex shadow-sm">
+                            <h2 className="font-semibold text-teal-900 px-2 pb-2 flex-shrink-0">Componentes</h2>
                             <div className="flex flex-wrap gap-2 mb-4 flex-shrink-0">
                                 {['Todos', ...categoryOrder].map(category => (
                                     <button
@@ -227,8 +227,8 @@ export default function EditorPage() {
                                         className={cn(
                                             "px-2.5 py-1 text-xs font-semibold rounded-full transition-colors",
                                             selectedCategory === category
-                                                ? "bg-blue-600 text-white"
-                                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                                ? "bg-teal-600 text-white shadow-sm"
+                                                : "bg-teal-50 text-teal-700 hover:bg-teal-100"
                                         )}
                                     >
                                         {category}
@@ -264,7 +264,7 @@ export default function EditorPage() {
 
                         <div className="flex-1 overflow-y-auto">
                             <div className="p-4 md:p-8">
-                                <div id="editor-canvas" className={cn("mx-auto bg-white rounded-2xl shadow-lg p-4 md:p-8 min-h-[60vh] flex flex-col gap-0", canvasWidthClass)}>
+                                <div id="editor-canvas" className={cn("mx-auto card-bg rounded-2xl card-shadow p-4 md:p-8 min-h-[60vh] flex flex-col gap-0", canvasWidthClass)}>
                                     {blocks.map((block, index) => (
                                         <BlockRenderer
                                             key={block.id}
@@ -291,12 +291,12 @@ export default function EditorPage() {
                                         />
                                     ))}
                                     {blocks.length > 0 && (
-                                        <div className="mt-8 pt-6 border-t border-slate-200/50">
+                                        <div className="mt-8 pt-6 border-t border-teal-100/50">
                                             <button
                                                 onClick={() => {
                                                     setIsAddComponentPanelOpen(true);
                                                 }}
-                                                className="w-full bg-slate-100 text-slate-600 py-3 rounded-lg font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+                                                className="w-full bg-teal-50 text-teal-700 py-3 rounded-lg font-semibold hover:bg-teal-100 transition-colors flex items-center justify-center gap-2 shadow-sm"
                                             >
                                                 <PlusIcon className="w-5 h-5" />
                                                 Añadir Bloque
@@ -304,14 +304,14 @@ export default function EditorPage() {
                                         </div>
                                     )}
                                     {blocks.length === 0 && (
-                                        <div className="text-center py-24 border-2 border-dashed rounded-lg">
+                                        <div className="text-center py-24 rounded-lg card-bg card-shadow">
                                             <p className="text-5xl mb-4">🎨</p>
-                                            <p className="font-semibold text-slate-700 mb-4 text-lg">Tu lienzo está en blanco</p>
+                                            <p className="font-semibold text-teal-900 mb-4 text-lg">Tu lienzo está en blanco</p>
                                             <button
                                                 onClick={() => {
                                                     setIsAddComponentPanelOpen(true);
                                                 }}
-                                                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mx-auto"
+                                                className="bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 mx-auto shadow-sm"
                                             >
                                                 <PlusIcon className="w-5 h-5" />
                                                 Añadir tu primer bloque
@@ -322,7 +322,7 @@ export default function EditorPage() {
                             </div>
                         </div>
                         {activeBlockType && <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />}
-                        {isAddComponentPanelOpen && previewMode === 'mobile' && (
+                        {isAddComponentPanelOpen && (
                             <MobileAddComponentPanel
                                 onClose={() => setIsAddComponentPanelOpen(false)}
                                 onSelectBlock={(type) => { setActiveBlockType(type); setIsAddComponentPanelOpen(false); }}
@@ -345,8 +345,8 @@ export default function EditorPage() {
                     {isMobileEdit && (
                         <div className="md:hidden fixed bottom-6 right-6 z-40">
                             <button
-                                onClick={() => setIsAddComponentPanelOpen(true)}
-                                className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform"
+                                onClick={() => { setPreviewMode('mobile'); setIsAddComponentPanelOpen(true); }}
+                                className="w-14 h-14 bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform hover:bg-teal-700"
                             >
                                 <PlusIcon className="w-7 h-7" />
                             </button>
@@ -384,10 +384,10 @@ export default function EditorPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="mb-4 border-b pb-2">
+                                            <div className="mb-4 border-b border-teal-100 pb-2">
                                                 <nav className="flex gap-2">
-                                                    <button onClick={() => setEditorTab('content')} className={cn('px-3 py-1 rounded-md text-sm', editorTab === 'content' ? 'bg-slate-100 font-semibold' : 'text-slate-600')}>Contenido</button>
-                                                    <button onClick={() => setEditorTab('style')} className={cn('px-3 py-1 rounded-md text-sm', editorTab === 'style' ? 'bg-slate-100 font-semibold' : 'text-slate-600')}>Estilo</button>
+                                                    <button onClick={() => setEditorTab('content')} className={cn('px-3 py-1 rounded-md text-sm transition-colors', editorTab === 'content' ? 'bg-teal-100 text-teal-900 font-semibold' : 'text-slate-600 hover:text-teal-700')}>Contenido</button>
+                                                    <button onClick={() => setEditorTab('style')} className={cn('px-3 py-1 rounded-md text-sm transition-colors', editorTab === 'style' ? 'bg-teal-100 text-teal-900 font-semibold' : 'text-slate-600 hover:text-teal-700')}>Estilo</button>
                                                 </nav>
                                             </div>
 

@@ -1,248 +1,413 @@
 // app/dashboard/page.tsx
-'use client'
-import { useRouter } from 'next/navigation'
-import React, { useState, Fragment } from 'react'
-import { Transition } from '@headlessui/react'
-// Importamos los iconos que usaremos
-import { 
-  GlobeAltIcon, 
-  UsersIcon, 
-  ClipboardDocumentListIcon, 
-  BanknotesIcon, 
-  ChartBarIcon,
-  XMarkIcon,
-  PlusIcon,
-  Squares2X2Icon
-} from '@heroicons/react/24/outline'
+'use client';
 
-// Definimos el tipo para nuestros módulos, ahora con colores e iconos SVG
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { 
+  PlusIcon, XMarkIcon, Squares2X2Icon, 
+  ArrowTrendingUpIcon, SparklesIcon, UserCircleIcon
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/app/hooks/useAuth';
+import { useTheme } from '@/app/contexts/ThemeContext';
+import { colorPalettes } from '@/app/lib/colors';
+
+// --- CONFIGURACIÓN DE MÓDULOS ---
+type ModuleSize = 'size-1x1' | 'size-2x1' | 'size-2x2' | 'size-4x1';
+
 type Module = {
   id: string;
+  type: 'kpi' | 'chart' | 'list' | 'banner';
   title: string;
-  description: string;
-  Icon: React.ElementType; // Usamos un componente de icono en lugar de una URL
-  href: string;
-  color: { // Paleta de colores para cada módulo
-    bg: string;
-    icon: string;
-  };
-  status?: 'Próximamente';
+  size: ModuleSize;
+  data?: any;
 };
 
-// Lista completa de módulos con su nueva identidad visual
-const ALL_MODULES: Module[] = [
-  {
-    id: 'sites',
-    title: 'Gestor de Sitios Web',
-    description: 'Crea y edita tus páginas web públicas.',
-    Icon: GlobeAltIcon,
-    href: '/dashboard/sites',
-    color: { bg: 'bg-blue-100', icon: 'text-blue-600' }
-  },
-  {
-    id: 'crm',
-    title: 'Clientes (CRM)',
-    description: 'Gestiona todos tus contactos y leads.',
-    Icon: UsersIcon,
-    href: '/dashboard/clients',
-    status: 'Próximamente',
-    color: { bg: 'bg-purple-100', icon: 'text-purple-600' }
-  },
-  {
-    id: 'projects',
-    title: 'Gestor de Proyectos',
-    description: 'Organiza tareas y colabora en proyectos.',
-    Icon: ClipboardDocumentListIcon,
-    href: '/dashboard/projects',
-    status: 'Próximamente',
-    color: { bg: 'bg-orange-100', icon: 'text-orange-600' }
-  },
-  {
-    id: 'sales',
-    title: 'Ventas y Facturación',
-    description: 'Crea y envía facturas a tus clientes.',
-    Icon: BanknotesIcon,
-    href: '/dashboard/sales',
-    status: 'Próximamente',
-    color: { bg: 'bg-green-100', icon: 'text-green-600' }
-  },
-  {
-    id: 'analytics',
-    title: 'Analytics',
-    description: 'Métricas de tus sitios y ventas.',
-    Icon: ChartBarIcon,
-    href: '/dashboard/analytics',
-    status: 'Próximamente',
-    color: { bg: 'bg-indigo-100', icon: 'text-indigo-600' }
-  }
+type Site = {
+  id: string;
+  name: string;
+  domain: string;
+};
+
+// Datos iniciales simulados
+const INITIAL_MODULES: Module[] = [
+  { id: '1', type: 'banner', title: 'Bienvenido a Gestularia', size: 'size-4x1', data: { subtitle: 'Tu panel está listo.' } },
+  { id: '2', type: 'kpi', title: 'Visitas Totales', size: 'size-1x1', data: { value: '12.5k', trend: '+15%' } },
+  { id: '3', type: 'chart', title: 'Rendimiento', size: 'size-2x1', data: { bars: [40, 70, 45, 90, 60] } },
 ];
 
-export default function DashboardHomePage() {
+export default function DashboardPage() {
   const router = useRouter();
-  
-  const [dashboardModules, setDashboardModules] = useState<Module[]>([ALL_MODULES[0]]);
-  const [isToolboxOpen, setIsToolboxOpen] = useState(false);
+  const { user, loading: authLoading, logout } = useAuth();
+  const { theme, palette } = useTheme();
+  const c = colorPalettes[palette][theme];
+  const [modules, setModules] = useState<Module[]>(INITIAL_MODULES);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [currentSite, setCurrentSite] = useState<Site | null>(null);
+  const [loadingSites, setLoadingSites] = useState(true);
+  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [isInsertMode, setIsInsertMode] = useState(false);
+  const [pendingModuleType, setPendingModuleType] = useState<{type: Module['type'], size: ModuleSize} | null>(null);
+  const slotRef = useRef<HTMLDivElement>(null);
 
-  const addModule = (moduleToAdd: Module) => {
-    if (!dashboardModules.find(m => m.id === moduleToAdd.id)) {
-      setDashboardModules([...dashboardModules, moduleToAdd]);
+  // Cargar sitios del usuario
+  useEffect(() => {
+    if (authLoading) return;
+    
+    if (!user) {
+      router.push('/login');
+      return;
     }
-  };
 
-  const removeModule = (moduleId: string) => {
-    setDashboardModules(dashboardModules.filter(m => m.id !== moduleId));
-  };
+    const fetchSites = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/tenants', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          if (!res.ok) {
+            if (res.status === 401) {
+              // Redirigir al login si el token es inválido
+              router.push('/login');
+              return;
+            }
+            throw new Error('Error al obtener los tenants');
+          }
+
+          const data = await res.json();
+          const sitesList = data.tenants || [];
+          setSites(sitesList);
+          if (sitesList.length > 0) {
+            setCurrentSite(sitesList[0]);
+          }
+        } catch (error) {
+          console.error('Error en la solicitud:', error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoadingSites(false);
+      }
+    };
+
+    fetchSites();
+  }, [user, authLoading, router]);
+
+  // --- ACCIONES (useCallback para evitar re-renders) ---
+  const activateInsertMode = useCallback((type: Module['type'], size: ModuleSize) => {
+    setIsFabOpen(false);
+    setPendingModuleType({ type, size });
+    setIsInsertMode(true);
+    
+    // Usar ref en lugar de querySelector
+    setTimeout(() => {
+      if (slotRef.current) {
+        slotRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+    }, 100);
+  }, []);
+
+  const confirmInsert = useCallback(() => {
+    if (!pendingModuleType) return;
+    
+    const newModule: Module = {
+      id: Date.now().toString(),
+      type: pendingModuleType.type,
+      size: pendingModuleType.size,
+      title: pendingModuleType.type === 'kpi' ? 'Nueva Métrica' : 'Nuevo Módulo',
+      data: generateMockData(pendingModuleType.type)
+    };
+
+    setModules(prev => [...prev, newModule]);
+    setIsInsertMode(false);
+    setPendingModuleType(null);
+  }, [pendingModuleType]);
+
+  const removeModule = useCallback((id: string) => {
+    setModules(prev => prev.filter(m => m.id !== id)); 
+  }, []);
+
+  // Helper para datos falsos (fuera del componente si es posible, pero aquí es ok)
+  const generateMockData = useCallback((type: string) => {
+    if (type === 'kpi') return { value: Math.floor(Math.random() * 1000), trend: '+5%' };
+    if (type === 'chart') return { bars: Array.from({length: 5}, () => Math.floor(Math.random() * 100)) };
+    return {};
+  }, []);
+
+  // Cancelar inserción al hacer click fuera del slot o FAB (OPTIMIZADO)
+  React.useEffect(() => {
+    if (!isInsertMode) return;
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Usar referencias directas en lugar de closest (más rápido)
+      const clickedSlot = slotRef.current?.contains(target);
+      const clickedFab = target.closest('.fab-container');
+      
+      if (!clickedSlot && !clickedFab) {
+        setIsInsertMode(false);
+        setPendingModuleType(null);
+      }
+    };
+
+    // Usar capture phase para mejor rendimiento
+    document.addEventListener('click', handleClickOutside, true);
+    return () => document.removeEventListener('click', handleClickOutside, true);
+  }, [isInsertMode]);
+
+  if (authLoading || loadingSites) {
+    return (
+      <div className="min-h-full flex items-center justify-center" style={{ backgroundColor: 'transparent' }}>
+        <div style={{ color: c.text.primary }}>Cargando dashboard...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            Tu Espacio de Trabajo
-          </h1>
-          <p className="text-gray-600">
-            Añade, elimina y organiza tus herramientas como prefieras.
-          </p>
-        </div>
-        <button
-          onClick={() => setIsToolboxOpen(true)}
-          className="bg-gray-800 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-all shadow-sm flex items-center gap-2"
+    <div className="relative h-full" style={{ backgroundColor: c.bg.primary }}>
+      {/* Header removed here to avoid duplicate; using the site-specific header elsewhere */}
+
+      {/* --- GRID DE MÓDULOS (Bento Grid optimizado) --- */}
+      <div className="p-6 sm:p-8">
+        <div 
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-[160px] gap-6 pb-24"
+          style={{ 
+            gridAutoFlow: 'row dense',
+            // Optimización: usar contain para aislar el layout
+            contain: 'layout style paint'
+          }}
         >
-          <Squares2X2Icon className="h-5 w-5" />
-          Bandeja de Herramientas
-        </button>
+          {/* Módulos Renderizados */}
+          {modules.map((mod) => (
+            <ModuleCard key={mod.id} module={mod} onRemove={removeModule} />
+          ))}
+
+          {/* Slot Fantasma AL FINAL - Muestra el tamaño real del módulo */}
+          {isInsertMode && pendingModuleType && (
+            <div 
+              ref={slotRef}
+              onClick={(e) => {
+                e.stopPropagation();
+                confirmInsert();
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                confirmInsert();
+              }}
+              className={cn(
+                "ghost-slot border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 group will-change-[background-color] touch-manipulation select-none min-h-[140px] relative z-50 isolate",
+                // Aplicar el tamaño real del módulo que se va a insertar
+                {
+                  'col-span-1 row-span-1': pendingModuleType.size === 'size-1x1',
+                  'col-span-1 sm:col-span-2 row-span-1': pendingModuleType.size === 'size-2x1',
+                  'col-span-1 sm:col-span-2 row-span-2': pendingModuleType.size === 'size-2x2',
+                  'col-span-1 sm:col-span-2 lg:col-span-4 row-span-1': pendingModuleType.size === 'size-4x1',
+                }
+              )}
+              style={{
+                borderColor: `${c.accent.primary}40`,
+                backgroundColor: `${c.accent.primary}0D`,
+                color: c.accent.primary
+              }}
+            >
+              <PlusIcon className="w-10 h-10 mb-3 transition-colors duration-200 pointer-events-none" style={{ color: c.accent.primary }} />
+              <span className="font-semibold text-sm transition-colors duration-200 pointer-events-none" style={{ color: c.accent.primary }}>
+                Toca para Insertar Aquí
+              </span>
+              <span className="text-xs mt-1 transition-colors duration-200 pointer-events-none" style={{ color: `${c.accent.primary}99` }}>
+                {pendingModuleType.type === 'kpi' && '📊 KPI (1x1)'}
+                {pendingModuleType.type === 'chart' && '📈 Gráfico (2x1)'}
+                {pendingModuleType.type === 'banner' && '🚀 Banner (4x1)'}
+              </span>
+            </div>
+          )}
+
+          {/* Estado Vacío */}
+          {!isInsertMode && modules.length === 0 && (
+            <div className="col-span-full h-96 border-2 border-dashed border-slate-800 rounded-3xl flex flex-col items-center justify-center text-slate-500">
+              <Squares2X2Icon className="w-12 h-12 mb-4 opacity-20" />
+              <p className="font-semibold">Panel Vacío</p>
+              <p className="text-sm mt-1">Usa el botón + para comenzar</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Grid del Dashboard */}
-      {dashboardModules.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {dashboardModules.map((module) => (
-            <div
-              key={module.id}
-              className={`bg-white rounded-xl shadow-sm border group transition-all duration-300 relative ${!module.status && 'hover:shadow-lg hover:-translate-y-1'}`}
-            >
-              <button 
-                onClick={() => removeModule(module.id)}
-                className="absolute top-3 right-3 w-7 h-7 bg-gray-100 rounded-full text-gray-500 hover:bg-red-100 hover:text-red-600 transition-all opacity-0 group-hover:opacity-100 z-10 flex items-center justify-center"
-                title={`Quitar ${module.title}`}
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-              
-              <div 
-                onClick={() => !module.status && router.push(module.href)}
-                className={`p-6 ${!module.status ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-              >
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${module.color.bg} ${module.status ? 'opacity-60' : ''}`}>
-                  <module.Icon className={`h-7 w-7 ${module.color.icon}`} />
-                </div>
-                <div className={`${module.status ? 'opacity-60' : ''}`}>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-600">{module.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{module.description}</p>
-                   {module.status && (
-                    <div className="mt-3">
-                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full font-medium">
-                        {module.status}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+      {/* --- FAB (Floating Action Button) FIJO --- */}
+      <div className="fab-container fixed bottom-8 right-8 flex flex-col items-end gap-4 z-40">
+        {/* Menú Desplegable */}
+        <div className={cn(
+          "absolute right-0 bottom-20 flex flex-col gap-3 transition-all duration-300 origin-bottom-right",
+          isFabOpen ? "opacity-100 scale-100 translate-y-0 pointer-events-auto z-50" : "opacity-0 scale-90 translate-y-10 pointer-events-none z-0"
+        )}>
+          <FabItem 
+            label="KPI (Pequeño 1x1)" 
+            icon="📊" 
+            onClick={() => activateInsertMode('kpi', 'size-1x1')} 
+          />
+          <FabItem 
+            label="Gráfico (Ancho 2x1)" 
+            icon="📈" 
+            onClick={() => activateInsertMode('chart', 'size-2x1')} 
+          />
+          <FabItem 
+            label="Banner (Full 4x1)" 
+            icon="🚀" 
+            onClick={() => activateInsertMode('banner', 'size-4x1')} 
+          />
         </div>
-      ) : (
-        <div className="text-center py-20 border-2 border-dashed rounded-xl bg-gray-50">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-          </svg>
-          <h3 className="mt-2 text-lg font-medium text-gray-900">Tu dashboard está vacío</h3>
-          <p className="mt-1 text-sm text-gray-500">Empieza por añadir tus herramientas de trabajo.</p>
-          <div className="mt-6">
-            <button
-              onClick={() => setIsToolboxOpen(true)}
-              type="button"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <PlusIcon className="h-5 w-5 mr-2" />
-              Añadir herramienta
-            </button>
-          </div>
-        </div>
-      )}
 
-      {/* Bandeja de Herramientas (Modal Lateral) */}
-      <Transition show={isToolboxOpen} as={Fragment}>
-        <div className="fixed inset-0 z-50">
-          <Transition.Child
-            as={Fragment}
-            enter="ease-in-out duration-500"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in-out duration-500"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsToolboxOpen(false)} />
-          </Transition.Child>
-
-          <div className="fixed inset-y-0 right-0 max-w-full flex">
-            <Transition.Child
-              as={Fragment}
-              enter="transform transition ease-in-out duration-500 sm:duration-700"
-              enterFrom="translate-x-full"
-              enterTo="translate-x-0"
-              leave="transform transition ease-in-out duration-500 sm:duration-700"
-              leaveFrom="translate-x-0"
-              leaveTo="translate-x-full"
-            >
-              <div className="w-screen max-w-md">
-                <div className="h-full flex flex-col bg-white shadow-xl">
-                  <div className="p-6 bg-gray-50 border-b">
-                    <div className="flex items-start justify-between">
-                      <h2 className="text-lg font-medium text-gray-900">Bandeja de Herramientas</h2>
-                      <button onClick={() => setIsToolboxOpen(false)} className="ml-3 h-7 flex items-center justify-center text-gray-400 hover:text-gray-500">
-                        <span className="sr-only">Cerrar panel</span>
-                        <XMarkIcon className="h-6 w-6" />
-                      </button>
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500">Selecciona las herramientas que quieres en tu dashboard.</p>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {ALL_MODULES.map(module => {
-                      const isAdded = dashboardModules.some(m => m.id === module.id);
-                      return (
-                        <div key={module.id} className="border rounded-lg p-3 flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 ${module.color.bg}`}>
-                            <module.Icon className={`h-6 w-6 ${module.color.icon}`} />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-800">{module.title}</h4>
-                            <p className="text-xs text-gray-500">{module.description}</p>
-                          </div>
-                          <button
-                            onClick={() => addModule(module)}
-                            disabled={isAdded || !!module.status}
-                            className={`px-3 py-1 text-xs rounded-full font-semibold transition-all ${
-                              isAdded 
-                                ? 'bg-green-100 text-green-700 cursor-default' 
-                                : module.status
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                            }`}
-                          >
-                            {isAdded ? 'Añadido ✓' : module.status ? 'Próximo' : 'Añadir +'}
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </Transition.Child>
-          </div>
-        </div>
-      </Transition>
+        {/* Botón Principal */}
+        <button 
+          onClick={() => {
+            if (isInsertMode) {
+              setIsInsertMode(false);
+              setPendingModuleType(null);
+            } else {
+              setIsFabOpen(!isFabOpen);
+            }
+          }}
+          className={cn(
+            "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 z-50",
+            isInsertMode ? "" : ""
+          )}
+          style={{
+            boxShadow: `0 0 30px ${c.accent.primary}33`,
+            backgroundColor: isInsertMode ? '#ef4444' : (isFabOpen ? c.bg.primary : c.accent.primary),
+            color: isInsertMode ? '#FFFFFF' : (isFabOpen ? c.text.primary : c.button.primary.text)
+          }}
+        >
+          {isInsertMode ? <XMarkIcon className="w-8 h-8 text-white" /> : <PlusIcon className="w-8 h-8" />}
+        </button>
+      </div>
     </div>
-  )
+  );
 }
+
+// --- COMPONENTES AUXILIARES ---
+
+function FabItem({ label, icon, onClick }: { label: string, icon: string, onClick: () => void }) {
+  const { theme, palette } = useTheme();
+  const c = colorPalettes[palette][theme];
+
+  return (
+    <button 
+      onClick={onClick}
+      className="flex items-center gap-3 px-5 py-3 rounded-full shadow-xl transition-all group whitespace-nowrap"
+      style={{ backgroundColor: c.bg.secondary, border: `1px solid ${c.border.secondary}`, color: c.text.primary }}
+    >
+      <span className="text-lg" style={{ color: c.text.primary }}>{icon}</span>
+      <span className="text-sm font-semibold" style={{ color: c.text.primary }}>{label}</span>
+    </button>
+  );
+}
+
+// Memoizar ModuleCard para evitar re-renders innecesarios
+const ModuleCard = React.memo(({ module, onRemove }: { module: Module, onRemove: (id: string) => void }) => {
+    const { theme, palette } = useTheme();
+    const c = colorPalettes[palette][theme];
+
+    // Mapeo de clases de tamaño
+    const sizeClasses = {
+        'size-1x1': 'col-span-1 row-span-1',
+        'size-2x1': 'col-span-1 sm:col-span-2 row-span-1',
+        'size-2x2': 'col-span-1 sm:col-span-2 row-span-2',
+        'size-4x1': 'col-span-1 sm:col-span-2 lg:col-span-4 row-span-1',
+    };
+
+    return (
+        <div
+            className={cn("relative rounded-3xl p-6 shadow-lg hover:-translate-y-0.5 transition-all duration-200 group overflow-hidden flex flex-col will-change-[border-color]", sizeClasses[module.size])}
+            data-module-id={module.id}
+            style={{
+                backgroundColor: c.bg.secondary,
+                border: `1px solid ${c.border.primary}`,
+                color: c.text.primary
+            }}
+        >
+            {/* CAPA OVERLAY (PRODUCCIÓN) - invisible y no bloqueante */}
+            <div
+                className="absolute inset-0 z-10 pointer-events-none"
+                data-overlay="true"
+            />
+
+            {/* Botón Cerrar - Visible en móviles, hover en desktop */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onRemove(module.id);
+                }}
+                className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 active:scale-90 touch-manipulation pointer-events-auto"
+                aria-label="Eliminar módulo"
+                style={{ backgroundColor: c.bg.primary, color: c.text.tertiary }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = c.bg.primary)}
+            >
+                <XMarkIcon className="w-5 h-5" />
+            </button>
+
+            {/* Contenido según tipo - Todo con z-index bajo y pointer-events-none donde sea necesario */}
+            {module.type === 'kpi' && (
+                <div className="relative z-0 flex flex-col h-full">
+                    <h3 className="text-sm font-medium uppercase tracking-wider" style={{ color: c.text.secondary }}>{module.title}</h3>
+                    <div className="flex-1 flex flex-col justify-end">
+                         <p className="text-4xl font-bold" style={{ color: c.text.primary }}>{module.data.value}</p>
+                         <div className="flex items-center gap-1 text-sm mt-1" style={{ color: c.success }}>
+                            <ArrowTrendingUpIcon className="w-4 h-4" />
+                            <span>{module.data.trend}</span>
+                         </div>
+                    </div>
+                </div>
+            )}
+
+            {module.type === 'chart' && (
+                <div className="relative z-0 flex flex-col h-full">
+                    <h3 className="text-sm font-medium uppercase mb-4" style={{ color: c.text.secondary }}>{module.title}</h3>
+                    <div className="flex-1 flex items-end justify-between gap-2 px-2">
+                        {module.data.bars.map((h: number, i: number) => (
+                            <div key={i} className="w-full rounded-t-sm transition-colors relative" style={{ height: `${h}%`, backgroundColor: `${c.accent.primary}33` }}>
+                                <div className="absolute inset-0 transition-colors" style={{ backgroundColor: `${c.accent.primary}${h > 50 ? 'CC' : '88'}` }} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {module.type === 'banner' && (
+                <div className="flex items-center justify-between h-full px-4 relative z-0 pointer-events-none">
+                    <div className="flex-1">
+                        <h2 className="text-2xl font-bold mb-1" style={{ color: c.text.primary }}>{module.title}</h2>
+                        <p style={{ color: c.text.secondary }}>{module.data.subtitle}</p>
+                    </div>
+                    <div className="relative flex-shrink-0 w-16 h-16">
+                        <div style={{ background: `radial-gradient(circle at 30% 30%, ${c.accent.primary}30, transparent 40%), linear-gradient(135deg, ${c.accent.primary}, ${c.accent.secondary})` }} className="w-16 h-16 rounded-full opacity-70 blur-lg absolute inset-0" />
+                        <SparklesIcon className="w-12 h-12" style={{ color: c.accent.primary, position: 'absolute', inset: 0, margin: 'auto' }} />
+                    </div>
+                </div>
+            )}
+            
+            {/* Decoración de fondo (Glow sutil) - Reducido para mejor rendimiento */}
+            <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-xl pointer-events-none z-0" style={{ backgroundColor: `${c.accent.primary}0D` }} />
+        </div>
+    );
+}, (prevProps, nextProps) => {
+    // Solo re-renderizar si el módulo cambió
+    return prevProps.module.id === nextProps.module.id && 
+           prevProps.module.type === nextProps.module.type &&
+           prevProps.module.title === nextProps.module.title;
+});
+
+ModuleCard.displayName = 'ModuleCard';
