@@ -53,7 +53,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
       </div>
       
       <div className="flex items-center gap-3">
-        {/* Botón Toggle Tema - siempre visible */}
+        {/* Botón Toggle Tema - siempre visibeeele */}
         <button
           onClick={toggleTheme}
           className="p-2.5 rounded-lg transition-all duration-200 hover:scale-105"
