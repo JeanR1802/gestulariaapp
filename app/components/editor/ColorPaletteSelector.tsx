@@ -26,7 +26,7 @@ export function ColorPaletteSelector() {
             className="inline-block h-4 w-4 rounded-full mr-3 ring-2 ring-offset-1"
             style={{
               backgroundColor: c.accent.primary,
-              ringColor: c.accent.secondary,
+              boxShadow: `0 0 0 2px ${c.bg.secondary}, 0 0 0 4px ${c.accent.secondary}`,
             }}
           />
           <span className="block truncate font-medium">Turquesa</span>

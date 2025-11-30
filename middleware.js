@@ -26,9 +26,12 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
-  // Si tenemos un subdominio válido, reescribimos la ruta a la API del sitio.
+  // Si tenemos un subdominio válido, reescribimos la ruta a la página del sitio.
   if (subdomain) {
-    url.pathname = `/api/site/${subdomain}${url.pathname}`;
+    // Rewrite to the [slug] page route, preserving the original path
+    const originalPath = url.pathname === '/' ? '' : url.pathname;
+    url.pathname = `/${subdomain}${originalPath}`;
+    console.log('[MIDDLEWARE] Rewriting subdomain to:', url.pathname);
     return NextResponse.rewrite(url);
   }
 
@@ -37,6 +40,7 @@ export function middleware(request) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    // Excluir archivos estáticos y recursos públicos del middleware
+    '/((?!api|_next/static|_next/image|favicon.ico|block-behaviors.js|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg|.*\\.ico|.*\\.webmanifest|.*\\.js|.*\\.css).*)',
   ],
 };

@@ -1,24 +1,28 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { ColorPalette } from '../lib/colors'
 
 type Theme = 'light' | 'dark'
 
 interface ThemeContextType {
   theme: Theme
   toggleTheme: () => void
-  palette: 'teal' // Siempre turquesa
+  palette: ColorPalette
+  setPalette: (palette: ColorPalette) => void
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark')
+  const [palette, setPaletteState] = useState<ColorPalette>('teal')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Cargar tema guardado del localStorage
+    // Cargar tema y paleta guardados del localStorage
     const savedTheme = localStorage.getItem('theme') as Theme | null
+    const savedPalette = localStorage.getItem('palette') as ColorPalette | null
     
     if (savedTheme) {
       setTheme(savedTheme)
@@ -26,6 +30,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       // Detectar preferencia del sistema
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       setTheme(prefersDark ? 'dark' : 'light')
+    }
+    
+    if (savedPalette) {
+      setPaletteState(savedPalette)
     }
     
     setMounted(true)
@@ -39,8 +47,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [theme, mounted])
 
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('palette', palette)
+    }
+  }, [palette, mounted])
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+  }
+
+  const setPalette = (newPalette: ColorPalette) => {
+    setPaletteState(newPalette)
   }
 
   // Evitar flash de contenido sin tema
@@ -49,7 +67,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, palette: 'teal' }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, palette, setPalette }}>
       {children}
     </ThemeContext.Provider>
   )
@@ -58,7 +76,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 export function useTheme() {
   const context = useContext(ThemeContext)
   if (context === undefined) {
-    throw new Error('useTheme debe usarse dentro de ThemeProvider')
+    // No lanzar para evitar romper componentes que se renderizan fuera del provider
+    console.warn('useTheme llamado fuera de ThemeProvider — usando valores por defecto.');
+    return {
+      theme: 'light' as Theme,
+      toggleTheme: () => {},
+      palette: 'teal' as ColorPalette,
+      setPalette: () => {}
+    }
   }
   return context
 }

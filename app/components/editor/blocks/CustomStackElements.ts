@@ -14,7 +14,8 @@ export interface StackElement {
     alt?: string;
     buttonText?: string;
     buttonLink?: string;
-    height?: number; // en píxeles para el espaciador
+    height?: number; // en píxeles para el espaciador (vertical legacy)
+    width?: number; // en píxeles para espaciador horizontal
 
     // Propiedades específicas de Header (usadas para tipar los sub-elementos)
     href?: string;

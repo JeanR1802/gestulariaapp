@@ -6,23 +6,35 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 interface HeaderElementRendererProps {
     element: StackElement;
     onRemove: (id: string) => void;
+    onOpenProperties?: (id: string) => void;
+    disableInteractions?: boolean;
 }
 
-export function HeaderElementRenderer({ element, onRemove }: HeaderElementRendererProps) {
-    // Debug: mostrar id, tipo y zona al renderizar cada elemento
-    console.log('[HeaderElementRenderer] render element', { id: element.id, type: element.type, zone: (element.data as any)?.zone, isEmpty: (element.data as any)?.isEmpty });
+export function HeaderElementRenderer({ element, onRemove, onOpenProperties, disableInteractions = false }: HeaderElementRendererProps) {
+    // Minimal renderer for header elements — logo is plain text with no background or colored box
 
     return (
         <div
             className="relative group"
             data-header-el
             data-el-id={element.id}
-            // Debug border to visualize element bounds during testing
-            style={{ border: '1px dashed rgba(148,163,184,0.6)', padding: '4px', borderRadius: 6 }}
+            onClick={(e) => {
+                // If interactions disabled (in insertion mode), do nothing here so clicks fall through to slot handler
+                if (disableInteractions) {
+                    e.stopPropagation();
+                    return;
+                }
+                e.stopPropagation();
+                if (onOpenProperties) onOpenProperties(element.id);
+            }}
+            role={disableInteractions ? undefined : 'button'}
+            title={disableInteractions ? undefined : 'Abrir propiedades del elemento'}
+            style={{ cursor: disableInteractions ? 'default' : 'pointer' }}
         >
             {/* Renderizado Real del Elemento */}
             {element.type === 'logo' && (
-                <div className="font-bold text-xl text-slate-900 select-none">
+                // Plain text logo — editable via the element editor elsewhere
+                <div className="text-base text-slate-900 select-none" style={{ pointerEvents: disableInteractions ? 'none' : 'auto' }}>
                     {element.data.imageUrl ? (
                         <img src={element.data.imageUrl} alt={element.data.alt || 'Logo'} className="h-8 w-auto object-contain" />
                     ) : (
@@ -35,19 +47,19 @@ export function HeaderElementRenderer({ element, onRemove }: HeaderElementRender
                 <h2 className={cn("font-bold text-slate-900 whitespace-nowrap",
                     element.data.level === 'h2' ? 'text-xl' :
                         element.data.level === 'h3' ? 'text-lg' : 'text-base'
-                )}>
+                )} style={{ pointerEvents: disableInteractions ? 'none' : 'auto' }}>
                     {element.data.content || 'Título'}
                 </h2>
             )}
             
             {element.type === 'paragraph' && (
-                <p className="text-sm text-slate-600 max-w-xs">
+                <p className="text-sm text-slate-600 max-w-xs" style={{ pointerEvents: disableInteractions ? 'none' : 'auto' }}>
                     {element.data.content || 'Texto del párrafo'}
                 </p>
             )}
             
             {element.type === 'image' && (
-                <div className="relative">
+                <div className="relative" style={{ pointerEvents: disableInteractions ? 'none' : 'auto' }}>
                     {element.data.imageUrl ? (
                         <img src={element.data.imageUrl} alt={element.data.alt} className="h-10 w-auto object-cover rounded" />
                     ) : (
@@ -61,19 +73,20 @@ export function HeaderElementRenderer({ element, onRemove }: HeaderElementRender
                     href={element.data.href || '#'}
                     className="text-slate-600 hover:text-blue-600 font-medium text-sm transition-colors px-2 py-1 rounded hover:bg-slate-50"
                     onClick={(e) => e.preventDefault()}
+                    style={{ pointerEvents: disableInteractions ? 'none' : 'auto' }}
                 >
                     {element.data.content || 'Enlace'}
                 </a>
             )}
             
             {element.type === 'button' && (
-                <button className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-700 transition-all shadow-sm hover:shadow">
+                <button className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-blue-700 transition-all shadow-sm hover:shadow" style={{ pointerEvents: disableInteractions ? 'none' : 'auto' }}>
                     {element.data.buttonText || 'Botón'}
                 </button>
             )}
             
             {element.type === 'actions' && (
-                <div className="flex gap-1 items-center">
+                <div className="flex gap-1 items-center" style={{ pointerEvents: disableInteractions ? 'none' : 'auto' }}>
                     <button className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -88,11 +101,12 @@ export function HeaderElementRenderer({ element, onRemove }: HeaderElementRender
             )}
             
             {element.type === 'spacer' && (
-                <div className="w-4 h-full min-h-[20px] border-l border-slate-300 mx-2"></div>
+                // Horizontal spacer: use width (px) from element.data; fallback to height or 1
+                <div style={{ width: `${(element.data as any).width ?? (element.data as any).height ?? 1}px`, height: '100%', minHeight: 1 }} />
             )}
 
-            {/* Overlay de edición */}
-            {element.type !== 'slot' && (
+            {/* Overlay de edición: solo mostrar si interacciones permitidas */}
+            {!disableInteractions && element.type !== 'slot' && (
                 <div className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity z-50">
                     <button
                         onClick={(e) => {

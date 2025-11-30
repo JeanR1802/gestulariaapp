@@ -172,7 +172,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="relative h-full" style={{ backgroundColor: c.bg.primary }}>
+    <div className="relative h-full" style={{ backgroundColor: theme === 'light' ? '#F3F4F6' : c.bg.primary }}>
       {/* Header removed here to avoid duplicate; using the site-specific header elsewhere */}
 
       {/* --- GRID DE MÓDULOS (Bento Grid optimizado) --- */}
@@ -331,9 +331,17 @@ const ModuleCard = React.memo(({ module, onRemove }: { module: Module, onRemove:
         <div
             className={cn("relative rounded-3xl p-6 shadow-lg hover:-translate-y-0.5 transition-all duration-200 group overflow-hidden flex flex-col will-change-[border-color]", sizeClasses[module.size])}
             data-module-id={module.id}
+            onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)';
+                (e.currentTarget as HTMLElement).style.boxShadow = `0 15px 30px -5px ${c.accent.glow}`;
+            }}
+            onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
+            }}
             style={{
-                backgroundColor: c.bg.secondary,
-                border: `1px solid ${c.border.primary}`,
+                backgroundColor: theme === 'light' ? '#FBFFFE' : c.bg.secondary,
+                border: `1px solid transparent`,
                 color: c.text.primary
             }}
         >
@@ -393,8 +401,11 @@ const ModuleCard = React.memo(({ module, onRemove }: { module: Module, onRemove:
                         <p style={{ color: c.text.secondary }}>{module.data.subtitle}</p>
                     </div>
                     <div className="relative flex-shrink-0 w-16 h-16">
-                        <div style={{ background: `radial-gradient(circle at 30% 30%, ${c.accent.primary}30, transparent 40%), linear-gradient(135deg, ${c.accent.primary}, ${c.accent.secondary})` }} className="w-16 h-16 rounded-full opacity-70 blur-lg absolute inset-0" />
-                        <SparklesIcon className="w-12 h-12" style={{ color: c.accent.primary, position: 'absolute', inset: 0, margin: 'auto' }} />
+                        <div
+                            className="w-16 h-16 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: theme === 'light' ? c.accent.primary : '#FFFFFF' }}
+                        />
+                        <SparklesIcon className="w-12 h-12 absolute inset-0 m-auto" style={{ color: theme === 'light' ? '#FFFFFF' : c.bg.primary }} />
                     </div>
                 </div>
             )}

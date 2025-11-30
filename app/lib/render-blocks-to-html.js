@@ -1,5 +1,17 @@
 // app/lib/render-blocks-to-html.js
-const buildHead = (cssUrl) => `<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Preview</title><link rel="stylesheet" href="${cssUrl}"/></head><body>`;
+const buildHead = (cssUrl, manifestUrl, faviconUrl) => {
+  // En desarrollo, usar Tailwind CDN; en producción, usar el CSS compilado si existe
+  const isDev = process.env.NODE_ENV !== 'production';
+  const cssLink = isDev 
+    ? '<script src="https://cdn.tailwindcss.com"></script>' 
+    : `<link rel="stylesheet" href="${cssUrl}"/>`;
+  
+  // Solo incluir manifest y favicon si están disponibles
+  const manifestLink = manifestUrl ? `<link rel="manifest" href="${manifestUrl}"/>` : '';
+  const faviconLink = faviconUrl ? `<link rel="icon" type="image/png" href="${faviconUrl}"/>` : '';
+  
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Preview</title>${cssLink}${manifestLink}${faviconLink}</head><body>`;
+};
 const buildTail = (initScript) => `${initScript}</body></html>`;
 
 let canUseReactServer = false;
@@ -19,6 +31,8 @@ const initReactComponents = async () => {
 };
 
 function legacyRender(blocks) {
+  console.log('🎨 [legacyRender] Starting render, blocks:', Array.isArray(blocks), 'count:', blocks?.length);
+  
   // --- Utilidades para colores personalizados ---
     function getClassOrStyle(color, tailwindDefault, cssProp) {
     if (!color) return { class: tailwindDefault, style: '' };
@@ -38,9 +52,13 @@ function legacyRender(blocks) {
     return { class: '', style: `${cssProp}: ${color};` };
   }
 
-  if (!Array.isArray(blocks)) return '';
+  if (!Array.isArray(blocks)) {
+    console.log('🔴 [legacyRender] Blocks is not an array!');
+    return '';
+  }
 
-  return blocks.map(block => {
+  return blocks.map((block, index) => {
+    console.log(`🎨 [legacyRender] Rendering block ${index}:`, block?.type);
     const { data, type } = block;
     if (!data) {
       console.warn(`AVISO: Bloque de tipo "${type}" no tiene datos y no será renderizado.`);
@@ -181,6 +199,94 @@ function legacyRender(blocks) {
             `;
             break;
 
+          case 'custom': {
+            // Custom header with customElements
+            // Respect the editor's advanced layout logic (fixed/dynamic mode, padding)
+            const customElements = data.customElements || [];
+            const leftElements = customElements.filter(el => el.data && el.data.zone === 'left');
+            const centerElements = customElements.filter(el => el.data && el.data.zone === 'center');
+            const rightElements = customElements.filter(el => el.data && el.data.zone === 'right');
+            
+            // Get mode (default to 'fijo' if not specified, match editor's headerMode field)
+            const layoutMode = data.headerMode || data.mode || 'fijo';
+            
+            // Get padding values (in px)
+            const paddingLeft = typeof data.paddingLeft === 'number' ? data.paddingLeft : 0;
+            const paddingRight = typeof data.paddingRight === 'number' ? data.paddingRight : 0;
+
+            const renderElement = (el) => {
+              const elData = el.data || {};
+              switch (el.type) {
+                case 'logo':
+                  return `<span class="font-bold text-xl ${logo.class}" style="${logo.style}">${elData.content || 'Logo'}</span>`;
+                case 'link':
+                  return `<a href="${elData.href || '#'}" class="text-sm hover:opacity-80 transition-opacity ${link.class}" style="${link.style}">${elData.content || 'Link'}</a>`;
+                case 'button':
+                  return `<a href="${elData.buttonLink || elData.href || '#'}" class="px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition-opacity ${buttonBg.class}" style="${buttonBg.style}">${elData.buttonText || elData.content || 'Button'}</a>`;
+                case 'heading':
+                  const HeadingTag = elData.level || 'h2';
+                  return `<${HeadingTag} class="font-bold text-lg ${logo.class}" style="${logo.style}">${elData.content || 'Heading'}</${HeadingTag}>`;
+                case 'paragraph':
+                  return `<p class="text-sm ${link.class}" style="${link.style}">${elData.content || 'Text'}</p>`;
+                case 'image':
+                  return `<img src="${elData.imageUrl || '/placeholder.svg'}" alt="${elData.alt || 'Image'}" class="h-8 w-auto object-contain"/>`;
+                case 'spacer':
+                  return `<div style="width:${elData.width || elData.height || 20}px" class="flex-shrink-0"></div>`;
+                case 'actions':
+                  return `<a href="${elData.href || '#'}" class="text-sm hover:opacity-80 transition-opacity ${link.class}" style="${link.style}">${elData.platform || 'Action'}</a>`;
+                default:
+                  return '<span class="text-xs text-slate-400">Unknown</span>';
+              }
+            };
+
+            // Render based on layout mode
+            if (layoutMode === 'fijo') {
+              // Fixed mode: center is always centered, left/right absolute positioned
+              // Padding is applied via invisible spacers (matching editor logic)
+              headerHtml = `
+                <div class="max-w-6xl mx-auto w-full relative" style="height:90px;">
+                  ${paddingLeft > 0 ? `<div style="position:absolute;left:0;top:0;width:${paddingLeft}px;height:100%;pointer-events:none;"></div>` : ''}
+                  ${paddingRight > 0 ? `<div style="position:absolute;right:0;top:0;width:${paddingRight}px;height:100%;pointer-events:none;"></div>` : ''}
+                  
+                  <div class="absolute h-full flex items-center gap-2" style="left:${paddingLeft}px;">
+                    ${leftElements.map(renderElement).join('')}
+                  </div>
+                  
+                  <div class="absolute h-full flex items-center justify-center gap-2" style="left:50%;transform:translateX(-50%);">
+                    ${centerElements.map(renderElement).join('')}
+                  </div>
+                  
+                  <div class="absolute h-full flex items-center flex-row-reverse gap-2" style="right:${paddingRight}px;">
+                    ${rightElements.map(renderElement).join('')}
+                  </div>
+                </div>
+              `;
+            } else {
+              // Dynamic mode: flex layout, center can be pushed
+              // Padding still applied via spacers for consistency
+              headerHtml = `
+                <div class="max-w-6xl mx-auto w-full flex items-center justify-between" style="height:90px;">
+                  ${paddingLeft > 0 ? `<div style="width:${paddingLeft}px;flex-shrink:0;"></div>` : ''}
+                  
+                  <div class="flex items-center gap-2">
+                    ${leftElements.map(renderElement).join('')}
+                  </div>
+                  
+                  <div class="flex items-center justify-center gap-2">
+                    ${centerElements.map(renderElement).join('')}
+                  </div>
+                  
+                  <div class="flex items-center flex-row-reverse gap-2">
+                    ${rightElements.map(renderElement).join('')}
+                  </div>
+                  
+                  ${paddingRight > 0 ? `<div style="width:${paddingRight}px;flex-shrink:0;"></div>` : ''}
+                </div>
+              `;
+            }
+            break;
+          }
+
           default:
             headerHtml = `
               <div class="max-w-5xl mx-auto flex justify-between items-center">
@@ -301,7 +407,9 @@ function legacyRender(blocks) {
         `;
  
          // Return header + script
-         return `<header id="${headerId}" class="${bg.class} p-4 w-full ${data.variant === 'sticky' ? 'sticky top-0 z-40' : ''}" style="${bg.style}">${headerHtml}</header>${script}`;
+         // For custom variant, don't apply p-4 padding to outer header (padding is handled internally)
+         const outerPadding = data.variant === 'custom' ? '' : 'p-4';
+         return `<header id="${headerId}" class="${bg.class} ${outerPadding} w-full ${data.variant === 'sticky' ? 'sticky top-0 z-40' : ''}" style="${bg.style}">${headerHtml}</header>${script}`;
       }
       case 'hero': {
         const titleClass = getClassOrStyle(data.titleColor, 'text-slate-800', 'color');
@@ -709,6 +817,8 @@ exports.renderBlocksToHTML = async function renderBlocksToHTML(blocks, opts = {}
   const envBase = (process.env.NEXT_PUBLIC_BASE_PATH || '').replace(/\/$/, '') || '';
   const defaultCss = envBase ? `${envBase}/_next/static/css/tailwind.css` : '/_next/static/css/tailwind.css';
   const cssUrl = opts.cssUrl || defaultCss;
+  const manifestUrl = opts.manifestUrl || null; // No incluir manifest por defecto
+  const faviconUrl = opts.faviconUrl || null; // No incluir favicon por defecto
 
   // Initialize React components if not already done
   if (!canUseReactServer) {
@@ -727,15 +837,15 @@ exports.renderBlocksToHTML = async function renderBlocksToHTML(blocks, opts = {}
     try {
       const BlocksApp = (props) => React.createElement(React.Fragment, null, props.blocks.map((block) => React.createElement(BlockRenderer, { block: block, key: block.id, isEditing: false })));
       const inner = ReactDOMServer.renderToStaticMarkup(React.createElement(BlocksApp, { blocks }));
-      return buildHead(cssUrl) + inner + buildTail(initScript);
+      return buildHead(cssUrl, manifestUrl, faviconUrl) + inner + buildTail(initScript);
     } catch (e) {
       console.error('ReactDOMServer rendering failed, falling back to legacy renderer', e);
       const inner = legacyRender(blocks);
-      return buildHead(cssUrl) + inner + buildTail(initScript);
+      return buildHead(cssUrl, manifestUrl, faviconUrl) + inner + buildTail(initScript);
     }
   }
 
   const inner = legacyRender(blocks);
-  return buildHead(cssUrl) + inner + buildTail(initScript);
+  return buildHead(cssUrl, manifestUrl, faviconUrl) + inner + buildTail(initScript);
 };
 

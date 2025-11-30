@@ -19,8 +19,9 @@ export async function GET(request, { params }) {
     }
 
     const db = await connectToDatabase()
-    // Se utiliza el 'id' desestructurado de 'params'
-    const { id } = params;
+    // Next.js 15 requires awaiting params before accessing properties
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     const tenant = await db.collection('tenants').findOne({ 
       id: id, 
       userKey: payload.key 
@@ -63,8 +64,9 @@ export async function PUT(request, { params }) {
     updates.updatedAt = new Date()
 
     const db = await connectToDatabase()
-    // Se utiliza el 'id' desestructurado de 'params'
-    const { id } = params;
+    // Next.js 15 requires awaiting params before accessing properties
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     const result = await db.collection('tenants').updateOne(
       { id: id, userKey: payload.key },
       { $set: updates }
@@ -97,8 +99,9 @@ export async function DELETE(request, { params }) {
     }
 
     const db = await connectToDatabase()
-    // Se utiliza el 'id' desestructurado de 'params'
-    const { id } = params;
+    // Next.js 15 requires awaiting params before accessing properties
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     const result = await db.collection('tenants').deleteOne({ 
       id: id, 
       userKey: payload.key 

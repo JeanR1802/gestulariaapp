@@ -150,11 +150,7 @@ export const BLOCKS: BlocksConfig = {
                 linkColor: 'text-slate-600', 
                 buttonBgColor: 'bg-blue-600', 
                 buttonTextColor: 'text-white', 
-                customElements: [
-                    { id: nanoid(), type: 'logo', data: { content: 'MiLogo' } as StackElement['data'] }, 
-                    { id: nanoid(), type: 'link', data: { content: 'Inicio' } as StackElement['data'] }, 
-                    { id: nanoid(), type: 'actions', data: { buttonText: 'Acción', buttonLink: '#' } as StackElement['data'] }
-                ] 
+                customElements: []
             } as HeaderData 
         }, // NUEVA VARIANTE
     ]

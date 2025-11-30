@@ -7,7 +7,7 @@ import { colorPalettes, ColorPalette } from '../lib/colors';
 
 export default function BottomPalettePanel({ onClose }: { onClose: () => void }) {
   const { theme, palette, setPalette } = useTheme();
-  const c = colorPalettes[palette][theme];
+  const c = colorPalettes[palette as keyof typeof colorPalettes][theme];
   const [mounted, setMounted] = React.useState(false);
 
   const paletteColors: Record<ColorPalette, string> = {

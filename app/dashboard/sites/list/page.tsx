@@ -506,7 +506,7 @@ export default function SitesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen" style={{ backgroundColor: c.bg.primary }}>
+      <div className="flex items-center justify-center h-screen" style={{ backgroundColor: theme === 'light' ? '#F3F4F6' : c.bg.primary }}>
         <div className="relative w-16 h-16">
            <div 
              className="absolute top-0 left-0 w-full h-full border-4 rounded-full" 
@@ -522,7 +522,7 @@ export default function SitesPage() {
   }
 
   return (
-    <div className="min-h-screen font-sans transition-colors duration-200" style={{ backgroundColor: c.bg.primary, color: c.text.primary }}>
+    <div className="min-h-screen font-sans transition-colors duration-200" style={{ backgroundColor: theme === 'light' ? '#F3F4F6' : c.bg.primary, color: c.text.primary }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
         {/* Header de Sección */}
@@ -587,7 +587,7 @@ export default function SitesPage() {
             className="border-2 border-dashed rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[400px]"
             style={{ 
               borderColor: c.border.primary,
-              backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'
+              backgroundColor: theme === 'light' ? '#FBFFFE' : (theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)')
             }}
           >
             <div 
@@ -620,7 +620,7 @@ export default function SitesPage() {
                 key={tenant.id} 
                 className="rounded-2xl overflow-hidden shadow-lg transition-all duration-300 group flex flex-col"
                 style={{ 
-                  backgroundColor: c.bg.secondary,
+                  backgroundColor: theme === 'light' ? '#FBFFFE' : c.bg.secondary,
                   borderColor: c.border.secondary,
                   borderWidth: '1px'
                 }}

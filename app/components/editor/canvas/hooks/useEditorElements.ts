@@ -5,6 +5,7 @@ import { getDefaultDataForType, generateElementId } from '../utils/elementHelper
 
 export function useEditorElements(block: Block, localData: BlockData, setLocalData: (data: BlockData) => void) {
     const [insertingType, setInsertingType] = useState<StackElementType | null>(null);
+    const [isInserting, setIsInserting] = useState<boolean>(false);
 
     // Default maximum number of real elements allowed per slot/zone
     const DEFAULT_MAX_PER_SLOT = 10;
@@ -57,7 +58,17 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
             flattened.push(...(b.right || []));
         });
 
-        setLocalData({ ...localData, customElements: flattened } as BlockData & { customElements: StackElement[] });
+        // Remove duplicates by id (preserve order)
+        const seen = new Set<string>();
+        const uniqueFlattened: StackElement[] = flattened.filter(el => {
+            if (!el || !el.id) return false;
+            if (seen.has(el.id)) return false;
+            seen.add(el.id);
+            return true;
+        });
+
+        // Update localData with deduped flattened list
+        setLocalData({ ...localData, customElements: uniqueFlattened } as BlockData & { customElements: StackElement[] });
     };
 
     // Helpers: agrupar por row y por zona
@@ -90,100 +101,150 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
     };
 
     // allow specifying a zone and row when adding (defaults to center,row 0)
-    const addElement = (type: StackElementType, zone: 'left' | 'center' | 'right' = 'center', row: number = 0) => {
-        console.log('[useEditorElements] addElement requested', { type, zone, row });
-        const baseData: any = { ...(getDefaultDataForType(type) as any), zone, row };
-        const newElement: StackElement = {
-            id: generateElementId(),
-            type,
-            data: baseData as any
-        };
-
-        const { rows, rowsMap } = splitByRowAndZone(customElements);
-        // ensure target row exists in map
-        if (!rowsMap.has(row)) rowsMap.set(row, { left: [], center: [], right: [] });
-        const bucket = rowsMap.get(row)!;
-        // Prevent insertion if the target zone already reached max real elements
-        const existingRealCount = ((bucket as any)[zone] as StackElement[]).filter(e => e.type !== 'slot').length;
-        if (existingRealCount >= DEFAULT_MAX_PER_SLOT) {
-            console.log('[useEditorElements] addElement - target zone full by maxPerSlot', { zone, row, existingRealCount, max: DEFAULT_MAX_PER_SLOT });
-            return;
+    const addElement = (type: StackElementType, zone: 'left' | 'center' | 'right' = 'center', row: number = 0): StackElement[] => {
+        const callStack = new Error().stack;
+        console.log('🔴 [addElement] LLAMADA DETECTADA', { 
+            type, 
+            zone, 
+            row, 
+            currentElements: customElements.length,
+            timestamp: Date.now(),
+            callStack: callStack?.split('\n').slice(1, 4).join('\n')
+        });
+        
+        // Prevenir múltiples inserciones simultáneas
+        if (isInserting) {
+            console.log('[useEditorElements] addElement - blocked: insertion already in progress');
+            return customElements;
         }
-        if (zone === 'left') bucket.left.push(newElement);
-        else if (zone === 'right') bucket.right.push(newElement);
-        else bucket.center.push(newElement);
+        
+        setIsInserting(true);
+        console.log('[useEditorElements] addElement requested', { type, zone, row });
+        console.log('🟠 [addElement] customElements ANTES de insertar:', customElements.length, 'elementos:', customElements.map(e => e.id));
+        
+        try {
+            const baseData: any = { ...(getDefaultDataForType(type) as any), zone, row };
+            const newElement: StackElement = {
+                id: generateElementId(),
+                type,
+                data: baseData as any
+            };
+            
+            console.log('🟡 [addElement] Elemento creado:', newElement.id, 'tipo:', type);
 
-        const finalRows = Array.from(new Set([...rows, row])).sort((a, b) => a - b);
-        const newElements = flattenRowsByRow(finalRows, rowsMap);
-        console.log('[useEditorElements] addElement - result rows', finalRows);
-        // Also prune any leftover empty slots immediately
-        const pruned = newElements.filter(el => !(el.type === 'slot' && (el.data as any)?.isEmpty));
-        setCustomElements(pruned);
+            const { rows, rowsMap } = splitByRowAndZone(customElements);
+            console.log('🟠 [addElement] Después de splitByRowAndZone, filas:', rows, 'elementos en buckets:', 
+                Array.from(rowsMap.values()).reduce((sum, bucket) => sum + bucket.left.length + bucket.center.length + bucket.right.length, 0));
+            // ensure target row exists in map
+            if (!rowsMap.has(row)) rowsMap.set(row, { left: [], center: [], right: [] });
+            const bucket = rowsMap.get(row)!;
+            // Prevent insertion if the target zone already reached max real elements
+            const existingRealCount = ((bucket as any)[zone] as StackElement[]).filter(e => e.type !== 'slot').length;
+            if (existingRealCount >= DEFAULT_MAX_PER_SLOT) {
+                console.log('[useEditorElements] addElement - target zone full by maxPerSlot', { zone, row, existingRealCount, max: DEFAULT_MAX_PER_SLOT });
+                return customElements;
+            }
+            if (zone === 'left') bucket.left.push(newElement);
+            else if (zone === 'right') bucket.right.push(newElement);
+            else bucket.center.push(newElement);
+
+            const finalRows = Array.from(new Set([...rows, row])).sort((a, b) => a - b);
+            const newElements = flattenRowsByRow(finalRows, rowsMap);
+            console.log('[useEditorElements] addElement - result rows', finalRows);
+            // Also prune any leftover empty slots immediately
+            const pruned = newElements.filter(el => !(el.type === 'slot' && (el.data as any)?.isEmpty));
+            
+            console.log('🟢 [addElement] Elementos finales:', pruned.length, 'elementos');
+            setCustomElements(pruned);
+
+            // Return the final pruned list so callers get the definitive state immediately
+            return pruned;
+        } finally {
+            // Limpiar el flag después de un breve delay
+            setTimeout(() => {
+                console.log('🔵 [addElement] Flag liberado');
+                setIsInserting(false);
+            }, 100);
+        }
     };
 
     // Insert element into specified row and zone (used by header preview)
-    const handleInsertElementInRow = (row: number, zone: 'left' | 'center' | 'right' = 'center') => {
-        if (!insertingType) return;
-        console.log('[useEditorElements] handleInsertElementInRow - insertingType', insertingType, 'zone', zone, 'row', row);
-        const baseData: any = { zone, row };
-        let newElement: StackElement;
-        switch (insertingType) {
-            case 'logo':
-                newElement = { id: generateElementId(), type: 'logo', data: { ...baseData, content: 'Mi Logo' } as any };
-                break;
-            case 'link':
-                newElement = { id: generateElementId(), type: 'link', data: { ...baseData, content: 'Enlace', href: '#' } as any };
-                break;
-            case 'actions':
-                newElement = { id: generateElementId(), type: 'actions', data: { ...baseData, buttonText: 'Acción', buttonLink: '#' } as any };
-                break;
-            case 'spacer':
-                newElement = { id: generateElementId(), type: 'spacer', data: { ...baseData, height: 20 } as any };
-                break;
-            case 'heading':
-                newElement = { id: generateElementId(), type: 'heading', data: { ...baseData, content: 'Título (H2)', level: 'h2' } as any };
-                break;
-            case 'paragraph':
-                newElement = { id: generateElementId(), type: 'paragraph', data: { ...baseData, content: 'Nuevo párrafo de texto.' } as any };
-                break;
-            case 'image':
-                newElement = { id: generateElementId(), type: 'image', data: { ...baseData, imageUrl: '', alt: 'Imagen' } as any };
-                break;
-            case 'button':
-                newElement = { id: generateElementId(), type: 'button', data: { ...baseData, buttonText: 'Botón', buttonLink: '#' } as any };
-                break;
-            default:
-                return;
+    const handleInsertElementInRow = (row: number, zone: 'left' | 'center' | 'right' = 'center'): StackElement[] | undefined => {
+        if (!insertingType) return undefined;
+        
+        // Prevenir múltiples inserciones simultáneas
+        if (isInserting) {
+            console.log('[useEditorElements] handleInsertElementInRow - blocked: insertion already in progress');
+            return undefined;
         }
+        
+        setIsInserting(true);
+        console.log('[useEditorElements] handleInsertElementInRow - insertingType', insertingType, 'zone', zone, 'row', row);
+        
+        try {
+            const baseData: any = { zone, row };
+            let newElement: StackElement;
+            switch (insertingType) {
+                case 'logo':
+                    newElement = { id: generateElementId(), type: 'logo', data: { ...baseData, content: 'Mi Logo' } as any };
+                    break;
+                case 'link':
+                    newElement = { id: generateElementId(), type: 'link', data: { ...baseData, content: 'Enlace', href: '#' } as any };
+                    break;
+                case 'actions':
+                    newElement = { id: generateElementId(), type: 'actions', data: { ...baseData, buttonText: 'Acción', buttonLink: '#' } as any };
+                    break;
+                case 'spacer':
+                    newElement = { id: generateElementId(), type: 'spacer', data: { ...baseData, height: 20 } as any };
+                    break;
+                case 'heading':
+                    newElement = { id: generateElementId(), type: 'heading', data: { ...baseData, content: 'Título (H2)', level: 'h2' } as any };
+                    break;
+                case 'paragraph':
+                    newElement = { id: generateElementId(), type: 'paragraph', data: { ...baseData, content: 'Nuevo párrafo de texto.' } as any };
+                    break;
+                case 'image':
+                    newElement = { id: generateElementId(), type: 'image', data: { ...baseData, imageUrl: '', alt: 'Imagen' } as any };
+                    break;
+                case 'button':
+                    newElement = { id: generateElementId(), type: 'button', data: { ...baseData, buttonText: 'Botón', buttonLink: '#' } as any };
+                    break;
+                default:
+                    return undefined;
+            }
 
-        const { rows, rowsMap } = splitByRowAndZone(customElements);
-        if (!rowsMap.has(row)) rowsMap.set(row, { left: [], center: [], right: [] });
-        const bucket = rowsMap.get(row)!;
-        // Remove any empty slot placeholders in the target row before inserting.
-        // This ensures that empty left/right slots don't block insertion into the center.
-        ['left','center','right'].forEach((z) => {
-             const arr = (bucket as any)[z] as StackElement[];
-             const filtered = arr.filter(el => !(el.type === 'slot' && (el.data as any)?.isEmpty));
-             (bucket as any)[z] = filtered;
-         });
-         // Prevent insertion if the target zone already reached max real elements
-         const existingRealCount2 = (zone === 'left' ? bucket.left : zone === 'right' ? bucket.right : bucket.center).filter(e => e.type !== 'slot').length;
-         if (existingRealCount2 >= DEFAULT_MAX_PER_SLOT) {
-             console.log('[useEditorElements] handleInsertElementInRow - target zone full by maxPerSlot', { zone, row, existingRealCount2, max: DEFAULT_MAX_PER_SLOT });
-             setInsertingType(null);
-             return;
-         }
-         if (zone === 'left') bucket.left.push(newElement);
-         else if (zone === 'center') bucket.center.push(newElement);
-         else bucket.right.push(newElement);
+            const { rows, rowsMap } = splitByRowAndZone(customElements);
+            if (!rowsMap.has(row)) rowsMap.set(row, { left: [], center: [], right: [] });
+            const bucket = rowsMap.get(row)!;
+            // Remove any empty slot placeholders in the target row before inserting.
+            // This ensures that empty left/right slots don't block insertion into the center.
+            ['left','center','right'].forEach((z) => {
+                 const arr = (bucket as any)[z] as StackElement[];
+                 const filtered = arr.filter(el => !(el.type === 'slot' && (el.data as any)?.isEmpty));
+                 (bucket as any)[z] = filtered;
+             });
+             // Prevent insertion if the target zone already reached max real elements
+             const existingRealCount2 = (zone === 'left' ? bucket.left : zone === 'right' ? bucket.right : bucket.center).filter(e => e.type !== 'slot').length;
+             if (existingRealCount2 >= DEFAULT_MAX_PER_SLOT) {
+                 console.log('[useEditorElements] handleInsertElementInRow - target zone full by maxPerSlot', { zone, row, existingRealCount2, max: DEFAULT_MAX_PER_SLOT });
+                 setInsertingType(null);
+                 return undefined;
+             }
+             if (zone === 'left') bucket.left.push(newElement);
+             else if (zone === 'right') bucket.right.push(newElement);
+             else bucket.center.push(newElement);
 
-        const finalRows = Array.from(new Set([...rows, row])).sort((a, b) => a - b);
-        const newElements = flattenRowsByRow(finalRows, rowsMap);
-        console.log('[useEditorElements] handleInsertElementInRow - result rows', finalRows);
-        // Prune empty slot placeholders so they don't block capacity (double safety)
-        const pruned = newElements.filter(el => !(el.type === 'slot' && (el.data as any)?.isEmpty));
-        setCustomElements(pruned);
-        setInsertingType(null);
+            const finalRows = Array.from(new Set([...rows, row])).sort((a, b) => a - b);
+            const pruned = flattenRowsByRow(finalRows, rowsMap).filter(el => !(el.type === 'slot' && (el.data as any)?.isEmpty));
+            setCustomElements(pruned);
+            setInsertingType(null);
+
+            // Return pruned final list
+            return pruned;
+        } finally {
+            // Limpiar el flag después de un breve delay
+            setTimeout(() => setIsInserting(false), 100);
+        }
     };
 
     const removeElement = (id: string) => {

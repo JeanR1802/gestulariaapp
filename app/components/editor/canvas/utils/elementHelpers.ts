@@ -14,7 +14,8 @@ export function getDefaultDataForType(type: StackElementType): StackElement['dat
         case 'button':
             return { buttonText: 'Botón', buttonLink: '#' };
         case 'spacer':
-            return { height: 20 };
+            // Horizontal spacer by default (width in px)
+            return { width: 1 } as StackElement['data'];
         case 'logo':
             return { content: 'Logo' };
         case 'link':
@@ -48,7 +49,7 @@ export const ELEMENT_TYPES: { type: StackElementType; label: string; icon: strin
     { type: 'paragraph', label: 'Párrafo', icon: '📄', desc: 'Texto normal' },
     { type: 'image', label: 'Imagen', icon: '🖼️', desc: 'Foto o gráfico' },
     { type: 'button', label: 'Botón', icon: '🔘', desc: 'Botón de llamada a la acción' },
-    { type: 'spacer', label: 'Espaciador', icon: '⬜', desc: 'Espacio vertical vacío' },
+    { type: 'spacer', label: 'Espaciador', icon: '⬜', desc: 'Espacio horizontal entre elementos' },
     { type: 'logo', label: 'Logo', icon: '🏷️', desc: 'Logotipo de la marca' },
     { type: 'link', label: 'Enlace', icon: '🔗', desc: 'Enlace de navegación' },
     { type: 'actions', label: 'Acción', icon: '⚡', desc: 'Iconos de acción (carrito, búsqueda)' },

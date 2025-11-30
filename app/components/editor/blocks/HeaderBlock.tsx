@@ -26,6 +26,11 @@ export interface HeaderData {
   buttonTextColor: string;
   // NUEVO CAMPO: Contenido para el modo personalizado
   customElements?: StackElement[]; 
+  // NUEVOS CAMPOS: padding del header en px (izquierda / derecha). Opcionales.
+  paddingLeft?: number;
+  paddingRight?: number;
+  // NUEVO CAMPO: modo del header para custom variant ('fijo' | 'dinamico')
+  headerMode?: 'fijo' | 'dinamico';
 }
 
 // --- Lógica para manejar colores personalizados ---
@@ -94,8 +99,15 @@ const HeaderDefault = ({ data }: BlockComponentProps<HeaderData>) => {
   // rect del canvas para limitar el portal
   const canvasRect = useCanvasRect(menuOpen);
 
+  // Build header inline style merging background and optional paddings
+  const headerStyle: React.CSSProperties = {
+    ...bg.style,
+    paddingLeft: typeof data.paddingLeft === 'number' ? `${data.paddingLeft}px` : undefined,
+    paddingRight: typeof data.paddingRight === 'number' ? `${data.paddingRight}px` : undefined,
+  };
+
   return (
-    <header className={cn('p-4', bg.className)} style={bg.style}>
+    <header className={cn('p-4', bg.className)} style={headerStyle}>
       <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
         <h1 className={cn('font-bold', isMobile ? 'text-lg' : 'text-xl', logoStyles.className)} style={logoStyles.style}>{data.logoText}</h1>
 
@@ -174,12 +186,18 @@ const HeaderCentered = ({ data }: BlockComponentProps<HeaderData>) => {
 
     const canvasRect = useCanvasRect(menuOpen);
 
+    const headerStyle: React.CSSProperties = {
+      ...bg.style,
+      paddingLeft: typeof data.paddingLeft === 'number' ? `${data.paddingLeft}px` : undefined,
+      paddingRight: typeof data.paddingRight === 'number' ? `${data.paddingRight}px` : undefined,
+    };
+
     // For the centered header we prefer the menu to drop from the TOP of the canvas
     // to avoid positioning issues; set anchorTop to 0 when open.
     const anchorTop = menuOpen ? 0 : null;
 
     return (
-      <header className={cn('p-4', bg.className)} style={bg.style}>
+      <header className={cn('p-4', bg.className)} style={headerStyle}>
         <div className="max-w-6xl mx-auto flex flex-col items-center gap-4">
           {/* Header content stacked and centered (mobile-first) */}
           <div className="w-full header-content flex flex-col items-center py-4 px-4 md:px-0 relative box-border">
@@ -271,13 +289,40 @@ const HeaderCustom = ({ data, isEditing, onUpdate }: BlockComponentProps<HeaderD
       )
   }
 
+  const headerStyle: React.CSSProperties = {
+    ...bg.style,
+    paddingLeft: typeof data.paddingLeft === 'number' ? `${data.paddingLeft}px` : undefined,
+    paddingRight: typeof data.paddingRight === 'number' ? `${data.paddingRight}px` : undefined,
+  };
+
+  // Agrupar elementos por zone
+  const customElements = data.customElements || [];
+  const leftElements = customElements.filter(el => el.data.zone === 'left');
+  const centerElements = customElements.filter(el => el.data.zone === 'center');
+  const rightElements = customElements.filter(el => el.data.zone === 'right');
+
   // En el modo edición AVANZADA (isEditing === true), renderizamos los customElements
   return (
-    <header className={cn('p-4 min-h-[120px] flex items-center', bg.className)} style={bg.style}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 w-full">
-            {data.customElements?.map((element) => (
-                <StackElementRenderer key={element.id} element={element} />
-            ))}
+    <header className={cn('p-4 min-h-[80px] flex items-center', bg.className)} style={headerStyle}>
+        <div className="max-w-6xl mx-auto w-full grid grid-cols-3 items-center gap-4">
+            {/* Left Zone */}
+            <div className="flex items-center gap-4 justify-start">
+                {leftElements.map((element) => (
+                    <StackElementRenderer key={element.id} element={element} />
+                ))}
+            </div>
+            {/* Center Zone */}
+            <div className="flex items-center gap-4 justify-center">
+                {centerElements.map((element) => (
+                    <StackElementRenderer key={element.id} element={element} />
+                ))}
+            </div>
+            {/* Right Zone */}
+            <div className="flex items-center gap-4 justify-end">
+                {rightElements.map((element) => (
+                    <StackElementRenderer key={element.id} element={element} />
+                ))}
+            </div>
         </div>
     </header>
   );
@@ -286,25 +331,77 @@ const HeaderCustom = ({ data, isEditing, onUpdate }: BlockComponentProps<HeaderD
 // --- StackElementRenderer Component ---
 function StackElementRenderer({ element }: { element: StackElement }) {
   switch (element.type) {
+    case 'logo':
+      return (
+        <span className="font-bold text-xl">
+          {element.data.content || 'Logo'}
+        </span>
+      );
+    
+    case 'link':
+      return (
+        <a 
+          href={element.data.href || '#'} 
+          className="text-sm hover:opacity-80 transition-opacity"
+        >
+          {element.data.content || 'Link'}
+        </a>
+      );
+    
+    case 'button':
+      return (
+        <a 
+          href={element.data.buttonLink || element.data.href || '#'} 
+          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:opacity-90 transition-opacity"
+        >
+          {element.data.buttonText || element.data.content || 'Button'}
+        </a>
+      );
+    
     case 'heading':
       const HeadingTag = element.data.level || 'h2';
-      return <HeadingTag className="font-bold text-lg">{element.data.content}</HeadingTag>;
+      return (
+        <HeadingTag className="font-bold text-lg">
+          {element.data.content || 'Heading'}
+        </HeadingTag>
+      );
+    
     case 'paragraph':
-      return <p className="text-sm">{element.data.content}</p>;
+      return (
+        <p className="text-sm">
+          {element.data.content || 'Text'}
+        </p>
+      );
+    
     case 'image':
-      return <img src={element.data.imageUrl} alt={element.data.alt} className="h-8 w-auto" />;
-    case 'button':
-      return <button className="px-4 py-2 bg-blue-600 text-white rounded">{element.data.buttonText}</button>;
+      return (
+        <img 
+          src={element.data.imageUrl || '/placeholder.svg'} 
+          alt={element.data.alt || 'Image'} 
+          className="h-8 w-auto object-contain"
+        />
+      );
+    
     case 'spacer':
-      return <div style={{ height: element.data.height || 20 }}></div>;
-    case 'logo':
-      return <span className="font-bold text-xl">{element.data.content}</span>;
-    case 'link':
-      return <a href={element.data.href} className="text-blue-600 hover:underline">{element.data.content}</a>;
+      return (
+        <div 
+          style={{ width: element.data.width || element.data.height || 20 }} 
+          className="flex-shrink-0"
+        />
+      );
+    
     case 'actions':
-      return <a href={element.data.href} className="text-blue-600">{element.data.platform}</a>;
+      return (
+        <a 
+          href={element.data.href || '#'} 
+          className="text-sm hover:opacity-80 transition-opacity"
+        >
+          {element.data.platform || 'Action'}
+        </a>
+      );
+    
     default:
-      return <span>Elemento desconocido</span>;
+      return <span className="text-xs text-slate-400">Unknown element</span>;
   }
 }
 
@@ -501,8 +598,14 @@ const HeaderWithButton = ({ data }: BlockComponentProps<HeaderData>) => {
   // rect del canvas para limitar el portal
   const canvasRect = useCanvasRect(menuOpen);
 
+  const headerStyle: React.CSSProperties = {
+    ...bg.style,
+    paddingLeft: typeof data.paddingLeft === 'number' ? `${data.paddingLeft}px` : undefined,
+    paddingRight: typeof data.paddingRight === 'number' ? `${data.paddingRight}px` : undefined,
+  };
+
   return (
-    <header className={cn('p-4', bg.className)} style={bg.style}>
+    <header className={cn('p-4', bg.className)} style={headerStyle}>
       <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
         <h1 className={cn('font-bold', isMobile ? 'text-lg' : 'text-xl', logoStyles.className)} style={logoStyles.style}>{data.logoText}</h1>
 
@@ -581,8 +684,14 @@ const HeaderSticky = ({ data }: BlockComponentProps<HeaderData>) => {
   // rect del canvas para limitar el portal
   const canvasRect = useCanvasRect(menuOpen);
 
+  const headerStyle: React.CSSProperties = {
+    ...bg.style,
+    paddingLeft: typeof data.paddingLeft === 'number' ? `${data.paddingLeft}px` : undefined,
+    paddingRight: typeof data.paddingRight === 'number' ? `${data.paddingRight}px` : undefined,
+  };
+
   return (
-    <header className={cn('sticky top-0 z-50 p-4', bg.className)} style={bg.style}>
+    <header className={cn('sticky top-0 z-50 p-4', bg.className)} style={headerStyle}>
       <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
         <h1 className={cn('font-bold', isMobile ? 'text-lg' : 'text-xl', logoStyles.className)} style={logoStyles.style}>{data.logoText}</h1>
 
