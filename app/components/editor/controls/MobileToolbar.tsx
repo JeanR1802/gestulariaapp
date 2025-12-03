@@ -1,7 +1,7 @@
 
 'use client';
 
-import { EyeIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, PencilIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 
 interface MobileToolbarProps {

@@ -18,7 +18,7 @@ import {
   EnvelopeIcon,
   ArrowLeftIcon,
   SparklesIcon
-} from '@heroicons/react/24/outline'
+} from '@heroicons/react/24/solid'
 import { generateSlug, cn } from '@/lib/utils'
 import { useTheme } from '@/app/contexts/ThemeContext'
 import { colorPalettes } from '@/app/lib/colors'

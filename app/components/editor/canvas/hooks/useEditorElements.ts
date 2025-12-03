@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { StackElement, StackElementType } from '@/app/components/editor/blocks/CustomStackElements';
+import { StackElement, StackElementType } from '@/app/components/editor/blocks/StackBlock';
 import { BlockData, Block } from '@/app/components/editor/blocks';
 import { getDefaultDataForType, generateElementId } from '../utils/elementHelpers';
 
@@ -19,18 +19,18 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
 
     const setCustomElements = (elements: StackElement[]) => {
         // Ensure every element has a valid zone and row
-        const normalized = elements.map(el => ({ ...el, data: { ...(el.data || {}), zone: (el.data as any)?.zone || 'center', row: (el.data as any)?.row ?? 0 } }));
+        const normalized = elements.map(el => ({ ...el, data: { ...(el.data || {}), zone: (el.data as Record<string, unknown>)?.zone || 'center', row: (el.data as Record<string, unknown>)?.row ?? 0 } }));
         // Prune empty slot placeholders automatically: remove elements of type 'slot' that are still marked empty
         // If a slot doesn't have explicit isEmpty flag, treat it as empty only when it has no meaningful properties
         const pruned = normalized.filter(el => {
             if (el.type !== 'slot') return true;
-            const d = el.data as any;
+            const d = el.data as Record<string, unknown>;
             // Consider non-empty if it has content or any property other than zone/row/slotType/isEmpty/placeholder/acceptedTypes
             const keys = Object.keys(d || {}).filter(k => !['zone','row','slotType','isEmpty','placeholder','acceptedTypes'].includes(k));
             const hasMeaningful = keys.length > 0;
             return hasMeaningful === true ? true : false;
         });
-        console.log('[useEditorElements] setCustomElements - normalized elements', normalized.map(e => ({ id: e.id, type: e.type, zone: (e.data as any)?.zone, row: (e.data as any)?.row })));
+        console.log('[useEditorElements] setCustomElements - normalized elements', normalized.map(e => ({ id: e.id, type: e.type, zone: (e.data as Record<string, unknown>)?.zone, row: (e.data as Record<string, unknown>)?.row })));
         if (pruned.length !== normalized.length) {
             console.log('[useEditorElements] setCustomElements - pruned empty slots', normalized.length - pruned.length);
         }
@@ -39,8 +39,9 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
         // when space becomes available. We'll build a rows map and flatten.
         const rowsMap = new Map<number, { left: StackElement[]; center: StackElement[]; right: StackElement[] }>();
         pruned.forEach(el => {
-            const row = (el.data as any)?.row ?? 0;
-            const zone = ((el.data as any)?.zone as 'left' | 'center' | 'right') || 'center';
+            const dataObj = el.data as Record<string, unknown> | undefined;
+            const row = typeof dataObj?.row === 'number' ? dataObj.row : 0;
+            const zone = (dataObj?.zone as 'left' | 'center' | 'right' | undefined) || 'center';
             if (!rowsMap.has(row)) rowsMap.set(row, { left: [], center: [], right: [] });
             const bucket = rowsMap.get(row)!;
             if (zone === 'left') bucket.left.push(el);
@@ -75,8 +76,9 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
     const splitByRowAndZone = (elements: StackElement[]) => {
         const rowsMap = new Map<number, { left: StackElement[]; center: StackElement[]; right: StackElement[] }>();
         elements.forEach(el => {
-            const row = (el.data as any)?.row ?? 0;
-            const zone = ((el.data as any)?.zone as 'left' | 'center' | 'right') || 'center';
+            const dataObj = el.data as Record<string, unknown> | undefined;
+            const row = typeof dataObj?.row === 'number' ? dataObj.row : 0;
+            const zone = (dataObj?.zone as 'left' | 'center' | 'right' | undefined) || 'center';
             if (!rowsMap.has(row)) rowsMap.set(row, { left: [], center: [], right: [] });
             const bucket = rowsMap.get(row)!;
             if (zone === 'left') bucket.left.push(el);
@@ -123,11 +125,11 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
         console.log('🟠 [addElement] customElements ANTES de insertar:', customElements.length, 'elementos:', customElements.map(e => e.id));
         
         try {
-            const baseData: any = { ...(getDefaultDataForType(type) as any), zone, row };
+            const baseData: Record<string, unknown> = { ...(getDefaultDataForType(type) as Record<string, unknown>), zone, row };
             const newElement: StackElement = {
                 id: generateElementId(),
                 type,
-                data: baseData as any
+                data: baseData as Record<string, unknown>
             };
             
             console.log('🟡 [addElement] Elemento creado:', newElement.id, 'tipo:', type);
@@ -139,7 +141,7 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
             if (!rowsMap.has(row)) rowsMap.set(row, { left: [], center: [], right: [] });
             const bucket = rowsMap.get(row)!;
             // Prevent insertion if the target zone already reached max real elements
-            const existingRealCount = ((bucket as any)[zone] as StackElement[]).filter(e => e.type !== 'slot').length;
+            const existingRealCount = ((bucket as Record<string, unknown>)[zone] as StackElement[]).filter(e => e.type !== 'slot').length;
             if (existingRealCount >= DEFAULT_MAX_PER_SLOT) {
                 console.log('[useEditorElements] addElement - target zone full by maxPerSlot', { zone, row, existingRealCount, max: DEFAULT_MAX_PER_SLOT });
                 return customElements;
@@ -152,7 +154,7 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
             const newElements = flattenRowsByRow(finalRows, rowsMap);
             console.log('[useEditorElements] addElement - result rows', finalRows);
             // Also prune any leftover empty slots immediately
-            const pruned = newElements.filter(el => !(el.type === 'slot' && (el.data as any)?.isEmpty));
+            const pruned = newElements.filter(el => !(el.type === 'slot' && (el.data as Record<string, unknown>)?.isEmpty));
             
             console.log('🟢 [addElement] Elementos finales:', pruned.length, 'elementos');
             setCustomElements(pruned);
@@ -182,33 +184,33 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
         console.log('[useEditorElements] handleInsertElementInRow - insertingType', insertingType, 'zone', zone, 'row', row);
         
         try {
-            const baseData: any = { zone, row };
+            const baseData: Record<string, unknown> = { zone, row };
             let newElement: StackElement;
             switch (insertingType) {
                 case 'logo':
-                    newElement = { id: generateElementId(), type: 'logo', data: { ...baseData, content: 'Mi Logo' } as any };
+                    newElement = { id: generateElementId(), type: 'logo', data: { ...baseData, content: 'Mi Logo' } as Record<string, unknown> };
                     break;
                 case 'link':
-                    newElement = { id: generateElementId(), type: 'link', data: { ...baseData, content: 'Enlace', href: '#' } as any };
+                    newElement = { id: generateElementId(), type: 'link', data: { ...baseData, content: 'Enlace', href: '#' } as Record<string, unknown> };
                     break;
                 case 'actions':
-                    newElement = { id: generateElementId(), type: 'actions', data: { ...baseData, buttonText: 'Acción', buttonLink: '#' } as any };
+                    newElement = { id: generateElementId(), type: 'actions', data: { ...baseData, buttonText: 'Acción', buttonLink: '#' } as Record<string, unknown> };
                     break;
                 case 'spacer':
                     // For header/custom elements the spacer is horizontal — default width 10px
-                    newElement = { id: generateElementId(), type: 'spacer', data: { ...baseData, width: 10 } as any };
+                    newElement = { id: generateElementId(), type: 'spacer', data: { ...baseData, width: 10 } as Record<string, unknown> };
                     break;
                 case 'heading':
-                    newElement = { id: generateElementId(), type: 'heading', data: { ...baseData, content: 'Título (H2)', level: 'h2' } as any };
+                    newElement = { id: generateElementId(), type: 'heading', data: { ...baseData, content: 'Título (H2)', level: 'h2' } as Record<string, unknown> };
                     break;
                 case 'paragraph':
-                    newElement = { id: generateElementId(), type: 'paragraph', data: { ...baseData, content: 'Nuevo párrafo de texto.' } as any };
+                    newElement = { id: generateElementId(), type: 'paragraph', data: { ...baseData, content: 'Nuevo párrafo de texto.' } as Record<string, unknown> };
                     break;
                 case 'image':
-                    newElement = { id: generateElementId(), type: 'image', data: { ...baseData, imageUrl: '', alt: 'Imagen' } as any };
+                    newElement = { id: generateElementId(), type: 'image', data: { ...baseData, imageUrl: '', alt: 'Imagen' } as Record<string, unknown> };
                     break;
                 case 'button':
-                    newElement = { id: generateElementId(), type: 'button', data: { ...baseData, buttonText: 'Botón', buttonLink: '#' } as any };
+                    newElement = { id: generateElementId(), type: 'button', data: { ...baseData, buttonText: 'Botón', buttonLink: '#' } as Record<string, unknown> };
                     break;
                 default:
                     return undefined;
@@ -220,9 +222,9 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
             // Remove any empty slot placeholders in the target row before inserting.
             // This ensures that empty left/right slots don't block insertion into the center.
             ['left','center','right'].forEach((z) => {
-                 const arr = (bucket as any)[z] as StackElement[];
-                 const filtered = arr.filter(el => !(el.type === 'slot' && (el.data as any)?.isEmpty));
-                 (bucket as any)[z] = filtered;
+                 const arr = (bucket as Record<string, unknown>)[z] as StackElement[];
+                 const filtered = arr.filter(el => !(el.type === 'slot' && (el.data as Record<string, unknown>)?.isEmpty));
+                 (bucket as Record<string, unknown>)[z] = filtered;
              });
              // Prevent insertion if the target zone already reached max real elements
              const existingRealCount2 = (zone === 'left' ? bucket.left : zone === 'right' ? bucket.right : bucket.center).filter(e => e.type !== 'slot').length;
@@ -236,7 +238,7 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
              else bucket.center.push(newElement);
 
             const finalRows = Array.from(new Set([...rows, row])).sort((a, b) => a - b);
-            const pruned = flattenRowsByRow(finalRows, rowsMap).filter(el => !(el.type === 'slot' && (el.data as any)?.isEmpty));
+            const pruned = flattenRowsByRow(finalRows, rowsMap).filter(el => !(el.type === 'slot' && (el.data as Record<string, unknown>)?.isEmpty));
             setCustomElements(pruned);
             setInsertingType(null);
 
@@ -315,7 +317,7 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
         console.log('[useEditorElements] updateElement - id, newData', id, newData);
         // preserve zone and row if not provided
         const newElements = customElements.map(el =>
-            el.id === id ? { ...el, data: { ...el.data, ...newData, zone: (newData as any)?.zone || (el.data as any).zone || 'center', row: (newData as any)?.row ?? (el.data as any).row ?? 0 } } : el
+            el.id === id ? { ...el, data: { ...el.data, ...newData, zone: (newData as Record<string, unknown>)?.zone || (el.data as Record<string, unknown>).zone || 'center', row: (newData as Record<string, unknown>)?.row ?? (el.data as Record<string, unknown>).row ?? 0 } } : el
         );
         const { rows, rowsMap } = splitByRowAndZone(newElements);
         const finalRows = rows.sort((a,b)=>a-b);

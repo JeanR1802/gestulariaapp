@@ -8,12 +8,13 @@ export function classToComputedColor(className: string, property: 'background-co
     el.style.height = '1px';
     el.className = className;
     document.body.appendChild(el);
-    const cs = getComputedStyle(el)[property];
+    const computedStyle = getComputedStyle(el);
+    const cs = computedStyle.getPropertyValue(property);
     document.body.removeChild(el);
     if (!cs) return null;
     // cs can be like 'rgb(34, 197, 94)' or '#fff'
     return cs;
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }

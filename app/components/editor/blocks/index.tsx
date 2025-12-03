@@ -15,7 +15,7 @@ import {
   UserGroupIcon,
   ShoppingBagIcon,
   StarIcon
-} from '@heroicons/react/24/outline';
+} from '@heroicons/react/24/solid';
 import { nanoid } from 'nanoid'; // <-- Asegurar que nanoid está disponible
 
 // Importaciones de bloques y sus tipos de datos

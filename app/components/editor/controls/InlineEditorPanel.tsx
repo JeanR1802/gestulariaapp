@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Block, BLOCKS, BlockData } from '../blocks';
 import { PreviewRenderer } from '../PreviewRenderer';
-import { PaintBrushIcon, PencilIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { PaintBrushIcon, PencilIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 
 // --- Tipos y Props ---

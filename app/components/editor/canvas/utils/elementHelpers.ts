@@ -1,4 +1,4 @@
-import { StackElement, StackElementType } from '@/app/components/editor/blocks/CustomStackElements';
+import { StackElement, StackElementType } from '@/app/components/editor/blocks/StackBlock';
 
 /**
  * Devuelve los datos por defecto para cada tipo de elemento

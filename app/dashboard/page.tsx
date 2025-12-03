@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
   PlusIcon, XMarkIcon, Squares2X2Icon, 
   ArrowTrendingUpIcon, SparklesIcon, UserCircleIcon
-} from '@heroicons/react/24/outline';
+} from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/app/hooks/useAuth';
 import { useTheme } from '@/app/contexts/ThemeContext';
@@ -20,7 +20,7 @@ type Module = {
   type: 'kpi' | 'chart' | 'list' | 'banner';
   title: string;
   size: ModuleSize;
-  data?: any;
+  data?: unknown;
 };
 
 type Site = {
@@ -368,47 +368,56 @@ const ModuleCard = React.memo(({ module, onRemove }: { module: Module, onRemove:
             </button>
 
             {/* Contenido según tipo - Todo con z-index bajo y pointer-events-none donde sea necesario */}
-            {module.type === 'kpi' && (
-                <div className="relative z-0 flex flex-col h-full">
-                    <h3 className="text-sm font-medium uppercase tracking-wider" style={{ color: c.text.secondary }}>{module.title}</h3>
-                    <div className="flex-1 flex flex-col justify-end">
-                         <p className="text-4xl font-bold" style={{ color: c.text.primary }}>{module.data.value}</p>
-                         <div className="flex items-center gap-1 text-sm mt-1" style={{ color: c.success }}>
-                            <ArrowTrendingUpIcon className="w-4 h-4" />
-                            <span>{module.data.trend}</span>
-                         </div>
+            {module.type === 'kpi' && (() => {
+                const kpiData = module.data as { value?: string; trend?: string } | undefined;
+                return (
+                    <div className="relative z-0 flex flex-col h-full">
+                        <h3 className="text-sm font-medium uppercase tracking-wider" style={{ color: c.text.secondary }}>{module.title}</h3>
+                        <div className="flex-1 flex flex-col justify-end">
+                             <p className="text-4xl font-bold" style={{ color: c.text.primary }}>{kpiData?.value || 'N/A'}</p>
+                             <div className="flex items-center gap-1 text-sm mt-1" style={{ color: c.success }}>
+                                <ArrowTrendingUpIcon className="w-4 h-4" />
+                                <span>{kpiData?.trend || '0%'}</span>
+                             </div>
+                        </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
 
-            {module.type === 'chart' && (
-                <div className="relative z-0 flex flex-col h-full">
-                    <h3 className="text-sm font-medium uppercase mb-4" style={{ color: c.text.secondary }}>{module.title}</h3>
-                    <div className="flex-1 flex items-end justify-between gap-2 px-2">
-                        {module.data.bars.map((h: number, i: number) => (
-                            <div key={i} className="w-full rounded-t-sm transition-colors relative" style={{ height: `${h}%`, backgroundColor: `${c.accent.primary}33` }}>
-                                <div className="absolute inset-0 transition-colors" style={{ backgroundColor: `${c.accent.primary}${h > 50 ? 'CC' : '88'}` }} />
-                            </div>
-                        ))}
+            {module.type === 'chart' && (() => {
+                const chartData = module.data as { bars?: number[] } | undefined;
+                return (
+                    <div className="relative z-0 flex flex-col h-full">
+                        <h3 className="text-sm font-medium uppercase mb-4" style={{ color: c.text.secondary }}>{module.title}</h3>
+                        <div className="flex-1 flex items-end justify-between gap-2 px-2">
+                            {(chartData?.bars || []).map((h: number, i: number) => (
+                                <div key={i} className="w-full rounded-t-sm transition-colors relative" style={{ height: `${h}%`, backgroundColor: `${c.accent.primary}33` }}>
+                                    <div className="absolute inset-0 transition-colors" style={{ backgroundColor: `${c.accent.primary}${h > 50 ? 'CC' : '88'}` }} />
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
 
-            {module.type === 'banner' && (
-                <div className="flex items-center justify-between h-full px-4 relative z-0 pointer-events-none">
-                    <div className="flex-1">
-                        <h2 className="text-2xl font-bold mb-1" style={{ color: c.text.primary }}>{module.title}</h2>
-                        <p style={{ color: c.text.secondary }}>{module.data.subtitle}</p>
+            {module.type === 'banner' && (() => {
+                const bannerData = module.data as { subtitle?: string } | undefined;
+                return (
+                    <div className="flex items-center justify-between h-full px-4 relative z-0 pointer-events-none">
+                        <div className="flex-1">
+                            <h2 className="text-2xl font-bold mb-1" style={{ color: c.text.primary }}>{module.title}</h2>
+                            <p style={{ color: c.text.secondary }}>{bannerData?.subtitle || ''}</p>
+                        </div>
+                        <div className="relative flex-shrink-0 w-16 h-16">
+                            <div
+                                className="w-16 h-16 rounded-lg flex items-center justify-center"
+                                style={{ backgroundColor: theme === 'light' ? c.accent.primary : '#FFFFFF' }}
+                            />
+                            <SparklesIcon className="w-12 h-12 absolute inset-0 m-auto" style={{ color: theme === 'light' ? '#FFFFFF' : c.bg.primary }} />
+                        </div>
                     </div>
-                    <div className="relative flex-shrink-0 w-16 h-16">
-                        <div
-                            className="w-16 h-16 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: theme === 'light' ? c.accent.primary : '#FFFFFF' }}
-                        />
-                        <SparklesIcon className="w-12 h-12 absolute inset-0 m-auto" style={{ color: theme === 'light' ? '#FFFFFF' : c.bg.primary }} />
-                    </div>
-                </div>
-            )}
+                );
+            })()}
             
             {/* Decoración de fondo (Glow sutil) - Reducido para mejor rendimiento */}
             <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-xl pointer-events-none z-0" style={{ backgroundColor: `${c.accent.primary}0D` }} />

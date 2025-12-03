@@ -1,6 +1,6 @@
 'use client';
 
-import { SunIcon, MoonIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { SunIcon, MoonIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';

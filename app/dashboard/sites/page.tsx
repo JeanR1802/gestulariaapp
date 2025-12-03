@@ -8,7 +8,7 @@ import {
   GlobeAltIcon, UsersIcon, ClipboardDocumentListIcon, 
   BanknotesIcon, ChartBarIcon, XMarkIcon, PlusIcon, 
   Squares2X2Icon, ArrowRightIcon, CheckIcon
-} from '@heroicons/react/24/outline';
+} from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { colorPalettes } from '@/app/lib/colors';
@@ -233,9 +233,11 @@ const EmptyState = React.memo(({ onOpenToolbox }: { onOpenToolbox: () => void })
 });
 EmptyState.displayName = 'EmptyState';
 
-const ToolboxModal = React.memo((props: any) => {
+const ToolboxModal = React.memo((props: { isOpen: boolean; onClose: () => void; modules: unknown; activeModules: unknown; onAddModule: (type: ModuleType) => void }) => {
   // Contenido de ToolboxModal sin cambios para brevedad...
-  const { isOpen, onClose, modules, activeModules, onAddModule } = props;
+  const { isOpen, onClose, modules: modulesRaw, activeModules: activeModulesRaw, onAddModule } = props;
+  const modules = modulesRaw as ModuleDef[];
+  const activeModules = activeModulesRaw as ModuleDef[];
   const { theme, palette } = useTheme();
   const c = colorPalettes[palette][theme];
 

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { colorPalettes } from '@/app/lib/colors';
@@ -66,10 +68,15 @@ export default function HeaderPresentational({ data }: { data: HeaderPresentatio
   const buttonStyles = getButtonStyles(data.buttonBgColor, data.buttonTextColor, 'bg-blue-600', 'text-white');
 
   // Merge with theme palette defaults when helper did not resolve a color
-  const bgStyle = { ...(bg.style || {}), backgroundColor: (bg.style && (bg.style as any).backgroundColor) || c.bg?.primary } as React.CSSProperties;
-  const finalLogoStyle = { ...(logoStyles.style || {}), color: (logoStyles.style && (logoStyles.style as any).color) || c.text.primary } as React.CSSProperties;
-  const finalLinkStyle = { ...(linkStyles.style || {}), color: (linkStyles.style && (linkStyles.style as any).color) || c.text.secondary } as React.CSSProperties;
-  const finalButtonStyle = { ...(buttonStyles.style || {}), backgroundColor: (buttonStyles.style && (buttonStyles.style as any).backgroundColor) || c.accent?.primary, color: (buttonStyles.style && (buttonStyles.style as any).color) || (theme === 'dark' ? '#0D1222' : '#FFFFFF') } as React.CSSProperties;
+  const bgStyleProps = bg.style as React.CSSProperties | undefined;
+  const logoStyleProps = logoStyles.style as React.CSSProperties | undefined;
+  const linkStyleProps = linkStyles.style as React.CSSProperties | undefined;
+  const buttonStyleProps = buttonStyles.style as React.CSSProperties | undefined;
+
+  const bgStyle = { ...(bg.style || {}), backgroundColor: bgStyleProps?.backgroundColor || c.bg?.primary } as React.CSSProperties;
+  const finalLogoStyle = { ...(logoStyles.style || {}), color: logoStyleProps?.color || c.text.primary } as React.CSSProperties;
+  const finalLinkStyle = { ...(linkStyles.style || {}), color: linkStyleProps?.color || c.text.secondary } as React.CSSProperties;
+  const finalButtonStyle = { ...(buttonStyles.style || {}), backgroundColor: buttonStyleProps?.backgroundColor || c.accent?.primary, color: buttonStyleProps?.color || (theme === 'dark' ? '#0D1222' : '#FFFFFF') } as React.CSSProperties;
 
   switch (variant) {
     case 'custom':

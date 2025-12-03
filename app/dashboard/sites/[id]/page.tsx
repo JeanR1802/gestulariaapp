@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { BLOCKS, BlockType, BlockData, Block, BlockConfig } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 import { MobileToolbar } from '@/app/components/editor/controls/MobileToolbar';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import { Transition } from '@headlessui/react';
 import { PreviewModeContext } from '@/app/contexts/PreviewModeContext';

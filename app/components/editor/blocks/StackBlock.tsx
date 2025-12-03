@@ -9,7 +9,7 @@ import { nanoid } from 'nanoid';
 import { TrashIcon, ArrowUpIcon, ArrowDownIcon, Heading, Type, Image, Circle } from 'lucide-react';
 
 // --- INLINE TYPES (previously from CustomStackElements) ---
-export type StackElementType = 'heading' | 'paragraph' | 'image' | 'button' | 'spacer';
+export type StackElementType = 'heading' | 'paragraph' | 'image' | 'button' | 'spacer' | 'logo' | 'link' | 'actions' | 'slot';
 
 export interface StackElement {
   id: string;

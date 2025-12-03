@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { EnvelopeIcon, CheckCircleIcon, SparklesIcon, ArrowRightIcon, UserIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
+import { EnvelopeIcon, CheckCircleIcon, UserIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './contexts/ThemeContext';
@@ -72,7 +73,7 @@ export default function LandingPage() {
       <header className="flex justify-between items-center px-6 py-8 md:px-16 relative z-50">
         <div className="flex items-center gap-3">
           {/* Logo: usa el .ico público */}
-          <img src="/lgo.png" alt="Gestularia logo" className="w-6 h-6 object-contain rounded-md" />
+          <Image src="/lgo.png" alt="Gestularia logo" className="w-6 h-6 object-contain rounded-md" width={24} height={24} />
           <span className="font-bold tracking-widest text-sm md:text-base">GESTULARIA</span>
           <span className="border border-white/20 px-2 py-0.5 text-[10px] rounded text-slate-400 uppercase tracking-wider ml-2">Beta Access</span>
         </div>

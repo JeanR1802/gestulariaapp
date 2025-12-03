@@ -9,7 +9,7 @@ import {
   ChartBarIcon,
   Cog6ToothIcon,
   ArrowTrendingUpIcon
-} from '@heroicons/react/24/outline';
+} from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import { useTheme } from '../contexts/ThemeContext';
 import { colorPalettes } from '../lib/colors';

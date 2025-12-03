@@ -322,7 +322,7 @@ export function HeaderStyleEditor({
   updateData,
 }: {
   data: HeaderData;
-  updateData: (key: keyof HeaderData, value: any) => void;
+  updateData: (key: keyof HeaderData, value: unknown) => void;
 }) {
   return (
     <div className="space-y-3">
