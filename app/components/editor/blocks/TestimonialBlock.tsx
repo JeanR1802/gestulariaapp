@@ -31,19 +31,29 @@ export interface TestimonialData {
 
 // --- Helpers seguros para colores ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {
-  if (!colorValue) return { className: defaultClass, style: {} } as const;
+  const colorMap: Record<string, string> = {
+    'text-white': '#ffffff', 'text-black': '#000000',
+    'text-slate-600': '#475569', 'text-slate-700': '#334155', 'text-slate-800': '#1e293b',
+    'text-slate-900': '#0f172a', 'text-blue-600': '#2563eb',
+  };
+  if (!colorValue) return { className: defaultClass, style: { color: colorMap[defaultClass] || '#1e293b' } } as const;
   if (colorValue.startsWith('[#')) {
     return { className: '', style: { color: colorValue.slice(1, -1) } } as const;
   }
-  return { className: colorValue, style: {} } as const;
+  return { className: colorValue, style: { color: colorMap[colorValue] || '#1e293b' } } as const;
 };
 
 const getBackgroundStyles = (colorValue: string | undefined, defaultClass = 'bg-white') => {
-  if (!colorValue) return { className: defaultClass, style: {} } as const;
+  const bgMap: Record<string, string> = {
+    'bg-white': '#ffffff', 'bg-black': '#000000',
+    'bg-slate-50': '#f8fafc', 'bg-slate-100': '#f1f5f9', 'bg-slate-800': '#1e293b',
+    'bg-blue-600': '#2563eb',
+  };
+  if (!colorValue) return { className: defaultClass, style: { backgroundColor: bgMap[defaultClass] || '#ffffff' } } as const;
   if (colorValue.startsWith('[#')) {
     return { className: '', style: { backgroundColor: colorValue.slice(1, -1) } } as const;
   }
-  return { className: colorValue, style: {} } as const;
+  return { className: colorValue, style: { backgroundColor: bgMap[colorValue] || '#ffffff' } } as const;
 };
 
 // --- Utilidades de actualización inmutable ---

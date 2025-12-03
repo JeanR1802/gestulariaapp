@@ -195,7 +195,8 @@ export function useEditorElements(block: Block, localData: BlockData, setLocalDa
                     newElement = { id: generateElementId(), type: 'actions', data: { ...baseData, buttonText: 'Acción', buttonLink: '#' } as any };
                     break;
                 case 'spacer':
-                    newElement = { id: generateElementId(), type: 'spacer', data: { ...baseData, height: 20 } as any };
+                    // For header/custom elements the spacer is horizontal — default width 10px
+                    newElement = { id: generateElementId(), type: 'spacer', data: { ...baseData, width: 10 } as any };
                     break;
                 case 'heading':
                     newElement = { id: generateElementId(), type: 'heading', data: { ...baseData, content: 'Título (H2)', level: 'h2' } as any };

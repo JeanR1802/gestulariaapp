@@ -34,7 +34,7 @@ export function ColorPalette({ label, selectedColor, onChange }: ColorPalettePro
 
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 mb-2" style={{ color: '#334155' }}>{label}</label>
       <div className="flex flex-wrap gap-3 items-center">
         {colors.map((color) => (
           <button
@@ -55,27 +55,35 @@ export function ColorPalette({ label, selectedColor, onChange }: ColorPalettePro
           +
         </button>
         {showCustom && (
-          <div className="absolute z-30 mt-2 bg-white p-4 rounded-lg shadow-lg border flex flex-col items-center gap-2">
-            <ColorPicker
-              color={customColor}
-              onChange={setCustomColor}
-              label="Color personalizado"
-            />
-            <button
-              className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              onClick={() => {
-                onChange(`[${customColor}]`);
-                setShowCustom(false);
-              }}
-            >
-              Aplicar
-            </button>
-            <button
-              className="text-xs text-slate-500 mt-1 hover:underline"
-              onClick={() => setShowCustom(false)}
-            >
-              Cancelar
-            </button>
+          <div>
+            {/* Overlay modal */}
+            <div className="fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm transition-opacity" onClick={() => setShowCustom(false)} />
+            {/* Panel centrado */}
+            <div className="fixed left-1/2 top-1/2 z-[80] -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-2xl shadow-2xl border flex flex-col items-center gap-4 w-[90vw] max-w-xs">
+              <label className="block text-base font-semibold text-slate-700 mb-2">Color personalizado</label>
+              <ColorPicker
+                color={customColor}
+                onChange={setCustomColor}
+                label=""
+              />
+              <div className="flex gap-3 w-full mt-2">
+                <button
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-base"
+                  onClick={() => {
+                    onChange(`[${customColor}]`);
+                    setShowCustom(false);
+                  }}
+                >
+                  Aplicar
+                </button>
+                <button
+                  className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200 transition text-base"
+                  onClick={() => setShowCustom(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

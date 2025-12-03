@@ -54,5 +54,11 @@ module.exports = {
       },
     },
   },
+  // Evitar que clases dinámicas usadas en el editor sean purgadas en producción
+  safelist: [
+    'bg-blue-600', 'text-white', 'bg-white', 'text-slate-800', 'text-slate-900', 'text-slate-600',
+    'bg-slate-800', 'bg-slate-900', 'text-blue-600', 'bg-blue-50', 'bg-slate-50', 'bg-slate-100',
+    'bg-yellow-400/90', 'text-blue-900', 'hover:bg-slate-100', 'hover:text-white'
+  ],
   plugins: [],
 }

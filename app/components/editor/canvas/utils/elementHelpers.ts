@@ -15,7 +15,8 @@ export function getDefaultDataForType(type: StackElementType): StackElement['dat
             return { buttonText: 'Botón', buttonLink: '#' };
         case 'spacer':
             // Horizontal spacer by default (width in px)
-            return { width: 1 } as StackElement['data'];
+            // Use 10px as a reasonable default so inserted spacers are visible
+            return { width: 10 } as StackElement['data'];
         case 'logo':
             return { content: 'Logo' };
         case 'link':

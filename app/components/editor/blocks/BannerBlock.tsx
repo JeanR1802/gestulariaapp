@@ -18,14 +18,26 @@ export interface BannerData {
 
 // --- Helpers seguros para colores ---
 const getStyles = (color: string | undefined, defaultClass: string) => {
-  if (!color) return { className: defaultClass, style: {} };
-  if (color.startsWith('text-')) return { className: color, style: {} };
+  const colorMap: Record<string, string> = {
+    'text-white': '#ffffff', 'text-black': '#000000',
+    'text-slate-600': '#475569', 'text-slate-700': '#334155', 'text-slate-800': '#1e293b',
+    'text-slate-900': '#0f172a', 'text-blue-600': '#2563eb', 'text-blue-900': '#1e3a8a',
+    'text-yellow-900': '#713f12',
+  };
+  if (!color) return { className: defaultClass, style: { color: colorMap[defaultClass] || '#1e293b' } };
+  if (color.startsWith('text-')) return { className: color, style: { color: colorMap[color] || '#1e293b' } };
   if (color.startsWith('[#')) return { className: '', style: { color: color.slice(1, -1) } };
   return { className: '', style: { color } };
 };
 const getBackgroundStyles = (color: string | undefined, defaultClass = 'bg-blue-50') => {
-  if (!color) return { className: defaultClass, style: {} };
-  if (color.startsWith('bg-')) return { className: color, style: {} };
+  const bgMap: Record<string, string> = {
+    'bg-white': '#ffffff', 'bg-black': '#000000',
+    'bg-slate-50': '#f8fafc', 'bg-slate-100': '#f1f5f9',
+    'bg-blue-50': '#eff6ff', 'bg-blue-600': '#2563eb',
+    'bg-yellow-400': '#facc15',
+  };
+  if (!color) return { className: defaultClass, style: { backgroundColor: bgMap[defaultClass] || '#eff6ff' } };
+  if (color.startsWith('bg-')) return { className: color, style: { backgroundColor: bgMap[color] || '#ffffff' } };
   if (color.startsWith('[#')) return { className: '', style: { backgroundColor: color.slice(1, -1) } };
   return { className: '', style: { backgroundColor: color } };
 };

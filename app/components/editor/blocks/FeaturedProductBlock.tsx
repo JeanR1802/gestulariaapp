@@ -21,33 +21,71 @@ export interface FeaturedProductData {
   rating: number;
   buttonText: string;
   backgroundColor?: string;
-  tagColor?: string;
-  titleColor?: string;
-  descriptionColor?: string;
-  priceColor?: string;
+  textColor?: string;
   buttonBgColor?: string;
   buttonTextColor?: string;
 }
 
 // --- Helpers seguros para colores ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {
-  if (!colorValue) return { className: defaultClass, style: {} } as const;
-  if (colorValue.startsWith('[#')) return { className: '', style: { color: colorValue.slice(1, -1) } } as const;
-  return { className: colorValue, style: {} } as const;
+  const colorMap: Record<string, string> = {
+    'text-white': '#ffffff', 'text-black': '#000000', 'text-slate-50': '#f8fafc', 'text-slate-100': '#f1f5f9',
+    'text-slate-200': '#e2e8f0', 'text-slate-300': '#cbd5e1', 'text-slate-400': '#94a3b8', 'text-slate-500': '#64748b',
+    'text-slate-600': '#475569', 'text-slate-700': '#334155', 'text-slate-800': '#1e293b', 'text-slate-900': '#0f172a',
+    'text-blue-600': '#2563eb', 'text-blue-500': '#3b82f6',
+  };
+  const finalClass = colorValue || defaultClass;
+  if (colorValue?.startsWith('[#')) return { className: '', style: { color: colorValue.slice(1, -1) } } as const;
+  return { className: finalClass, style: { color: colorMap[finalClass] || '#1e293b' } } as const;
 };
 
 const getBackgroundStyles = (colorValue: string | undefined, defaultClass = 'bg-white') => {
-  if (!colorValue) return { className: defaultClass, style: {} } as const;
-  if (colorValue.startsWith('[#')) return { className: '', style: { backgroundColor: colorValue.slice(1, -1) } } as const;
-  return { className: colorValue, style: {} } as const;
+  const bgMap: Record<string, string> = {
+    'bg-white': '#ffffff', 'bg-black': '#000000', 'bg-slate-50': '#f8fafc', 'bg-slate-100': '#f1f5f9',
+    'bg-slate-200': '#e2e8f0', 'bg-slate-300': '#cbd5e1', 'bg-slate-400': '#94a3b8', 'bg-slate-500': '#64748b',
+    'bg-slate-600': '#475569', 'bg-slate-700': '#334155', 'bg-slate-800': '#1e293b', 'bg-slate-900': '#0f172a',
+    'bg-blue-600': '#2563eb', 'bg-blue-500': '#3b82f6',
+  };
+  const finalClass = colorValue || defaultClass;
+  if (colorValue?.startsWith('[#')) return { className: '', style: { backgroundColor: colorValue.slice(1, -1) } } as const;
+  return { className: finalClass, style: { backgroundColor: bgMap[finalClass] || '#ffffff' } } as const;
 };
 
 const getButtonStyles = (bgColor?: string, textColor?: string) => {
   const style: React.CSSProperties = {};
   const isCustomBg = bgColor?.startsWith('[#');
   const isCustomText = textColor?.startsWith('[#');
-  if (isCustomBg && bgColor) style.backgroundColor = bgColor.slice(1, -1);
-  if (isCustomText && textColor) style.color = textColor.slice(1, -1);
+  
+  const bgMap: Record<string, string> = {
+    'bg-blue-600': '#2563eb',
+    'bg-blue-500': '#3b82f6',
+    'bg-slate-900': '#0f172a',
+    'bg-slate-800': '#1e293b',
+    'bg-white': '#ffffff',
+    'bg-black': '#000000',
+  };
+  const textMap: Record<string, string> = {
+    'text-white': '#ffffff',
+    'text-slate-800': '#1e293b',
+    'text-slate-900': '#0f172a',
+    'text-black': '#000000',
+  };
+  
+  // SIEMPRE aplicar inline styles
+  if (isCustomBg && bgColor) {
+    style.backgroundColor = bgColor.slice(1, -1);
+  } else {
+    const bgClass = bgColor || 'bg-slate-900';
+    style.backgroundColor = bgMap[bgClass] || '#0f172a';
+  }
+  
+  if (isCustomText && textColor) {
+    style.color = textColor.slice(1, -1);
+  } else {
+    const textClass = textColor || 'text-white';
+    style.color = textMap[textClass] || '#ffffff';
+  }
+  
   return { className: cn(!isCustomBg ? bgColor || 'bg-slate-900' : '', !isCustomText ? textColor || 'text-white' : ''), style } as const;
 };
 
@@ -63,10 +101,7 @@ const RatingStars = ({ rating }: { rating: number }) => (
 const FeaturedProductImageLeft = ({ data, isEditing, onUpdate }: BlockComponentProps<FeaturedProductData>) => {
   const { isMobile, isTablet, isDesktop } = usePreviewMode();
   const bg = getBackgroundStyles(data.backgroundColor, 'bg-white');
-  const tagStyles = getStyles(data.tagColor, 'text-blue-600');
-  const titleStyles = getStyles(data.titleColor, 'text-slate-800');
-  const descriptionStyles = getStyles(data.descriptionColor, 'text-slate-600');
-  const priceStyles = getStyles(data.priceColor, 'text-slate-900');
+  const textStyles = getStyles(data.textColor, 'text-slate-800');
   const buttonStyles = getButtonStyles(data.buttonBgColor, data.buttonTextColor);
 
   const handleUpdate = (key: keyof FeaturedProductData, value: string) => { if (onUpdate) onUpdate(key as string, value); };
@@ -78,11 +113,11 @@ const FeaturedProductImageLeft = ({ data, isEditing, onUpdate }: BlockComponentP
           <img src={data.imageUrl || 'https://placehold.co/600x600/e2e8f0/64748b?text=Producto'} alt={data.title} className="w-full h-full object-cover aspect-square" />
         </div>
         <div className={cn('text-left', { 'py-8': isDesktop })}>
-          <Editable tagName="span" value={data.tag} onUpdate={(v) => handleUpdate('tag', v)} isEditing={isEditing} className={cn('text-sm font-bold uppercase tracking-widest', tagStyles.className)} style={tagStyles.style} />
-          <Editable tagName="h2" value={data.title} onUpdate={(v) => handleUpdate('title', v)} isEditing={isEditing} className={cn('font-bold my-4', { 'text-5xl': isDesktop, 'text-4xl': isTablet, 'text-3xl': isMobile }, titleStyles.className)} style={titleStyles.style} />
-          <Editable tagName="p" value={data.description} onUpdate={(v) => handleUpdate('description', v)} isEditing={isEditing} className={cn('mb-6', { 'text-lg leading-relaxed': isDesktop, 'text-base': isTablet || isMobile }, descriptionStyles.className)} style={descriptionStyles.style} />
+          <Editable tagName="span" value={data.tag} onUpdate={(v) => handleUpdate('tag', v)} isEditing={isEditing} className={cn('text-sm font-bold uppercase tracking-widest', textStyles.className)} style={textStyles.style} />
+          <Editable tagName="h2" value={data.title} onUpdate={(v) => handleUpdate('title', v)} isEditing={isEditing} className={cn('font-bold my-4', { 'text-5xl': isDesktop, 'text-4xl': isTablet, 'text-3xl': isMobile }, textStyles.className)} style={textStyles.style} />
+          <Editable tagName="p" value={data.description} onUpdate={(v) => handleUpdate('description', v)} isEditing={isEditing} className={cn('mb-6', { 'text-lg leading-relaxed': isDesktop, 'text-base': isTablet || isMobile }, textStyles.className)} style={textStyles.style} />
           <div className="flex items-center justify-between mb-8">
-            <Editable tagName="p" value={data.price} onUpdate={(v) => handleUpdate('price', v)} isEditing={isEditing} className={cn('font-bold', { 'text-4xl': isDesktop, 'text-3xl': isTablet || isMobile }, priceStyles.className)} style={priceStyles.style} />
+            <Editable tagName="p" value={data.price} onUpdate={(v) => handleUpdate('price', v)} isEditing={isEditing} className={cn('font-bold', { 'text-4xl': isDesktop, 'text-3xl': isTablet || isMobile }, textStyles.className)} style={textStyles.style} />
             <RatingStars rating={data.rating} />
           </div>
           <Editable tagName="a" value={data.buttonText} onUpdate={(v) => handleUpdate('buttonText', v)} isEditing={isEditing} className={cn('w-full block text-center rounded-lg font-semibold transition-transform hover:scale-105', { 'py-4 text-lg': isDesktop, 'py-3 text-base': isTablet || isMobile }, buttonStyles.className)} style={buttonStyles.style} />
@@ -103,11 +138,11 @@ const FeaturedProductBackground = ({ data, isEditing, onUpdate }: BlockComponent
       <div className="absolute inset-0 bg-black/60"></div>
       <div className={cn('relative z-10 flex flex-col justify-center h-full mx-auto', { 'max-w-7xl px-8': isDesktop, 'max-w-5xl px-6': isTablet, 'max-w-full px-4': isMobile })}>
         <div className={cn({ 'max-w-lg': isDesktop || isTablet })}>
-          <Editable tagName="span" value={data.tag} onUpdate={(v) => handleUpdate('tag', v)} isEditing={isEditing} className={cn('text-sm font-bold uppercase tracking-widest', getStyles(data.tagColor, 'text-blue-400').className)} style={getStyles(data.tagColor, 'text-blue-400').style} />
-          <Editable tagName="h2" value={data.title} onUpdate={(v) => handleUpdate('title', v)} isEditing={isEditing} className={cn('font-bold my-4', { 'text-5xl': isDesktop, 'text-4xl': isTablet, 'text-3xl': isMobile }, getStyles(data.titleColor, 'text-white').className)} style={getStyles(data.titleColor, 'text-white').style} />
-          <Editable tagName="p" value={data.description} onUpdate={(v) => handleUpdate('description', v)} isEditing={isEditing} className={cn('mb-6', { 'text-lg leading-relaxed': isDesktop, 'text-base': isTablet || isMobile }, getStyles(data.descriptionColor, 'text-slate-200').className)} style={getStyles(data.descriptionColor, 'text-slate-200').style} />
+          <Editable tagName="span" value={data.tag} onUpdate={(v) => handleUpdate('tag', v)} isEditing={isEditing} className={cn('text-sm font-bold uppercase tracking-widest', getStyles(data.textColor, 'text-blue-400').className)} style={getStyles(data.textColor, 'text-blue-400').style} />
+          <Editable tagName="h2" value={data.title} onUpdate={(v) => handleUpdate('title', v)} isEditing={isEditing} className={cn('font-bold my-4', { 'text-5xl': isDesktop, 'text-4xl': isTablet, 'text-3xl': isMobile }, getStyles(data.textColor, 'text-white').className)} style={getStyles(data.textColor, 'text-white').style} />
+          <Editable tagName="p" value={data.description} onUpdate={(v) => handleUpdate('description', v)} isEditing={isEditing} className={cn('mb-6', { 'text-lg leading-relaxed': isDesktop, 'text-base': isTablet || isMobile }, getStyles(data.textColor, 'text-slate-200').className)} style={getStyles(data.textColor, 'text-slate-200').style} />
           <div className="flex items-center gap-8 mb-8">
-            <Editable tagName="p" value={data.price} onUpdate={(v) => handleUpdate('price', v)} isEditing={isEditing} className={cn('font-bold', { 'text-4xl': isDesktop, 'text-3xl': isTablet || isMobile }, getStyles(data.priceColor, 'text-white').className)} style={getStyles(data.priceColor, 'text-white').style} />
+            <Editable tagName="p" value={data.price} onUpdate={(v) => handleUpdate('price', v)} isEditing={isEditing} className={cn('font-bold', { 'text-4xl': isDesktop, 'text-3xl': isTablet || isMobile }, getStyles(data.textColor, 'text-white').className)} style={getStyles(data.textColor, 'text-white').style} />
             <RatingStars rating={data.rating} />
           </div>
           <Editable tagName="a" value={data.buttonText} onUpdate={(v) => handleUpdate('buttonText', v)} isEditing={isEditing} className={cn('w-full sm:w-auto inline-block text-center rounded-lg font-semibold transition-transform hover:scale-105', { 'py-4 px-12 text-lg': isDesktop, 'py-3 px-10 text-base': isTablet || isMobile }, buttonStyles.className)} style={buttonStyles.style} />
@@ -144,17 +179,11 @@ export function FeaturedProductContentEditor({ data, updateData }: { data: Featu
 // --- Editor de ESTILO ---
 export function FeaturedProductStyleEditor({ data, updateData }: { data: FeaturedProductData; updateData: (key: keyof FeaturedProductData, value: string) => void }) {
   const isCustomBg = data.backgroundColor?.startsWith('[#');
-  const isCustomTag = data.tagColor?.startsWith('[#');
-  const isCustomTitle = data.titleColor?.startsWith('[#');
-  const isCustomDesc = data.descriptionColor?.startsWith('[#');
-  const isCustomPrice = data.priceColor?.startsWith('[#');
+  const isCustomText = data.textColor?.startsWith('[#');
   return (
     <div className="space-y-4">
       <div><ColorPalette label="Color de Fondo" selectedColor={isCustomBg ? '' : data.backgroundColor || 'bg-white'} onChange={(color) => updateData('backgroundColor', color)} /></div>
-      <div><TextColorPalette label="Color de Etiqueta" selectedColor={isCustomTag ? '' : data.tagColor || 'text-blue-400'} onChange={(color) => updateData('tagColor', color)} /></div>
-      <div><TextColorPalette label="Color de Título" selectedColor={isCustomTitle ? '' : data.titleColor || 'text-white'} onChange={(color) => updateData('titleColor', color)} /></div>
-      <div><TextColorPalette label="Color de Descripción" selectedColor={isCustomDesc ? '' : data.descriptionColor || 'text-slate-200'} onChange={(color) => updateData('descriptionColor', color)} /></div>
-      <div><TextColorPalette label="Color de Precio" selectedColor={isCustomPrice ? '' : data.priceColor || 'text-white'} onChange={(color) => updateData('priceColor', color)} /></div>
+      <div><TextColorPalette label="Color de Texto" selectedColor={isCustomText ? '' : data.textColor || 'text-slate-800'} onChange={(color) => updateData('textColor', color)} /></div>
       <ButtonColorPalette label="Estilo del Botón" selectedBgColor={data.buttonBgColor || 'bg-slate-900'} selectedTextColor={data.buttonTextColor || 'text-white'} onChange={(bg, text) => { updateData('buttonBgColor', bg); updateData('buttonTextColor', text); }} />
     </div>
   );

@@ -23,17 +23,27 @@ export interface FooterData {
 
 // --- Lógica para manejar colores personalizados ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {
+  const colorMap: Record<string, string> = {
+    'text-white': '#ffffff', 'text-slate-300': '#cbd5e1', 'text-slate-400': '#94a3b8',
+    'text-slate-600': '#475569', 'text-slate-700': '#334155',
+  };
   if (colorValue?.startsWith('[#')) {
     return { className: '', style: { color: colorValue.slice(1, -1) } };
   }
-  return { className: colorValue || defaultClass, style: {} };
+  const finalClass = colorValue || defaultClass;
+  return { className: finalClass, style: { color: colorMap[finalClass] || '#cbd5e1' } };
 };
 
 const getBackgroundStyles = (colorValue: string | undefined, defaultClass = 'bg-slate-800') => {
+  const bgMap: Record<string, string> = {
+    'bg-white': '#ffffff', 'bg-slate-800': '#1e293b', 'bg-slate-900': '#0f172a',
+    'bg-blue-600': '#2563eb',
+  };
   if (colorValue?.startsWith('[#')) {
     return { className: '', style: { backgroundColor: colorValue.slice(1, -1) } };
   }
-  return { className: colorValue || defaultClass, style: {} };
+  const finalClass = colorValue || defaultClass;
+  return { className: finalClass, style: { backgroundColor: bgMap[finalClass] || '#1e293b' } };
 };
 
 // --- Componente "Director" ---

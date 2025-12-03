@@ -35,19 +35,63 @@ export interface PricingData {
 
 // --- Helper Editable ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {
+  const colorMap: Record<string, string> = {
+    'text-white': '#ffffff', 'text-black': '#000000', 'text-slate-50': '#f8fafc', 'text-slate-100': '#f1f5f9',
+    'text-slate-200': '#e2e8f0', 'text-slate-300': '#cbd5e1', 'text-slate-400': '#94a3b8', 'text-slate-500': '#64748b',
+    'text-slate-600': '#475569', 'text-slate-700': '#334155', 'text-slate-800': '#1e293b', 'text-slate-900': '#0f172a',
+    'text-blue-600': '#2563eb', 'text-blue-500': '#3b82f6',
+  };
   if (colorValue?.startsWith('[#')) return { className: '', style: { color: colorValue.slice(1, -1) } } as const;
-  return { className: colorValue || defaultClass, style: {} } as const;
+  const finalClass = colorValue || defaultClass;
+  return { className: finalClass, style: { color: colorMap[finalClass] || '#1e293b' } } as const;
 };
 const getBackgroundStyles = (colorValue: string | undefined, defaultClass = 'bg-white') => {
+  const bgMap: Record<string, string> = {
+    'bg-white': '#ffffff', 'bg-black': '#000000', 'bg-slate-50': '#f8fafc', 'bg-slate-100': '#f1f5f9',
+    'bg-slate-200': '#e2e8f0', 'bg-slate-300': '#cbd5e1', 'bg-slate-400': '#94a3b8', 'bg-slate-500': '#64748b',
+    'bg-slate-600': '#475569', 'bg-slate-700': '#334155', 'bg-slate-800': '#1e293b', 'bg-slate-900': '#0f172a',
+    'bg-blue-600': '#2563eb', 'bg-blue-500': '#3b82f6',
+  };
   if (colorValue?.startsWith('[#')) return { className: '', style: { backgroundColor: colorValue.slice(1, -1) } } as const;
-  return { className: colorValue || defaultClass, style: {} } as const;
+  const finalClass = colorValue || defaultClass;
+  return { className: finalClass, style: { backgroundColor: bgMap[finalClass] || '#ffffff' } } as const;
 };
 const getButtonStyles = (bgColor: string | undefined, textColor: string | undefined, defaultBg: string, defaultText: string) => {
   const isCustomBg = bgColor?.startsWith('[#');
   const isCustomText = textColor?.startsWith('[#');
   const style: React.CSSProperties = {};
-  if (isCustomBg && bgColor) style.backgroundColor = bgColor.slice(1, -1);
-  if (isCustomText && textColor) style.color = textColor.slice(1, -1);
+  
+  const bgMap: Record<string, string> = {
+    'bg-blue-600': '#2563eb',
+    'bg-blue-500': '#3b82f6',
+    'bg-white': '#ffffff',
+    'bg-slate-800': '#1e293b',
+    'bg-slate-900': '#0f172a',
+    'bg-black': '#000000',
+  };
+  const textMap: Record<string, string> = {
+    'text-white': '#ffffff',
+    'text-slate-800': '#1e293b',
+    'text-slate-900': '#0f172a',
+    'text-blue-600': '#2563eb',
+    'text-black': '#000000',
+  };
+  
+  // SIEMPRE aplicar inline styles
+  if (isCustomBg && bgColor) {
+    style.backgroundColor = bgColor.slice(1, -1);
+  } else {
+    const bgClass = bgColor || defaultBg;
+    style.backgroundColor = bgMap[bgClass] || '#2563eb';
+  }
+  
+  if (isCustomText && textColor) {
+    style.color = textColor.slice(1, -1);
+  } else {
+    const textClass = textColor || defaultText;
+    style.color = textMap[textClass] || '#ffffff';
+  }
+  
   return { className: cn(!isCustomBg ? bgColor || defaultBg : '', !isCustomText ? textColor || defaultText : ''), style } as const;
 };
 

@@ -7,7 +7,24 @@ import { ColorPalette } from '../controls/ColorPalette';
 import { cn } from '@/lib/utils';
 import { nanoid } from 'nanoid';
 import { TrashIcon, ArrowUpIcon, ArrowDownIcon, Heading, Type, Image, Circle } from 'lucide-react';
-import { StackElement, StackElementType } from './CustomStackElements';
+
+// --- INLINE TYPES (previously from CustomStackElements) ---
+export type StackElementType = 'heading' | 'paragraph' | 'image' | 'button' | 'spacer';
+
+export interface StackElement {
+  id: string;
+  type: StackElementType;
+  data: {
+    content?: string;
+    level?: 'h2' | 'h3' | 'h4';
+    imageUrl?: string;
+    alt?: string;
+    buttonText?: string;
+    buttonLink?: string;
+    height?: number;
+    [key: string]: unknown;
+  };
+}
 
 // --- 1. INTERFACES DE DATOS ---
 

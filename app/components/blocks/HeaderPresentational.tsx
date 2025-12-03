@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '@/app/contexts/ThemeContext';
 import { colorPalettes } from '@/app/lib/colors';
+import { getBackgroundStyles, getTextStyles, getButtonStyles } from '@/app/lib/block-style-helpers';
 
 // Tipos para elementos personalizados del header (compatible con StackElement)
 export type HeaderElementType = 'heading' | 'paragraph' | 'image' | 'button' | 'spacer' | 'logo' | 'link' | 'actions';
@@ -50,171 +51,249 @@ export default function HeaderPresentational({ data }: { data: HeaderPresentatio
   const link3 = data.link3 || 'Contacto';
   const buttonText = data.buttonText || '';
 
+  // Mobile menu state for interactive rendering
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
   // Use theme palette values as sensible defaults but allow explicit overrides from `data`
   const { theme, palette } = useTheme();
   const c = colorPalettes[palette][theme];
 
-  const resolveColor = (val?: string, fallback?: string) => {
-    if (!val) return fallback || undefined;
-    if (val.startsWith('[#') && val.endsWith(']')) return val.slice(1, -1);
-    return val; // allow classnames too but prefer inline resolved hex when provided in [#hex]
-  };
+  // Use centralized helpers so Tailwind class names and custom hex values
+  // always produce an inline style fallback that the preview can render.
+  const bg = getBackgroundStyles(data.backgroundColor, 'bg-white');
+  const logoStyles = getTextStyles(data.logoColor, 'text-slate-800');
+  const linkStyles = getTextStyles(data.linkColor, 'text-slate-600');
+  const buttonStyles = getButtonStyles(data.buttonBgColor, data.buttonTextColor, 'bg-blue-600', 'text-white');
 
-  const resolved = {
-    bg: resolveColor(data.backgroundColor, 'transparent'),
-    logoColor: resolveColor(data.logoColor, c.text.primary),
-    linkColor: resolveColor(data.linkColor, c.text.secondary),
-    buttonBg: resolveColor(data.buttonBgColor, c.accent.primary),
-    buttonText: resolveColor(data.buttonTextColor, theme === 'dark' ? '#0D1222' : '#FFFFFF')
-  } as const;
-
-  // Helper to produce inline style object for background when needed
-  const bgStyle = resolved.bg ? { backgroundColor: resolved.bg } : undefined;
+  // Merge with theme palette defaults when helper did not resolve a color
+  const bgStyle = { ...(bg.style || {}), backgroundColor: (bg.style && (bg.style as any).backgroundColor) || c.bg?.primary } as React.CSSProperties;
+  const finalLogoStyle = { ...(logoStyles.style || {}), color: (logoStyles.style && (logoStyles.style as any).color) || c.text.primary } as React.CSSProperties;
+  const finalLinkStyle = { ...(linkStyles.style || {}), color: (linkStyles.style && (linkStyles.style as any).color) || c.text.secondary } as React.CSSProperties;
+  const finalButtonStyle = { ...(buttonStyles.style || {}), backgroundColor: (buttonStyles.style && (buttonStyles.style as any).backgroundColor) || c.accent?.primary, color: (buttonStyles.style && (buttonStyles.style as any).color) || (theme === 'dark' ? '#0D1222' : '#FFFFFF') } as React.CSSProperties;
 
   switch (variant) {
     case 'custom':
-      return <HeaderCustomVariant data={data} bgStyle={bgStyle} resolved={resolved} />;
+      return <HeaderCustomVariant data={data} bgStyle={bgStyle} resolved={{ bg: bgStyle?.backgroundColor, logoColor: finalLogoStyle.color, linkColor: finalLinkStyle.color, buttonBg: finalButtonStyle.backgroundColor, buttonText: finalButtonStyle.color }} />;
     
     case 'centered':
       return (
-        <header className="p-4" style={bgStyle}>
-          <div className="max-w-5xl mx-auto flex justify-between items-center md:flex-col md:gap-3">
-            <h1 className="text-xl md:text-2xl font-bold" style={{ color: resolved.logoColor }}>{logo}</h1>
-            <nav className="hidden md:flex items-center space-x-6 text-sm" style={{ color: resolved.linkColor }}>
-              <a href="#">{link1}</a>
-              <a href="#">{link2}</a>
-              <a href="#">{link3}</a>
-            </nav>
-            <div className="md:hidden">
-              <button aria-label="Abrir menú" style={{ color: resolved.logoColor }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-              </button>
+        <header className="relative" style={bgStyle}>
+          {/* Desktop */}
+          <div className="hidden md:block p-4">
+            <div className="max-w-6xl mx-auto flex flex-col items-center gap-3">
+              <h1 className="text-xl font-bold" style={finalLogoStyle}>{logo}</h1>
+              <nav className="flex items-center space-x-6 text-sm" style={finalLinkStyle}>
+                <a href="#">{link1}</a>
+                <a href="#">{link2}</a>
+                <a href="#">{link3}</a>
+              </nav>
             </div>
           </div>
 
-          <nav className="hidden md:hidden fixed inset-x-0 top-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4 max-h-[70vh] overflow-y-auto" role="dialog" aria-modal="true" aria-hidden="true">
-            <button aria-label="Cerrar menú" className="self-end mr-4 text-slate-600">×</button>
-            <a href="#" className="text-slate-800 hover:text-blue-600">{link1}</a>
-            <a href="#" className="text-slate-800 hover:text-blue-600">{link2}</a>
-            <a href="#" className="text-slate-800 hover:text-blue-600">{link3}</a>
-          </nav>
+          {/* Mobile */}
+          <div className="md:hidden">
+            <div className="p-4 flex flex-col items-center gap-3">
+              <h1 className="text-2xl font-bold" style={finalLogoStyle}>{logo}</h1>
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="inline-flex items-center gap-2 px-6 py-2 rounded-full border-2 font-medium text-sm"
+                style={{ color: finalLogoStyle.color, borderColor: menuOpen ? '#60a5fa' : '#e2e8f0', backgroundColor: menuOpen ? '#eff6ff' : '#fff' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <span>{menuOpen ? 'Cerrar' : 'Menú'}</span>
+              </button>
+            </div>
+            {menuOpen && (
+              <nav className="border-t border-slate-200 px-4 py-3 space-y-2 flex flex-col items-center">
+                <a href="#" className="block py-2 px-4 rounded-md hover:bg-slate-50 text-sm font-medium text-center w-full max-w-xs" style={finalLinkStyle}>{link1}</a>
+                <a href="#" className="block py-2 px-4 rounded-md hover:bg-slate-50 text-sm font-medium text-center w-full max-w-xs" style={finalLinkStyle}>{link2}</a>
+                <a href="#" className="block py-2 px-4 rounded-md hover:bg-slate-50 text-sm font-medium text-center w-full max-w-xs" style={finalLinkStyle}>{link3}</a>
+              </nav>
+            )}
+          </div>
         </header>
       );
 
     case 'withButton':
       return (
-        <header className="p-4" style={bgStyle}>
-          <div className="max-w-5xl mx-auto flex justify-between items-center">
-            <h1 className="text-xl font-bold" style={{ color: resolved.logoColor }}>{logo}</h1>
-            <div className="hidden md:flex items-center gap-6">
-              <nav className="flex items-center space-x-6 text-sm" style={{ color: resolved.linkColor }}>
+        <header className="relative" style={bgStyle}>
+          {/* Desktop */}
+          <div className="hidden md:block p-4">
+            <div className="max-w-6xl mx-auto flex justify-between items-center">
+              <h1 className="text-xl font-bold" style={finalLogoStyle}>{logo}</h1>
+              <nav className="flex items-center space-x-6 text-sm" style={finalLinkStyle}>
                 <a href="#">{link1}</a>
                 <a href="#">{link2}</a>
+                <a href="#">{link3}</a>
+                <button className="px-4 py-2 rounded-md font-semibold" style={finalButtonStyle}>{buttonText}</button>
               </nav>
-              <a href="#" className="px-4 py-1.5 rounded-md text-sm font-semibold" style={{ backgroundColor: resolved.buttonBg, color: resolved.buttonText }}>{buttonText || 'Acción'}</a>
-            </div>
-            <div className="md:hidden">
-              <button aria-label="Abrir menú" style={{ color: resolved.logoColor }}>
-                ☰
-              </button>
             </div>
           </div>
 
-          <nav className="hidden md:hidden fixed inset-x-0 top-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4 max-h-[70vh] overflow-y-auto" role="dialog" aria-modal="true" aria-hidden="true">
-            <button aria-label="Cerrar menú" className="self-end mr-4 text-slate-600">×</button>
-            <a href="#" className="text-slate-800 hover:text-blue-600">{link1}</a>
-            <a href="#" className="text-slate-800 hover:text-blue-600">{link2}</a>
-            <a href="#" className="text-slate-800 hover:text-blue-600">{buttonText || 'Acción'}</a>
-          </nav>
+          {/* Mobile */}
+          <div className="md:hidden">
+            <div className="p-4">
+              <div className="flex justify-between items-center mb-2">
+                <h1 className="text-lg font-bold" style={finalLogoStyle}>{logo}</h1>
+                <button onClick={() => setMenuOpen(!menuOpen)} className="p-2" style={finalLogoStyle}>
+                  {menuOpen ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              <button className="w-full px-4 py-2.5 rounded-lg font-semibold text-sm shadow-sm" style={finalButtonStyle}>{buttonText}</button>
+            </div>
+            {menuOpen && (
+              <nav className="border-t border-slate-200 px-4 py-3 space-y-2">
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link1}</a>
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link2}</a>
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link3}</a>
+              </nav>
+            )}
+          </div>
         </header>
       );
 
     case 'sticky':
       return (
-        <header className="p-4" style={bgStyle}> 
-          <div className="max-w-5xl mx-auto flex justify-between items-center">
-            <h1 className="text-xl font-bold" style={{ color: resolved.logoColor }}>{logo}</h1>
-            <nav className="hidden md:flex items-center space-x-6 text-sm" style={{ color: resolved.linkColor }}>
-              <a href="#">{link1}</a>
-              <a href="#">{link2}</a>
-              <a href="#">{link3}</a>
-            </nav>
-            <div className="md:hidden">
-              <button aria-label="Abrir menú" style={{ color: resolved.logoColor }}>☰</button>
+        <header className="sticky top-0 z-50 relative" style={{ ...bgStyle, backdropFilter: 'blur(10px)' }}>
+          {/* Desktop */}
+          <div className="hidden md:block p-3 shadow-sm">
+            <div className="max-w-6xl mx-auto flex justify-between items-center">
+              <h1 className="text-lg font-bold" style={finalLogoStyle}>{logo}</h1>
+              <nav className="flex items-center space-x-6 text-sm" style={finalLinkStyle}>
+                <a href="#">{link1}</a>
+                <a href="#">{link2}</a>
+                <a href="#">{link3}</a>
+                <button className="px-4 py-1.5 rounded-md font-semibold text-sm" style={finalButtonStyle}>{buttonText}</button>
+              </nav>
             </div>
           </div>
 
-          <nav className="fixed inset-y-0 right-0 w-72 bg-white z-50 transform translate-x-full transition-transform max-h-[70vh]" role="dialog" aria-modal="true" aria-hidden="true">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold">Menu</h3>
-              <button aria-label="Cerrar menú" className="text-slate-600">×</button>
+          {/* Mobile */}
+          <div className="md:hidden">
+            <div className="p-3 shadow-sm flex justify-between items-center">
+              <h1 className="text-base font-bold" style={finalLogoStyle}>{logo}</h1>
+              <div className="flex items-center gap-2">
+                <button className="px-3 py-1.5 rounded-md font-semibold text-xs" style={finalButtonStyle}>{buttonText}</button>
+                <button onClick={() => setMenuOpen(!menuOpen)} className="p-1.5" style={finalLogoStyle}>
+                  {menuOpen ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
-            <div className="p-4 flex flex-col gap-4">
-              <a href="#" className="text-slate-800 hover:text-blue-600">{link1}</a>
-              <a href="#" className="text-slate-800 hover:text-blue-600">{link2}</a>
-              <a href="#" className="text-slate-800 hover:text-blue-600">{link3}</a>
-            </div>
-          </nav>
+            {menuOpen && (
+              <nav className="border-t border-slate-200 px-3 py-2 space-y-1 shadow-md">
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link1}</a>
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link2}</a>
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link3}</a>
+              </nav>
+            )}
+          </div>
         </header>
       );
 
     case 'nueva':
       return (
-        <header className="p-4" style={bgStyle}>
-          <div className="max-w-5xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-4" style={{ color: resolved.logoColor }}>
-              <h1 className="text-lg font-bold">{logo}</h1>
+        <header className="relative" style={bgStyle}>
+          {/* Desktop */}
+          <div className="hidden md:block p-4">
+            <div className="max-w-6xl mx-auto flex justify-between items-center">
+              <h1 className="text-xl font-bold" style={finalLogoStyle}>{logo}</h1>
+              <nav className="flex items-center space-x-6 text-sm" style={finalLinkStyle}>
+                <a href="#">{link1}</a>
+                <a href="#">{link2}</a>
+                <a href="#">{link3}</a>
+              </nav>
             </div>
-            <nav className="hidden md:flex items-center gap-8" style={{ color: resolved.linkColor }}>
-              <a href="#" className="text-sm">{link1}</a>
-              <a href="#" className="text-sm">{link2}</a>
-              <a href="#" className="text-sm">{link3}</a>
-            </nav>
-            <div className="hidden md:flex items-center gap-4">
-              <a href="#" className="px-4 py-1.5 rounded-full text-sm font-semibold" style={{ backgroundColor: resolved.buttonBg, color: resolved.buttonText }}>{buttonText || 'Comenzar'}</a>
-            </div>
-            <div className="md:hidden">
-              <button aria-label="Abrir menú" style={{ color: resolved.logoColor }}>☰</button>
-            </div>
-
           </div>
 
-          <nav className="hidden md:hidden fixed inset-0 bg-white z-50 p-6 max-h-[70vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-bold">{logo}</h2>
-              <button aria-label="Cerrar menú" className="text-slate-600">×</button>
+          {/* Mobile */}
+          <div className="md:hidden">
+            <div className="p-4 flex justify-between items-center">
+              <h1 className="text-lg font-bold" style={finalLogoStyle}>{logo}</h1>
+              <button onClick={() => setMenuOpen(!menuOpen)} className="p-2" style={finalLogoStyle}>
+                {menuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
             </div>
-            <div className="flex flex-col gap-4">
-              <a href="#" className="text-lg font-semibold" style={{ color: resolved.linkColor }}>{link1}</a>
-              <a href="#" className="text-lg font-semibold" style={{ color: resolved.linkColor }}>{link2}</a>
-              <a href="#" className="text-lg font-semibold" style={{ color: resolved.linkColor }}>{link3}</a>
-              <a href="#" className="mt-4 inline-block px-4 py-2 rounded-md font-semibold" style={{ backgroundColor: resolved.buttonBg, color: resolved.buttonText }}>{buttonText || 'Comenzar'}</a>
-            </div>
-          </nav>
+            {menuOpen && (
+              <nav className="border-t border-slate-200 px-4 py-3 space-y-2">
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link1}</a>
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link2}</a>
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link3}</a>
+              </nav>
+            )}
+          </div>
         </header>
       );
 
     default:
       return (
-        <header className="p-4" style={bgStyle}>
-          <div className="max-w-5xl mx-auto flex justify-between items-center">
-            <h1 className="text-xl font-bold" style={{ color: resolved.logoColor }}>{logo}</h1>
-            <nav className="hidden md:flex items-center space-x-6 text-sm" style={{ color: resolved.linkColor }}>
-              <a href="#">{link1}</a>
-              <a href="#">{link2}</a>
-              <a href="#">{link3}</a>
-            </nav>
-            <div className="md:hidden">
-              <button aria-label="Abrir menú" style={{ color: resolved.logoColor }}>☰</button>
+        <header className="relative" style={bgStyle}>
+          {/* Desktop */}
+          <div className="hidden md:block p-4">
+            <div className="max-w-6xl mx-auto flex justify-between items-center">
+              <h1 className="text-xl font-bold" style={finalLogoStyle}>{logo}</h1>
+              <nav className="flex items-center space-x-6 text-sm" style={finalLinkStyle}>
+                <a href="#">{link1}</a>
+                <a href="#">{link2}</a>
+                <a href="#">{link3}</a>
+              </nav>
             </div>
           </div>
 
-          <nav className="hidden md:hidden fixed inset-x-0 top-full bg-white border-b border-slate-200 flex flex-col items-center gap-4 py-4 max-h-[70vh] overflow-y-auto" role="dialog" aria-modal="true" aria-hidden="true">
-            <button aria-label="Cerrar menú" className="self-end mr-4 text-slate-600">×</button>
-            <a href="#" className="text-slate-800 hover:text-blue-600" style={{ color: resolved.linkColor }}>{link1}</a>
-            <a href="#" className="text-slate-800 hover:text-blue-600" style={{ color: resolved.linkColor }}>{link2}</a>
-            <a href="#" className="text-slate-800 hover:text-blue-600" style={{ color: resolved.linkColor }}>{link3}</a>
-          </nav>
+          {/* Mobile */}
+          <div className="md:hidden">
+            <div className="p-4 flex justify-between items-center">
+              <h1 className="text-lg font-bold" style={finalLogoStyle}>{logo}</h1>
+              <button 
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'} 
+                className="p-2"
+                style={finalLogoStyle}
+              >
+                {menuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {menuOpen && (
+              <nav className="border-t border-slate-200 px-4 py-3 space-y-2">
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link1}</a>
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link2}</a>
+                <a href="#" className="block py-2 px-3 rounded-md hover:bg-slate-50 text-sm font-medium" style={finalLinkStyle}>{link3}</a>
+              </nav>
+            )}
+          </div>
         </header>
       );
   }

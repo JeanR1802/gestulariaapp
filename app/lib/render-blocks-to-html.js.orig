@@ -817,24 +817,13 @@ function legacyRender(blocks) {
                 </div>${lightboxScript}`;
       }
       case 'cards': {
-        // Use getClassOrStyle so Tailwind classes or arbitrary colors get a style fallback
-        const titleClass = getClassOrStyle(data.titleColor, 'text-slate-800', 'color');
-        const bg = getClassOrStyle(data.backgroundColor, 'bg-slate-50', 'background-color');
-        const cardBg = getClassOrStyle(data.cardBackgroundColor, 'bg-white', 'background-color');
-        const cardTitle = getClassOrStyle(data.cardTitleColor, 'text-slate-900', 'color');
-        const cardDesc = getClassOrStyle(data.cardDescriptionColor, 'text-slate-600', 'color');
-
-        const cardsTitleHtml = data.title ? `<h2 class="text-3xl font-bold text-center mb-12 ${titleClass.class}" style="${titleClass.style}">${data.title}</h2>` : '';
-
+        const cardsTitleHtml = `<h2 class="text-3xl font-bold text-center mb-12 ${data.titleColor || 'text-slate-800'}">${data.title}</h2>`;
+        const cardTitleClass = data.cardTitleColor || 'text-slate-900';
+        const cardDescClass = data.cardDescriptionColor || 'text-slate-600';
         switch (data.variant) {
-          case 'list':
-            return `<div class="${bg.class} py-12 px-4" style="${bg.style}"><div class="max-w-3xl mx-auto">${cardsTitleHtml}<div class="space-y-8">${(data.cards || []).map(card => `<div class="flex items-start gap-6">${card.icon ? `<div class="text-3xl mt-1">${card.icon}</div>` : ''}<div><h3 class="text-xl font-semibold mb-2 ${cardTitle.class}" style="${cardTitle.style}">${card.title}</h3>${card.description ? `<p class="${cardDesc.class}" style="${cardDesc.style}">${card.description}</p>` : ''}</div></div>`).join('')}</div></div></div>`;
-
-          case 'imageTop':
-            return `<div class="${bg.class} py-12 px-4" style="${bg.style}"><div class="max-w-5xl mx-auto">${cardsTitleHtml}<div class="grid md:grid-cols-3 gap-8">${(data.cards || []).map(card => `<div class="${cardBg.class} rounded-lg shadow-sm ring-1 ring-slate-100 overflow-hidden" style="${cardBg.style}">${card.imageUrl ? `<img src="${card.imageUrl}" alt="${card.title}" class="w-full h-40 object-cover" />` : ''}<div class="p-6 text-center">${card.icon ? `<div class="text-4xl mb-3">${card.icon}</div>` : ''}<h3 class="text-xl font-semibold mb-2 ${cardTitle.class}" style="${cardTitle.style}">${card.title}</h3>${card.description ? `<p class="${cardDesc.class} text-sm" style="${cardDesc.style}">${card.description}</p>` : ''}</div></div>`).join('')}</div></div></div>`;
-
-          default:
-            return `<div class="${bg.class} py-12 px-4" style="${bg.style}"><div class="max-w-5xl mx-auto">${cardsTitleHtml}<div class="grid md:grid-cols-3 gap-8">${(data.cards || []).map(card => `<div class="text-center p-6 rounded-lg shadow-sm ring-1 ring-slate-100 ${cardBg.class}" style="${cardBg.style}">${card.icon ? `<div class="text-4xl mb-4">${card.icon}</div>` : ''}<h3 class="text-xl font-semibold mb-2 ${cardTitle.class}" style="${cardTitle.style}">${card.title}</h3>${card.description ? `<p class="${cardDesc.class} text-sm" style="${cardDesc.style}">${card.description}</p>` : ''}</div>`).join('')}</div></div></div>`;
+          case 'list': return `<div class="${data.backgroundColor || 'bg-white'} py-12 px-4"><div class="max-w-3xl mx-auto">${cardsTitleHtml}<div class="space-y-8">${(data.cards || []).map(card => `<div class="flex items-start gap-6"><div class="text-3xl mt-1">${card.icon}</div><div><h3 class="text-xl font-semibold mb-2 ${cardTitleClass}">${card.title}</h3><p class="${cardDescClass}">${card.description}</p></div></div>`).join('')}</div></div></div>`;
+          case 'imageTop': return `<div class="${data.backgroundColor || 'bg-slate-50'} py-12 px-4"><div class="max-w-5xl mx-auto">${cardsTitleHtml}<div class="grid md:grid-cols-3 gap-8">${(data.cards || []).map(card => `<div class="${data.cardBackgroundColor || 'bg-white'} rounded-lg shadow-sm ring-1 ring-slate-100 overflow-hidden"><img src="${card.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'}" alt="${card.title}" class="w-full h-40 object-cover" /><div class="p-6 text-center"><h3 class="text-xl font-semibold mb-2 ${cardTitleClass}">${card.title}</h3><p class="${cardDescClass} text-sm">${card.description}</p></div></div>`).join('')}</div></div></div>`;
+          default: return `<div class="${data.backgroundColor || 'bg-slate-50'} py-12 px-4"><div class="max-w-5xl mx-auto">${cardsTitleHtml}<div class="grid md:grid-cols-3 gap-8">${(data.cards || []).map(card => `<div class="text-center p-6 rounded-lg shadow-sm ring-1 ring-slate-100 ${data.cardBackgroundColor || 'bg-white'}"><div class="text-4xl mb-4">${card.icon}</div><h3 class="text-xl font-semibold mb-2 ${cardTitleClass}">${card.title}</h3><p class="${cardDescClass} text-sm">${card.description}</p></div>`).join('')}</div></div></div>`;
         }
       }
       case 'cta': {

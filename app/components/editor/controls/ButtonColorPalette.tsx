@@ -82,7 +82,7 @@ export function ButtonColorPalette({ label, selectedBgColor, selectedTextColor, 
 
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 mb-2" style={{ color: '#334155' }}>{label}</label>
       <div className="flex items-end gap-4 p-3 border rounded-lg bg-slate-50">
         <CustomColorPicker
           label="Fondo"

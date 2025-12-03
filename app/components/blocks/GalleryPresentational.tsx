@@ -7,6 +7,7 @@ const GalleryPresentational: React.FC<BlockComponentProps<GalleryData>> = ({ dat
   const images = data.images || [];
   const spacingMap: Record<string, string> = { sm: 'gap-2', md: 'gap-4', lg: 'gap-8' };
   const spacing = spacingMap[data.spacing] || 'gap-4';
+  const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
 
   if (data.variant === 'carousel') {
     const id = `scroll-gallery-${Math.random().toString(36).slice(2,8)}`;
@@ -39,11 +40,21 @@ const GalleryPresentational: React.FC<BlockComponentProps<GalleryData>> = ({ dat
   }
 
   return (
-    <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${spacing}`}>
-      {images.map((img, i: number) => (
-        <Image key={i} src={img.url || 'https://placehold.co/400x400'} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" width={400} height={400} />
-      ))}
-    </div>
+    <>
+      <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${spacing}`}>
+        {images.map((img, i: number) => (
+          <div key={i} onClick={() => data.lightbox && setLightboxIndex(i)} className={data.lightbox ? 'cursor-pointer' : ''}>
+            <Image src={img.url || 'https://placehold.co/400x400'} alt={img.alt || ''} className="w-full aspect-square object-cover rounded-lg" width={400} height={400} />
+          </div>
+        ))}
+      </div>
+      {data.lightbox && lightboxIndex !== null && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setLightboxIndex(null)}>
+          <button className="absolute top-4 right-4 text-white text-4xl" onClick={() => setLightboxIndex(null)}>&times;</button>
+          <Image src={images[lightboxIndex]?.url || ''} alt={images[lightboxIndex]?.alt || ''} className="max-w-full max-h-full object-contain" width={1200} height={1200} />
+        </div>
+      )}
+    </>
   );
 };
 

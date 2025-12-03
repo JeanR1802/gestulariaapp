@@ -116,11 +116,40 @@ export const BlockWrapper = React.forwardRef<HTMLDivElement, BlockWrapperProps>(
 }, ref) => { // <-- Recibe la ref
   const isMobile = useMediaQuery('(max-width: 799px)'); // Ajustado el breakpoint si es necesario
 
-  // En modo de edición, el panel se encarga de todo. El wrapper solo dibuja un anillo.
+  // En modo de edición, el panel se encarga de todo. El wrapper solo dibuja un anillo destacado.
   if (isEditing) {
     return (
-      <div ref={ref} className="relative"> {/* <-- Aplica la ref aquí */}
-        <div className="ring-2 ring-blue-500 ring-offset-2 rounded-lg">
+      <div ref={ref} className="relative mb-4"> {/* <-- Aplica la ref aquí */}
+        {/* Banner superior en móvil para indicar que está editando */}
+        {isMobile && (
+          <div className="absolute -top-8 left-0 right-0 z-20 flex justify-center pointer-events-none">
+            <div className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-bold px-5 py-2 rounded-full shadow-2xl flex items-center gap-2 animate-pulse border-2 border-white/30">
+              <svg className="w-4 h-4 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+              <span>Editando aquí ✨</span>
+            </div>
+          </div>
+        )}
+        <div className={cn(
+          "rounded-xl transition-all duration-300 relative",
+          isMobile 
+            ? "ring-4 ring-teal-500 animate-pulse-ring shadow-2xl" 
+            : "ring-2 ring-blue-500 ring-offset-2"
+        )}>
+          {/* Indicador de esquina en móvil */}
+          {isMobile && (
+            <>
+              <div className="absolute -top-2 -left-2 w-6 h-6 bg-teal-500 rounded-full animate-ping opacity-75 z-10"></div>
+              <div className="absolute -top-2 -left-2 w-6 h-6 bg-teal-500 rounded-full z-10 flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+              </div>
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full animate-ping opacity-75 z-10 animation-delay-300"></div>
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full z-10"></div>
+            </>
+          )}
           {children}
         </div>
       </div>

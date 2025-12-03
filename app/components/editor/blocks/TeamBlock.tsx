@@ -30,17 +30,27 @@ export interface TeamData {
 
 // --- Helpers de Estilos ---
 const getStyles = (colorValue: string | undefined, defaultClass: string) => {
+  const colorMap: Record<string, string> = {
+    'text-white': '#ffffff', 'text-slate-600': '#475569', 'text-slate-700': '#334155',
+    'text-slate-800': '#1e293b', 'text-slate-900': '#0f172a', 'text-blue-600': '#2563eb',
+  };
   if (colorValue?.startsWith('[#')) {
     return { className: '', style: { color: colorValue.slice(1, -1) } as React.CSSProperties };
   }
-  return { className: colorValue || defaultClass, style: {} };
+  const finalClass = colorValue || defaultClass;
+  return { className: finalClass, style: { color: colorMap[finalClass] || '#334155' } as React.CSSProperties };
 };
 
 const getBackgroundStyles = (colorValue: string | undefined, defaultClass = 'bg-white') => {
+  const bgMap: Record<string, string> = {
+    'bg-white': '#ffffff', 'bg-slate-50': '#f8fafc', 'bg-slate-100': '#f1f5f9',
+    'bg-blue-600': '#2563eb',
+  };
   if (colorValue?.startsWith('[#')) {
     return { className: '', style: { backgroundColor: colorValue.slice(1, -1) } as React.CSSProperties };
   }
-  return { className: colorValue || defaultClass, style: {} };
+  const finalClass = colorValue || defaultClass;
+  return { className: finalClass, style: { backgroundColor: bgMap[finalClass] || '#ffffff' } as React.CSSProperties };
 };
 
 // --- Utilidades de actualización inmutable ---

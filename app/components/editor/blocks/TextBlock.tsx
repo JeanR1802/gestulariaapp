@@ -18,15 +18,23 @@ export interface TextData {
 
 // --- Helpers seguros para colores ---
 const getStyles = (color: string | undefined, defaultClass: string) => {
-  if (!color) return { className: defaultClass, style: {} };
+  const colorMap: Record<string, string> = {
+    'text-white': '#ffffff', 'text-slate-600': '#475569', 'text-slate-700': '#334155',
+    'text-slate-800': '#1e293b', 'text-slate-900': '#0f172a', 'text-blue-600': '#2563eb',
+  };
+  if (!color) return { className: defaultClass, style: { color: colorMap[defaultClass] || '#334155' } };
   if (color.startsWith('[#')) return { className: '', style: { color: color.slice(1, -1) } };
-  return { className: color, style: {} };
+  return { className: color, style: { color: colorMap[color] || '#334155' } };
 };
 
 const getBackgroundStyles = (color: string | undefined, defaultClass = 'bg-white') => {
-  if (!color) return { className: defaultClass, style: {} };
+  const bgMap: Record<string, string> = {
+    'bg-white': '#ffffff', 'bg-slate-50': '#f8fafc', 'bg-slate-100': '#f1f5f9',
+    'bg-yellow-100': '#fef9c3', 'bg-blue-600': '#2563eb',
+  };
+  if (!color) return { className: defaultClass, style: { backgroundColor: bgMap[defaultClass] || '#ffffff' } };
   if (color.startsWith('[#')) return { className: '', style: { backgroundColor: color.slice(1, -1) } };
-  return { className: color, style: {} };
+  return { className: color, style: { backgroundColor: bgMap[color] || '#ffffff' } };
 };
 
 // --- Editable Inline Component (reusable) ---
@@ -42,6 +50,21 @@ type EditableProps = {
 const Editable: React.FC<EditableProps> = ({ tagName, value, onUpdate, isEditing, className, style }) => {
   const ref = React.useRef<HTMLElement>(null);
   useEditable(ref, (newValue) => onUpdate(newValue.replace(/<[^>]*>?/gm, '')), { disabled: !isEditing });
+
+  // decode HTML entities so values like "&#x1F4A1;" render as emoji inside the editor
+  const decodeEntities = (s: string) => {
+    if (typeof document === 'undefined') return s;
+    try {
+      const el = document.createElement('div');
+      el.innerHTML = s;
+      return el.textContent ?? s;
+    } catch (e) {
+      return s;
+    }
+  };
+
+  const displayValue = decodeEntities(value || '');
+
   return React.createElement(
     tagName,
     {
@@ -51,7 +74,7 @@ const Editable: React.FC<EditableProps> = ({ tagName, value, onUpdate, isEditing
       contentEditable: isEditing || undefined,
       suppressContentEditableWarning: true,
     },
-    value
+    displayValue
   );
 };
 
