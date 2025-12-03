@@ -3,7 +3,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { EnvelopeIcon, CheckCircleIcon, UserIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, CheckCircleIcon, UserIcon, Squares2X2Icon } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './contexts/ThemeContext';
