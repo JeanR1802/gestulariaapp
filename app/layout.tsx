@@ -19,8 +19,8 @@ export default function RootLayout({
       <head>
         <title>Gestularia</title>
         {/* Iconos y manifest: usa los archivos en /public */}
-        <link rel="icon" href="/lgo.png" />
-        {/* Usar lgo.png como favicon */}
+        <link rel="icon" href="/favicon.ico" />
+        {/* Usar favicon.ico como favicon principal */}
         {/* Ajustar proporciones del logo para evitar recortes */}
         <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
