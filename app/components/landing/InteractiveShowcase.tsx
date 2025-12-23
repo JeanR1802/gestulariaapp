@@ -128,7 +128,7 @@ export const InteractiveShowcase = () => {
 };
 
 // Mockup del teléfono SIN imágenes, solo gradientes
-const PhoneMockup = ({ activeFeature, isMobile }: { activeFeature: any, isMobile: boolean }) => {
+const PhoneMockup = ({ activeFeature, isMobile }: { activeFeature: typeof features[0], isMobile: boolean }) => {
     return (
         <div 
             className={`relative bg-[#020617] rounded-[40px] border-[8px] border-[#121212] shadow-2xl overflow-hidden z-20 mx-auto

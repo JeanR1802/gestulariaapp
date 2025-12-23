@@ -34,7 +34,7 @@ export default function RegisterPage() {
       } else {
         setError(data.error || 'Error al registrarse');
       }
-    } catch (err) {
+    } catch {
       setError('Error de conexión');
     } finally {
       setLoading(false);

@@ -61,7 +61,7 @@ export function formatDate(date: Date | string, options: Intl.DateTimeFormatOpti
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date
     return new Intl.DateTimeFormat('es-ES', defaultOptions).format(dateObj)
-  } catch (_error) {
+  } catch {
     return 'Fecha inválida'
   }
 }

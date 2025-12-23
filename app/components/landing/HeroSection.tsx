@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { ArrowDown } from 'lucide-react';
 
 export const HeroSection = () => {
@@ -84,12 +85,12 @@ export const HeroSection = () => {
               Ver cómo funciona
           </button>
           
-          <a
+          <Link
               href="/register"
               className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(37,99,235,0.4)] transition-all duration-300"
           >
               Prueba gratis
-          </a>
+          </Link>
         </div>
 
       </div>
