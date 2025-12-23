@@ -17,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <title>Gestularia</title>
         {/* Iconos y manifest: usa los archivos en /public */}
         <link rel="icon" href="/favicon.ico" />
@@ -30,7 +31,7 @@ export default function RootLayout({
         <meta property="og:title" content="Gestularia" />
         <meta property="og:image" content="/saas-logo.jpg" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} overflow-x-hidden`}>{children}</body>
     </html>
   )
 }

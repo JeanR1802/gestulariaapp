@@ -19,11 +19,26 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.body.style.overflow = loading ? 'hidden' : 'auto';
+    if (loading) {
+      // Bloquear scroll completamente durante el loading
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = '0';
+    } else {
+      // Restaurar scroll y resetear posición
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      window.scrollTo(0, 0); // Forzar scroll al inicio
+    }
   }, [loading]);
 
   return (
-    <main className="min-h-screen font-sans bg-transparent text-slate-900 relative">
+    <main className="min-h-screen font-sans bg-transparent text-slate-900 relative overflow-x-hidden w-full">
       <PrismaBackground />
       <WelcomeLoader onLoadingComplete={() => setLoading(false)} />
 

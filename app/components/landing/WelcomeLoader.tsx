@@ -57,7 +57,7 @@ export const WelcomeLoader = ({ onLoadingComplete }: { onLoadingComplete: () => 
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#020202] text-white px-6 transition-opacity duration-800"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#020202] text-white px-6 transition-opacity duration-800 overflow-hidden w-full h-full"
       style={{ opacity: progress === 100 ? 0 : 1 }}
     >
       <div className="w-full max-w-4xl flex flex-col items-center gap-12">
@@ -70,8 +70,8 @@ export const WelcomeLoader = ({ onLoadingComplete }: { onLoadingComplete: () => 
         </div>
 
         {/* FRASE PRINCIPAL */}
-        <div className="min-h-[120px] flex items-center justify-center">
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-center leading-tight tracking-tight">
+        <div className="min-h-[120px] flex items-center justify-center px-4">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-center leading-tight tracking-tight max-w-full break-words">
             {phrases[phraseIndex]}
           </h1>
         </div>
