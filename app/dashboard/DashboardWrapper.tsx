@@ -1,6 +1,8 @@
 'use client';
 
 import { DashboardSidebar } from './DashboardSidebar';
+import { SidebarProvider, useSidebar } from '@/app/contexts/SidebarContext';
+import { cn } from '@/lib/utils';
 
 interface DashboardWrapperProps {
   children: React.ReactNode;
@@ -8,16 +10,33 @@ interface DashboardWrapperProps {
   isEditor: boolean;
 }
 
-export function DashboardWrapper({ children, userEmail, isEditor }: DashboardWrapperProps) {
-  return (
-    <div className="dashboard-root flex h-screen overflow-hidden">
-      {!isEditor && <DashboardSidebar />}
+function DashboardContent({ children, isEditor }: { children: React.ReactNode; isEditor: boolean }) {
+  const { isExpanded } = useSidebar();
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className={isEditor ? "flex-1" : "flex-1 overflow-y-auto"}>
+  return (
+    <>
+      {!isEditor && <DashboardSidebar />}
+      <main className={cn(
+        "flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-y-auto", // allow main to scroll on mobile/touch
+        !isEditor && "ml-20", // Móvil siempre compacto
+        !isEditor && isExpanded && "lg:ml-64" // Desktop expandido
+      )}>
+        <div className={isEditor ? "flex-1" : "flex-1"}>
           {children}
         </div>
       </main>
-    </div>
+    </>
+  );
+}
+
+export function DashboardWrapper({ children, userEmail, isEditor }: DashboardWrapperProps) {
+  return (
+    <SidebarProvider>
+      <div className="dashboard-root flex h-screen overflow-hidden bg-slate-50 dark:bg-[#020617] transition-colors duration-500">
+        <DashboardContent isEditor={isEditor}>
+          {children}
+        </DashboardContent>
+      </div>
+    </SidebarProvider>
   );
 }

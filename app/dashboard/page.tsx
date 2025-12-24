@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 'use client';
 
 import React from 'react';
@@ -10,65 +11,63 @@ import { IncomeCard, AiStatCard, ToolsGrid } from './components/AliveWidgets';
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+    const { theme, toggleTheme } = useTheme();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-indigo-500">Cargando Gestularia...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-alive-light dark:bg-alive-dark">
+         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex-1 min-h-screen relative overflow-hidden transition-colors duration-700 bg-slate-50 dark:bg-[#020617]">
-        {/* Luces Ambientales de Fondo */}
-        <div className="absolute inset-0 bg-alive-light dark:bg-alive-dark pointer-events-none transition-opacity duration-700" />
+    <div className="flex-1 min-h-screen relative overflow-hidden">
+        {/* Fondo Atmosférico */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-transparent to-purple-50/50 dark:from-indigo-950/20 dark:via-transparent dark:to-purple-950/20 pointer-events-none" />
 
-        <div className="relative z-10 max-w-[1400px] mx-auto p-6 md:p-10 space-y-8 ml-20 lg:ml-24">
+        {/* Contenido Principal */}
+        <div className="relative z-10 max-w-[1400px] mx-auto p-4 md:p-8 space-y-8">{/*  Reducido padding y removido margen izquierdo */}
             
             {/* Header */}
-            <header className="flex justify-between items-end mb-8">
+            <header className="flex justify-between items-end mb-8 pt-4">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-slow"></span>
                         <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Sistema Operativo</span>
                     </div>
                     <h1 className="text-3xl md:text-4xl font-brand font-bold text-slate-800 dark:text-white tracking-tight">
-                        Gestularia HQ
+                        Hola, {user?.email?.split('@')[0] || 'Gestor'}
                     </h1>
                 </div>
 
                 {/* Toggle de Tema */}
                 <button 
                     onClick={toggleTheme}
-                    className="h-11 px-4 rounded-full flex items-center gap-3 border border-white/10 bg-white dark:bg-slate-900 shadow-sm"
+                    className="h-11 px-4 rounded-full flex items-center gap-3 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:scale-105 transition-all group shadow-md dark:shadow-xl"
                 >
-                    <div className="w-5 h-5">
-                        {theme === 'dark' ? <Moon className="w-5 h-5 text-indigo-400" /> : <Sun className="w-5 h-5 text-amber-500" />}
+                    <div className="relative w-5 h-5">
+                        <Sun className={`w-5 h-5 absolute inset-0 text-amber-500 transition-all duration-300 ${theme === 'dark' ? 'rotate-90 scale-0' : 'rotate-0 scale-100'}`} />
+                        <Moon className={`w-5 h-5 absolute inset-0 text-indigo-400 transition-all duration-300 ${theme === 'dark' ? 'rotate-0 scale-100' : '-rotate-90 scale-0'}`} />
                     </div>
-                    <span className="text-xs font-bold text-slate-500">
+                    <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-500 transition-colors hidden sm:inline-block">
                         {theme === 'dark' ? 'Modo Noche' : 'Modo Día'}
                     </span>
                 </button>
             </header>
 
             {/* Grid Principal de Métricas */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <IncomeCard value="24,500" trend="12.5%" />
-                <AiStatCard />
-            </div>
-
-            {/* Grid de Herramientas */}
-            <ToolsGrid onOpenSites={() => router.push('/dashboard/sites')} />
-
-            {/* Feed en Vivo */}
-            <div className="rounded-[2rem] border border-white/10 bg-white dark:bg-slate-900 shadow-lg p-6 mt-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold text-slate-800 dark:text-white">Feed en Vivo</h3>
-                    <span className="flex h-2 w-2 relative">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
+            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 auto-rows-min">
+                <div className="lg:col-span-4">
+                    <IncomeCard value="24,500" trend="12.5%" />
                 </div>
-                <div className="text-center py-8 text-slate-400 text-sm">
-                    No hay actividad reciente en tiempo real.
+
+                <div className="lg:col-span-2">
+                    <AiStatCard />
+                </div>
+
+                <div className="lg:col-span-6">
+                    <ToolsGrid onOpenSites={() => router.push('/dashboard/sites')} />
                 </div>
             </div>
 
