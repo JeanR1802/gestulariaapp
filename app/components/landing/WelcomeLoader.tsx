@@ -57,10 +57,13 @@ export const WelcomeLoader = ({ onLoadingComplete }: { onLoadingComplete: () => 
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#020202] text-white px-6 transition-opacity duration-800 overflow-hidden w-full h-full"
+      // OPTIMIZACIÓN: 'touch-none' le dice al navegador: "Ignora los dedos aquí".
+      // onTouchMove preventDefault es el bloqueo final para navegadores rebeldes.
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#020202] text-white px-6 transition-opacity duration-800 touch-none"
       style={{ opacity: progress === 100 ? 0 : 1 }}
+      onTouchMove={(e) => e.preventDefault()} 
     >
-      <div className="w-full max-w-4xl flex flex-col items-center gap-12">
+      <div className="w-full max-w-4xl flex flex-col items-center gap-12 pointer-events-none select-none">
         
         {/* LOGO DISCRETO */}
         <div className="absolute top-10 left-0 w-full text-center opacity-50">
@@ -70,8 +73,8 @@ export const WelcomeLoader = ({ onLoadingComplete }: { onLoadingComplete: () => 
         </div>
 
         {/* FRASE PRINCIPAL */}
-        <div className="min-h-[120px] flex items-center justify-center px-4">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-center leading-tight tracking-tight max-w-full break-words">
+        <div className="min-h-[120px] flex items-center justify-center">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-center leading-tight tracking-tight">
             {phrases[phraseIndex]}
           </h1>
         </div>

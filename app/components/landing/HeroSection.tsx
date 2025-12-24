@@ -5,21 +5,39 @@ import Link from 'next/link';
 import { ArrowDown } from 'lucide-react';
 
 export const HeroSection = () => {
+  
   const scrollToDemo = () => {
-    window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+    // Buscamos el contenedor y lo scrolleamos
+    const container = document.getElementById('main-scroll-container');
+    if (container) {
+        container.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+    }
   };
 
   return (
     <section className="relative h-[100dvh] flex flex-col justify-center items-center overflow-hidden bg-transparent text-white px-4">
+      {/* Premium background (CSS-only, optimized): layered radial gradients + dark base.
+          - No heavy blur or JS animations to keep performance.
+          - pointer-events-none so it never intercepts input. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 pointer-events-none"
+        style={{
+          /* Nuevo fondo: dos blobs suaves (indigo + teal) + base oscuro
+             Más sutil y balanceado que el anterior; sin filtros ni animaciones. */
+          backgroundImage:
+            'radial-gradient(600px 420px at 12% 18%, rgba(99,102,241,0.14) 0%, rgba(99,102,241,0.03) 35%, transparent 60%), radial-gradient(520px 360px at 88% 78%, rgba(6,182,212,0.10) 0%, rgba(6,182,212,0.02) 30%, transparent 62%), linear-gradient(180deg, rgba(6,7,11,0.94), rgba(12,14,18,0.96))',
+          backgroundBlendMode: 'screen, screen, normal',
+          willChange: 'transform'
+        }}
+      />
       
       <div className="container mx-auto relative z-10 flex flex-col items-center text-center -mt-12 sm:mt-0">
         
-        {/* 1. TÍTULO */}
         <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight mb-6 leading-[1.1] sm:leading-[0.95] drop-shadow-2xl">
           Dale a tu{' '}
           <span className="relative inline-block">
              <span className="relative z-10">negocio</span>
-             {/* Subrayado índigo/violeta para resaltar sobre el fondo oscuro */}
              <span className="absolute bottom-2 left-0 w-full h-3 bg-indigo-500/80 -z-0 transform -rotate-2 rounded-sm opacity-80"></span>
           </span>
           <br/>
@@ -28,52 +46,54 @@ export const HeroSection = () => {
           </span>
         </h1>
 
-        {/* 2. DESCRIPCIÓN */}
         <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-2xl font-normal leading-relaxed">
           Deja los mensajitos. En 15 minutos, tu tienda cobra sola, vende sola y genera confianza las 24 horas.
         </p>
 
-        {/* 3. WIDGET CÁPSULA OPTIMIZADO */}
         <div className="mb-10 w-full flex justify-center">
-            <div className="w-full max-w-[380px] h-[46px] bg-white/[0.03] border border-white/15 rounded-full shadow-2xl overflow-hidden relative backdrop-blur-sm">
-                
+            <div className="w-full max-w-[380px] h-[46px] bg-[#0f172a]/90 border border-white/10 rounded-full shadow-2xl overflow-hidden relative">
                 <style jsx>{`
-                    @keyframes infiniteScroll {
-                        0%, 15% { transform: translateY(0px); }          
-                        20%, 35% { transform: translateY(-46px); }       
-                        40%, 55% { transform: translateY(-92px); }       
-                        60%, 75% { transform: translateY(-138px); }      
-                        80%, 95% { transform: translateY(-184px); }      
-                        100% { transform: translateY(-184px); }          
-                    }
-                    .capsule-slider {
-                        animation: infiniteScroll 10s ease-in-out infinite;
-                        will-change: transform;
-                    }
-                    .highlight-tech { background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; margin-left: 5px; }
+                  @keyframes infiniteScroll {
+                    0%, 15% { transform: translateY(0px); }
+                    20%, 35% { transform: translateY(-46px); }
+                    40%, 55% { transform: translateY(-92px); }
+                    60%, 75% { transform: translateY(-138px); }
+                    80%, 95% { transform: translateY(-184px); }
+                    100% { transform: translateY(-184px); }
+                  }
+                  .capsule-slider {
+                    animation: infiniteScroll 10s ease-in-out infinite;
+                    will-change: transform;
+                    transform: translateZ(0);
+                  }
+                  /* Highlights por frase - colores sólidos (reemplazamos degradados) */
+                  .highlight-tech-1 { color: #0ea5e9; font-weight: 900; margin-left: 5px; } /* sky-500 */
+                  .highlight-tech-2 { color: #34d399; font-weight: 900; margin-left: 5px; } /* green-400 */
+                  .highlight-tech-3 { color: #f59e0b; font-weight: 900; margin-left: 5px; } /* amber-500 */
+                  .highlight-tech-4 { color: #8b5cf6; font-weight: 900; margin-left: 5px; } /* indigo-500 */
+                  .highlight-tech-5 { color: #fb7185; font-weight: 900; margin-left: 5px; } /* rose-400 */
                 `}</style>
 
                 <div className="capsule-slider flex flex-col">
                     <div className="h-[46px] flex items-center justify-center px-4 text-sm font-semibold text-slate-300 whitespace-nowrap">
-                        TU TIENDA LISTA EN <span className="highlight-tech">15 MINUTOS</span>
+                      TU TIENDA LISTA EN <span className="highlight-tech-1">15 MINUTOS</span>
                     </div>
                     <div className="h-[46px] flex items-center justify-center px-4 text-sm font-semibold text-slate-300 whitespace-nowrap">
-                        SIN MENSAJITOS, TODO <span className="highlight-tech">AUTOMATIZADO</span>
+                      SIN MENSAJITOS, TODO <span className="highlight-tech-2">AUTOMATIZADO</span>
                     </div>
                     <div className="h-[46px] flex items-center justify-center px-4 text-sm font-semibold text-slate-300 whitespace-nowrap">
-                        COBRA 24/7 CON <span className="highlight-tech">BOTÓN DE PAGO</span>
+                      COBRA 24/7 CON <span className="highlight-tech-3">BOTÓN DE PAGO</span>
                     </div>
                     <div className="h-[46px] flex items-center justify-center px-4 text-sm font-semibold text-slate-300 whitespace-nowrap">
-                        CATALOGOS QUE <span className="highlight-tech">REALMENTE VENDEN</span>
+                      CATALOGOS QUE <span className="highlight-tech-4">REALMENTE VENDEN</span>
                     </div>
                     <div className="h-[46px] flex items-center justify-center px-4 text-sm font-semibold text-slate-300 whitespace-nowrap">
-                        TECNOLOGÍA <span className="highlight-tech">SIN CÓDIGO</span>
+                      TECNOLOGÍA <span className="highlight-tech-5">SIN CÓDIGO</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        {/* 4. BOTONES CTA */}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <button
               onClick={scrollToDemo}

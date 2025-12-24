@@ -127,14 +127,19 @@ export const InteractiveShowcase = () => {
   );
 };
 
-// Mockup del teléfono SIN imágenes, solo gradientes
+// COMPONENTE MOCKUP OPTIMIZADO
 const PhoneMockup = ({ activeFeature, isMobile }: { activeFeature: typeof features[0], isMobile: boolean }) => {
     return (
         <div 
-            className={`relative bg-[#020617] rounded-[40px] border-[8px] border-[#121212] shadow-2xl overflow-hidden z-20 mx-auto
+            className={`relative bg-[#020617] rounded-[40px] border-[8px] border-[#121212] overflow-hidden z-20 mx-auto
                 ${isMobile ? 'w-[280px] h-[480px]' : 'w-[340px] h-[680px]'}
             `}
-            style={{ boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset' }}
+            // OPTIMIZACIÓN CRÍTICA: Quitamos sombras difusas en móvil
+            style={{ 
+                boxShadow: isMobile 
+                  ? '0 0 0 1px rgba(255,255,255,0.1) inset' // Solo borde sutil
+                  : '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1) inset' 
+            }}
         >
             <div className="absolute top-0 inset-x-0 h-6 bg-[#121212] z-50 rounded-b-xl mx-auto w-28"></div>
 
@@ -142,7 +147,6 @@ const PhoneMockup = ({ activeFeature, isMobile }: { activeFeature: typeof featur
                     
                     {/* VISTA 1: TIENDA */}
                     <PhoneScreen key="gallery" gradient={activeFeature.gradient} isActive={activeFeature.id === 'gallery'}>
-                        {/* Simulación de imagen con gradiente */}
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-800 to-slate-900 opacity-80" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40"></div>
                             
@@ -187,7 +191,6 @@ const PhoneMockup = ({ activeFeature, isMobile }: { activeFeature: typeof featur
                             </h2>
                             <div className="bg-white/10 rounded-xl p-4 mb-4 border border-white/10">
                                 <div className="flex gap-3 mb-3 pb-3 border-b border-white/10">
-                                    {/* Miniatura con gradiente en lugar de imagen */}
                                     <div className={`bg-gradient-to-br from-blue-500 to-blue-700 rounded overflow-hidden relative ${isMobile ? 'w-10 h-10' : 'w-14 h-14'}`} />
                                     <div>
                                         <h3 className="text-white font-bold text-sm">Nike Air Max</h3>

@@ -1,6 +1,7 @@
 // app/layout.tsx
 import './globals.css'
 import { Inter } from 'next/font/google'
+import { LandingNavbar } from './components/landing/LandingNavbar';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,7 +32,10 @@ export default function RootLayout({
         <meta property="og:title" content="Gestularia" />
         <meta property="og:image" content="/saas-logo.jpg" />
       </head>
-      <body className={`${inter.className} overflow-x-hidden`}>{children}</body>
+      <body className={`${inter.className} overflow-x-hidden`}>
+        <LandingNavbar />
+        {children}
+      </body>
     </html>
   )
 }
