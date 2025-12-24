@@ -7,6 +7,7 @@ import { WelcomeLoader } from '@/app/components/landing/WelcomeLoader';
 import { PrismaBackground } from '@/app/components/landing/PrismaBackground';
 import { HeroSection } from '@/app/components/landing/HeroSection';
 import { WhatsAppFloatingBtn } from '@/app/components/landing/WhatsAppFloatingBtn';
+import { LandingNavbar } from '@/app/components/landing/LandingNavbar';
 
 // Placeholder ligero
 const SectionLoader = () => (
@@ -37,6 +38,9 @@ export default function LandingPage() {
   return (
     // Main fijo sin scroll
     <main className="fixed inset-0 w-full h-full overflow-hidden font-sans bg-transparent text-slate-900">
+      
+      {/* Navbar solo en landing */}
+      <LandingNavbar />
       
       {/* Fondo fijo fuera del scroll (Rendimiento máximo) */}
       <PrismaBackground />

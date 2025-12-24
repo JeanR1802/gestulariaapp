@@ -102,4 +102,95 @@ html, body {
     transform: none !important;
     transition: none !important;
   }
+}
+
+/* ========================================
+   EFECTOS PREMIUM: SCROLL-DRIVEN ANIMATIONS
+   ======================================== */
+
+/* Animación moderna nativa de revelación al hacer scroll */
+@supports (animation-timeline: view()) {
+  .reveal-on-scroll {
+    opacity: 0;
+    transform: scale(0.9) translateY(40px);
+    animation: reveal linear forwards;
+    animation-timeline: view();
+    /* La animación ocurre cuando el elemento entra al viewport */
+    animation-range: entry 10% cover 40%;
+  }
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ========================================
+   EFECTO SCANLINE (Luz que recorre bordes)
+   ======================================== */
+.scanline-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 32px;
+}
+
+/* La luz que viaja por la tarjeta */
+.scanline-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: skewX(-25deg);
+  animation: shine 6s infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  20% { left: 200%; }
+  100% { left: 200%; }
+}
+
+/* ========================================
+   ANIMACIONES FLOTANTES Y 3D
+   ======================================== */
+.chat-bubble {
+  animation: float 4s ease-in-out infinite;
+}
+
+.credit-card-3d {
+  transform-style: preserve-3d;
+  animation: tilt 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes tilt {
+  0%, 100% { transform: rotateY(0deg) rotateX(0deg); }
+  50% { transform: rotateY(10deg) rotateX(5deg); }
+}
+
+/* ========================================
+   ACCESIBILIDAD: Reducción de movimiento
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .scanline-card::before,
+  .chat-bubble,
+  .credit-card-3d {
+    animation: none !important;
+  }
 } 

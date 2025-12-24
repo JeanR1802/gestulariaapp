@@ -2,148 +2,194 @@
 
 import React from 'react';
 import { Oswald } from 'next/font/google';
-import { MessageCircle, CreditCard, Box } from 'lucide-react';
+import { MessageCircle, CreditCard, Play, ArrowDown } from 'lucide-react';
 
 const oswald = Oswald({ subsets: ['latin'], weight: '700', display: 'swap' });
 
 export const BentoGrid = () => {
   return (
-    <section className="py-24 px-4 bg-[#050505] relative overflow-hidden">
+    <section className="relative bg-[#020202] text-white overflow-hidden pb-20">
       
-      {/* LUZ AMBIENTAL DE FONDO */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-900/15 blur-[120px] rounded-full pointer-events-none" />
-
-      <div className="max-w-6xl mx-auto relative z-10">
+      {/* --- ESTILOS CSS INCRUSTADOS PARA ASEGURAR EL LOOK EXACTO --- */}
+      <style jsx global>{`
+        /* Animación de Revelado segura para Móviles */
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(40px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         
-        {/* TÍTULO */}
-        <div className="mb-12 md:mb-20 text-center">
-            <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-4">
-              Todo lo que necesitas para <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">vender más.</span>
-            </h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-              Menos herramientas sueltas, más resultados.
-            </p>
-        </div>
+        .reveal-card {
+          animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+          opacity: 0; /* Inicia invisible hasta que la animación corre */
+        }
 
-        {/* GRID DE 3 CARTAS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[340px]">
+        /* Retardos para efecto cascada */
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        /* Activar animación solo cuando es visible (fallback simple) */
+        /* En producción real usaríamos IntersectionObserver, pero para este efecto rápido: */
+        .reveal-card { animation-play-state: running; }
+
+        /* GRADIENTES POTENTES (Tal cual el HTML) */
+        .card-purple {
+            background: radial-gradient(circle at 50% -20%, rgba(124, 58, 237, 0.25), rgba(0,0,0,0) 70%), #080808;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        .card-orange {
+            background: radial-gradient(circle at 50% -20%, rgba(249, 115, 22, 0.25), rgba(0,0,0,0) 70%), #080808;
+            border: 1px solid rgba(251, 146, 60, 0.3);
+        }
+        .card-green {
+            background: radial-gradient(circle at 50% -20%, rgba(34, 197, 94, 0.25), rgba(0,0,0,0) 70%), #080808;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+
+        /* EFECTOS HOVER Y LUCES */
+        .premium-card { transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .premium-card:hover { transform: translateY(-8px) scale(1.02); z-index: 10; }
+        
+        .card-purple:hover { border-color: rgba(167, 139, 250, 0.8); box-shadow: 0 0 40px rgba(124, 58, 237, 0.15); }
+        .card-orange:hover { border-color: rgba(253, 186, 116, 0.8); box-shadow: 0 0 40px rgba(249, 115, 22, 0.15); }
+        .card-green:hover { border-color: rgba(134, 239, 172, 0.8); box-shadow: 0 0 40px rgba(34, 197, 94, 0.15); }
+
+        /* LUZ VIAJERA (Scanline) */
+        .scanline::after {
+            content: ''; position: absolute; top: 0; left: -150%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: skewX(-25deg); animation: shine 6s infinite; pointer-events: none;
+        }
+        @keyframes shine { 0% { left: -150%; } 20% { left: 150%; } 100% { left: 150%; } }
+
+        /* ANIMACIONES INTERNAS */
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-pulse-ring { animation: pulse-ring 2s infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3); } 70% { box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); } }
+      `}</style>
+
+      {/* --- INTRO ÉPICA (Dentro de la sección para mantener flujo) --- */}
+      <div className="relative pt-20 pb-32 flex flex-col items-center justify-center text-center px-4 z-10 min-h-[60vh]">
+          {/* Luz Ambiental */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-900/10 blur-[100px] rounded-full pointer-events-none" />
+
+          {/* Scroll Prompt */}
+          <div className="mb-10 flex flex-col items-center gap-3 text-slate-500 animate-bounce">
+              <span className="text-xs uppercase tracking-[0.3em] font-mono">Desliza hacia abajo</span>
+              <ArrowDown className="w-5 h-5" />
+          </div>
+
+          {/* TITULO GIGANTE */}
+          <h2 className={`${oswald.className} text-6xl sm:text-7xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-200 to-slate-600 tracking-tighter leading-none drop-shadow-2xl scale-y-110 mb-8`}>
+              EXPERIMENTA<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+                  EL PODER.
+              </span>
+          </h2>
+
+          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed">
+             Domina el mercado con herramientas diseñadas para vender. Sin excusas.
+          </p>
+      </div>
+
+      {/* --- GRID DE TARJETAS (Visualmente Idéntico al HTML) --- */}
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[400px]">
             
-            {/* 1. TIENDAS VIVAS (PREMIUM GRADIENT) - Ocupa 2 columnas */}
-            <div className="md:col-span-2 md:row-span-2 relative group rounded-[32px] overflow-hidden transition-transform duration-500 hover:scale-[1.01]">
-                
-                {/* MARCO DE NEÓN (Gradiente Vivo) */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-cyan-500 p-[2px]">
-                    {/* FONDO INTERNO DEGRADADO PREMIUM */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#0f1016] via-[#050505] to-[#0a0a1a] rounded-[30px]" />
-                </div>
-                
-                {/* CONTENIDO */}
-                <div className="relative h-full rounded-[30px] p-8 md:p-12 flex flex-col justify-between overflow-hidden">
+            {/* 1. LA REINA (MORADO) */}
+            <div className="md:col-span-2 md:row-span-2 reveal-card delay-100">
+                <div className="premium-card card-purple scanline h-full flex flex-col p-8 md:p-12 relative rounded-[32px] overflow-hidden group">
                     
-                    {/* Efecto de luz interna superior */}
-                    <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-indigo-500/10 to-transparent opacity-50 pointer-events-none" />
-
-                    <div className="relative z-10">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-6 shadow-lg shadow-indigo-900/20">
-                            <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse shadow-[0_0_12px_#818cf8]" />
-                            Experiencia Inmersiva
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="px-4 py-1.5 rounded-full bg-purple-600/20 border border-purple-500/50 text-purple-200 text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-[0_0_20px_rgba(147,51,234,0.3)]">
+                            <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span> Inmersivo
                         </div>
-                        <h3 className={`${oswald.className} text-5xl md:text-6xl text-white mb-6 leading-none drop-shadow-xl`}>
-                            Tiendas <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Vivas.</span>
-                        </h3>
-                        <p className="text-slate-300 text-lg md:text-xl max-w-md leading-relaxed font-light">
-                            Tus productos no son fotos estáticas. Son historias. Vende con video a pantalla completa y atrapa a tus clientes.
-                        </p>
                     </div>
 
-                    {/* VISUAL MÁS GRANDE Y PROTAGONISTA */}
-                    <div className="relative mt-auto h-72 w-full flex items-end justify-center perspective-1000">
-                         {/* Tarjeta Flotante Izquierda */}
-                         <div className="absolute w-40 h-56 bg-slate-900 rounded-2xl border border-white/10 shadow-2xl transform -rotate-12 -translate-x-28 translate-y-12 opacity-60 scale-90 group-hover:-rotate-6 group-hover:-translate-x-32 transition-all duration-700 ease-out" />
-                         
-                         {/* Tarjeta Flotante Derecha */}
-                         <div className="absolute w-40 h-56 bg-slate-900 rounded-2xl border border-white/10 shadow-2xl transform rotate-12 translate-x-28 translate-y-12 opacity-60 scale-90 group-hover:rotate-6 group-hover:translate-x-32 transition-all duration-700 ease-out" />
-                         
-                         {/* Tarjeta Central (Hero) Brillante */}
-                         <div className="relative w-52 h-72 bg-gradient-to-b from-[#1e1b4b] to-black rounded-2xl border border-indigo-500/50 shadow-[0_0_60px_-15px_rgba(99,102,241,0.5)] transform translate-y-8 group-hover:translate-y-4 transition-all duration-500 z-20 overflow-hidden flex flex-col">
-                            {/* Video simulado */}
-                            <div className="flex-1 bg-indigo-900/10 relative flex items-center justify-center group-hover:bg-indigo-900/20 transition-colors">
-                                <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-xl border border-white/30 shadow-2xl group-hover:scale-110 transition-transform">
-                                    <div className="w-0 h-0 border-l-[12px] border-l-white border-y-[8px] border-y-transparent ml-1" />
+                    <h3 className={`${oswald.className} text-5xl md:text-8xl text-white mb-6 leading-[0.85] tracking-tight`}>
+                        TIENDAS <br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">VIVAS.</span>
+                    </h3>
+                    
+                    <p className="text-purple-100/70 text-lg max-w-sm font-light leading-relaxed mb-10">
+                        Atrapa a tus clientes. Vende con video a pantalla completa.
+                    </p>
+
+                    {/* VIDEO PLAYER (Siempre visible en móvil, interactivo en desktop) */}
+                    <div className="flex-1 w-full relative perspective-1000 flex items-end justify-center">
+                        <div className="relative w-64 h-80 bg-[#0a0a0a] rounded-2xl border border-purple-500/30 shadow-[0_0_60px_rgba(147,51,234,0.3)] overflow-hidden z-20 transform transition-all duration-500 translate-y-4 scale-100 md:translate-y-8 md:group-hover:translate-y-0 md:group-hover:scale-105">
+                            <div className="absolute inset-0 bg-gradient-to-b from-[#2e1065] to-black"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white/50 shadow-2xl animate-pulse-ring">
+                                    <Play className="w-8 h-8 text-white ml-1 fill-white" />
                                 </div>
                             </div>
-                            {/* Footer de la tarjeta */}
-                            <div className="h-16 bg-black/60 backdrop-blur-xl border-t border-white/10 p-4 flex items-center justify-between">
-                                <div className="space-y-1.5">
-                                    <div className="h-2 w-16 bg-white/40 rounded-full" />
-                                    <div className="h-2 w-10 bg-white/20 rounded-full" />
-                                </div>
-                                <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-indigo-600 to-blue-600 flex items-center justify-center shadow-lg">
-                                    <Box className="w-4 h-4 text-white" />
+                            <div className="absolute bottom-0 left-0 w-full p-5 bg-gradient-to-t from-black via-black/80 to-transparent">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-purple-900 border border-white/20"></div>
+                                    <div className="space-y-1.5">
+                                        <div className="w-24 h-2 bg-white/40 rounded-full"></div>
+                                        <div className="w-14 h-2 bg-white/20 rounded-full"></div>
+                                    </div>
                                 </div>
                             </div>
-                         </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* 2. PEDIDOS WHATSAPP (Verde) */}
-            <div className="group relative rounded-[32px] overflow-hidden transition-all duration-300 hover:translate-y-[-4px]">
-                {/* Borde sutil */}
-                <div className="absolute inset-0 bg-gradient-to-b from-green-500/30 to-white/5 p-[1px] rounded-[32px]">
-                    <div className="absolute inset-0 bg-[#080808] rounded-[31px]" />
-                </div>
-
-                <div className="relative h-full p-8 flex flex-col rounded-[31px] bg-gradient-to-b from-green-900/10 to-transparent">
-                    <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center mb-6 border border-green-500/20 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_-5px_rgba(34,197,94,0.3)]">
-                        <MessageCircle className="w-6 h-6 text-green-400" />
+            {/* 2. ACCIÓN (NARANJA/ROJO) */}
+            <div className="reveal-card delay-200">
+                <div className="premium-card card-orange scanline h-full flex flex-col p-8 relative rounded-[32px] overflow-hidden group">
+                    <div className="w-14 h-14 rounded-2xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center mb-6 text-orange-400 group-hover:scale-110 transition-transform shadow-[0_0_25px_rgba(249,115,22,0.3)]">
+                        <MessageCircle className="w-7 h-7" />
                     </div>
-                    
-                    <h3 className="text-2xl font-bold text-white mb-2">Pedidos Directos</h3>
-                    <p className="text-slate-400 text-sm mb-4">Sin "precio inbox". Órdenes claras directo a tu WhatsApp.</p>
 
-                    {/* Visual: Chat */}
-                    <div className="mt-auto bg-[#121212] border border-white/10 rounded-2xl p-4 relative transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 shadow-xl">
-                         <div className="flex gap-2 items-center mb-3 border-b border-white/5 pb-2">
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-[10px] text-slate-500 font-mono uppercase">Nuevo Mensaje</span>
-                         </div>
-                         <div className="flex justify-between items-center">
-                            <span className="text-sm font-bold text-white">Quiero 2 pares</span>
-                            <span className="text-[10px] font-bold text-black bg-green-400 px-2 py-0.5 rounded-full">PAGADO</span>
-                         </div>
+                    <h3 className={`${oswald.className} text-3xl font-black mb-2 text-white uppercase italic`}>
+                        Pedidos <br/> <span className="text-orange-500">Flash</span>
+                    </h3>
+                    <p className="text-orange-100/60 text-sm mb-8 font-medium">
+                        El bot cierra la venta. Tú solo despachas.
+                    </p>
+
+                    <div className="mt-auto relative w-full flex flex-col gap-3">
+                        <div className="bg-[#1a0c05] border border-orange-500/30 p-3 rounded-xl shadow-lg w-[90%] self-end transform rotate-1 animate-float">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-[10px] text-orange-400 font-bold uppercase">Nuevo Pedido</span>
+                                <span className="text-[10px] text-slate-500">1m</span>
+                            </div>
+                            <div className="text-white font-bold text-xs">Quiero 3 Pares 🔥</div>
+                        </div>
+                        <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white p-3 rounded-xl shadow-lg w-[85%] self-start transform -rotate-1 flex items-center gap-2 font-bold text-xs">
+                           <span>⚡ Orden Confirmada</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* 3. COBROS AUTOMÁTICOS (Azul) */}
-            <div className="group relative rounded-[32px] overflow-hidden transition-all duration-300 hover:translate-y-[-4px]">
-                 {/* Borde sutil */}
-                 <div className="absolute inset-0 bg-gradient-to-b from-blue-500/30 to-white/5 p-[1px] rounded-[32px]">
-                    <div className="absolute inset-0 bg-[#080808] rounded-[31px]" />
-                </div>
-
-                <div className="relative h-full p-8 flex flex-col rounded-[31px] bg-gradient-to-b from-blue-900/10 to-transparent">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6 border border-blue-500/20 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]">
-                        <CreditCard className="w-6 h-6 text-blue-400" />
+            {/* 3. DINERO (VERDE NEÓN) */}
+            <div className="reveal-card delay-300">
+                <div className="premium-card card-green scanline h-full flex flex-col p-8 relative rounded-[32px] overflow-hidden group">
+                    <div className="w-14 h-14 rounded-2xl bg-green-500/20 border border-green-500/40 flex items-center justify-center mb-6 text-green-400 group-hover:scale-110 transition-transform shadow-[0_0_25px_rgba(34,197,94,0.3)]">
+                        <CreditCard className="w-7 h-7" />
                     </div>
-                    
-                    <h3 className="text-2xl font-bold text-white mb-2">Pagos Blindados</h3>
-                    <p className="text-slate-400 text-sm mb-6">Tarjetas, transferencias y efectivo. Todo automatizado.</p>
 
-                    {/* Visual: Tarjeta Crédito */}
-                    <div className="mt-auto relative h-20 w-full flex items-end justify-center perspective-1000">
-                        <div className="absolute w-[85%] h-14 bg-[#1e293b] rounded-xl border border-white/10 transform -rotate-3 translate-y-1 group-hover:-rotate-6 transition-transform duration-300 shadow-lg" />
-                        <div className="absolute w-[85%] h-14 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl border border-white/10 shadow-2xl transform rotate-2 group-hover:rotate-3 group-hover:-translate-y-2 transition-all duration-300 flex flex-col justify-end p-3">
-                            <div className="flex justify-between items-center">
-                                <div className="flex gap-1.5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
-                                    <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
-                                    <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
-                                    <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
-                                </div>
-                                <div className="w-4 h-2.5 bg-white/20 rounded-sm" />
-                            </div>
+                    <h3 className={`${oswald.className} text-3xl font-black mb-2 text-white uppercase italic`}>
+                        Pagos <br/> <span className="text-green-500">Blindados</span>
+                    </h3>
+                    <p className="text-green-100/60 text-sm mb-8 font-medium">
+                        Dinero en tu cuenta, automáticamente.
+                    </p>
+
+                    <div className="mt-auto h-32 flex items-center justify-center relative perspective-1000">
+                        <div className="absolute top-4 w-[85%] h-20 bg-green-900/40 rounded-xl border border-green-500/20 transform rotate-[-5deg] z-0"></div>
+                        <div className="w-[90%] h-24 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl border border-white/20 shadow-2xl relative p-4 flex flex-col justify-between group-hover:translate-y-[-5px] transition-transform duration-300 z-10 animate-float">
+                             <div className="flex justify-between items-center">
+                                <span className="text-white/80 font-mono text-[10px]">SALDO DISPONIBLE</span>
+                                <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                             </div>
+                             <div className="text-2xl font-black text-white tracking-widest">$ 12,450</div>
                         </div>
                     </div>
                 </div>
