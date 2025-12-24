@@ -343,7 +343,11 @@ export const InteractiveShowcase = () => {
         </div>
 
         {/* --- EL VISOR (SLIDER) --- */}
-        <div className="relative w-full bg-[#080808] rounded-3xl sm:rounded-[40px] border border-white/10 overflow-hidden flex flex-col md:flex-row group transition-all duration-700 min-h-[600px] md:h-[550px]">
+        <div className="relative w-full rounded-3xl sm:rounded-[40px] overflow-hidden flex flex-col md:flex-row group transition-all duration-700 min-h-[600px] md:h-[550px]">
+            {/* Borde gradiente exterior */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${activeFeature.gradient} p-[2px] rounded-3xl sm:rounded-[40px] transition-all duration-500`}>
+                <div className="absolute inset-0 bg-[#080808] rounded-3xl sm:rounded-[40px]" />
+            </div>
             
             {/* FONDO DINÁMICO */}
             <div className={`absolute inset-0 transition-colors duration-700 ${activeFeature.bgGlow} blur-[150px] opacity-40 pointer-events-none`} />
@@ -368,9 +372,12 @@ export const InteractiveShowcase = () => {
             {/* --- IZQUIERDA: TEXTO --- */}
             <div className="relative z-20 w-full md:w-1/2 p-6 sm:p-8 md:p-16 flex flex-col justify-center items-start border-b md:border-b-0 md:border-r border-white/10">
                 
-                {/* Icono Flotante */}
-                <div key={`icon-${currentIndex}`} className={`mb-6 w-16 h-16 rounded-2xl bg-gradient-to-br ${activeFeature.gradient} bg-opacity-10 border border-white/10 flex items-center justify-center animate-in fade-in zoom-in duration-300 shadow-lg`}>
-                    <activeFeature.icon className="w-8 h-8 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                {/* Barra de color lateral */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${activeFeature.gradient}`} />
+                
+                {/* Icono Flotante con color */}
+                <div key={`icon-${currentIndex}`} className={`mb-6 w-20 h-20 rounded-2xl bg-gradient-to-br ${activeFeature.gradient} flex items-center justify-center animate-in fade-in zoom-in duration-300 shadow-lg`}>
+                    <activeFeature.icon className="w-10 h-10 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
                 </div>
 
                 {/* Textos */}
@@ -386,10 +393,10 @@ export const InteractiveShowcase = () => {
                     </p>
                 </div>
 
-                {/* Barra de Progreso */}
-                <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden mb-6 md:mb-0 max-w-[200px]">
+                {/* Barra de Progreso con gradiente */}
+                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-6 md:mb-0 max-w-[200px]">
                     <div 
-                        className="h-full bg-white transition-all duration-300 ease-out" 
+                        className={`h-full bg-gradient-to-r ${activeFeature.gradient} transition-all duration-300 ease-out shadow-[0_0_10px_rgba(139,92,246,0.5)]`}
                         style={{ width: `${((currentIndex + 1) / features.length) * 100}%` }} 
                     />
                 </div>

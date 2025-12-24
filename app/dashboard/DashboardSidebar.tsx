@@ -3,123 +3,75 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  Squares2X2Icon, 
-  GlobeAltIcon, 
-  UsersIcon, 
-  ChartBarIcon,
-  Cog6ToothIcon,
-  ArrowTrendingUpIcon
-} from '@heroicons/react/24/solid';
+    LayoutGrid, 
+    ShoppingBag, 
+    MessageSquare, 
+    Settings
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTheme } from '../contexts/ThemeContext';
-import { colorPalettes } from '../lib/colors';
-
-const menuItems = [
-  // Dashboard muestra métricas rápidas — icono cambiado a flecha de tendencias
-  { href: '/dashboard', label: 'Dashboard', icon: ArrowTrendingUpIcon },
-  // Sitios ahora se muestra como Módulos (mantener ruta /dashboard/sites)
-  { href: '/dashboard/sites', label: 'Módulos', icon: Squares2X2Icon },
-  { href: '/dashboard/analytics', label: 'Analíticas', icon: ChartBarIcon, disabled: true },
-  { href: '/dashboard/team', label: 'Equipo', icon: UsersIcon, disabled: true },
-  { href: '/dashboard/settings', label: 'Ajustes', icon: Cog6ToothIcon, disabled: true },
-];
+import { useAuth } from '@/app/hooks/useAuth';
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { theme, palette } = useTheme();
-  const c = colorPalettes[palette][theme];
-  const isLight = theme === 'light';
+  const { user } = useAuth();
 
-  // En modo oscuro queremos que el sidebar se note respecto al fondo:
-  // - fondo secundario del tema (ligeramente distinto)
-  // - borde sutil y sombra para separación
-  const sidebarBg = isLight ? c.accent.primary : c.bg.secondary;
-  const textColor = isLight ? '#FFFFFF' : c.text.primary;
-  const indicatorActive = isLight ? '#FFFFFF' : c.accent.primary;
-  const tooltipBg = isLight ? '#FFFFFF' : c.bg.secondary;
-  const tooltipText = isLight ? c.accent.primary : c.text.primary;
-  const sidebarBorder = isLight ? 'transparent' : `1px solid ${c.border.secondary}`;
-  const sidebarBoxShadow = isLight ? undefined : '0 8px 24px rgba(0,0,0,0.35)';
+  const menuItems = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
+    { href: '/dashboard/sites', label: 'Mis Sitios', icon: ShoppingBag },
+    { href: '/dashboard/chats', label: 'Chats IA', icon: MessageSquare, disabled: true },
+  ];
 
   return (
-    <aside 
-      className="w-20 lg:w-56 border-r flex flex-col items-center lg:items-start py-6 gap-8 z-20 flex-shrink-0 transition-all duration-300"
-      style={{ 
-        // Fondo adaptativo según tema
-        backgroundColor: sidebarBg,
-        borderRight: sidebarBorder,
-        boxShadow: sidebarBoxShadow,
-        paddingLeft: '1rem',
-        paddingRight: '1rem'
-      }}
-    >
-      {/* Botón al dashboard con logo lgc sin fondo */}
-      <Link 
-        href="/dashboard" 
-        className="flex items-center gap-3 w-10 h-10 rounded-xl hover:scale-110 transition-all overflow-hidden"
-      >
-        <img src="/lgc.png" alt="Logo" className="w-8 h-8 object-contain" />
-        <span className="hidden lg:inline text-sm font-semibold" style={{ color: textColor }}>Gestularia</span>
-      </Link>
-      {/* Logo lgc sin fondo */}
+    <aside className="w-20 lg:w-24 h-screen fixed left-0 top-0 z-50 flex flex-col items-center py-8 transition-colors duration-500 border-r border-white/5 bg-white/80 dark:bg-[#020617]/80 backdrop-blur-xl">
+        
+        {/* Logo / Brand Image (larger; black bg in light mode) */}
+        <div className="mb-12 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-sm hover:scale-105 transition-transform cursor-pointer bg-black dark:bg-transparent">
+            <img src="/logoG.svg" alt="Gestularia" className="w-9 h-9 object-contain" />
+        </div>
 
-      {/* Navegación con iconos */}
-      <nav className="flex flex-col gap-3 w-full">
-        {menuItems.map((item) => {
-          const isActive = (item.href === '/dashboard' && pathname === item.href) || 
-                           (item.href !== '/dashboard' && pathname.startsWith(item.href));
-          const disabled = !!item.disabled;
-          
-          return (
-            <Link
-              key={item.href}
-              href={disabled ? '#' : item.href}
-              title={item.label}
-              className={cn("relative group flex items-center gap-3 w-full rounded-xl transition-all px-3 py-2", disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer')}
-              style={{
-                backgroundColor: isActive ? (isLight ? 'rgba(255,255,255,0.12)' : 'rgba(20,20,20,0.25)') : 'transparent',
-                color: textColor,
-              }}
-              onMouseEnter={(e) => {
-                if (!disabled && !isActive) {
-                  e.currentTarget.style.backgroundColor = isLight ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!disabled && !isActive) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
-              }}
-            >
-              {/* Indicador lateral visible en lg cuando activo */}
-              <span className="hidden lg:inline-block absolute left-0 h-10 w-1 rounded-r-md" style={{ backgroundColor: isActive ? indicatorActive : 'transparent' }} />
+        {/* Navegación */}
+        <nav className="flex-1 flex flex-col gap-6 w-full items-center">
+            {menuItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                    <div key={item.label} className="relative group">
+                        <Link 
+                            href={item.disabled ? '#' : item.href}
+                            className={cn(
+                                "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300",
+                                isActive 
+                                    ? "bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20 shadow-sm" 
+                                    : "text-slate-400 hover:bg-slate-200/50 dark:hover:bg-white/10 hover:text-slate-600 dark:hover:text-slate-200",
+                                item.disabled && "opacity-50 cursor-not-allowed grayscale"
+                            )}
+                        >
+                            {item.label === 'Chats IA' ? (
+                                <div className="relative">
+                                    <item.icon className="w-5 h-5" />
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand-pink rounded-full border-2 border-white dark:border-slate-900"></span>
+                                </div>
+                            ) : (
+                                <item.icon className="w-5 h-5" />
+                            )}
+                        </Link>
+                        
+                        {/* Tooltip */}
+                        <div className="absolute left-14 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-xl translate-x-2 group-hover:translate-x-0 duration-200">
+                            {item.label} {item.disabled && "(Pronto)"}
+                        </div>
+                    </div>
+                );
+            })}
+        </nav>
 
-              <item.icon className="w-6 h-6 flex-shrink-0" style={{ color: textColor }} />
-
-              {/* Label visible en pantallas grandes */}
-              <span className="hidden lg:inline text-sm font-medium" style={{ color: textColor }}>{item.label}</span>
-
-              {/* Tooltip al hacer hover para pantallas pequeñas (oculto en lg) */}
-              <span 
-                className="absolute left-full ml-4 px-3 py-2 text-sm rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-xl lg:hidden"
-                style={{ 
-                  backgroundColor: tooltipBg,
-                  color: tooltipText,
-                  borderColor: 'transparent',
-                  borderWidth: '0px'
-                }}
-              >
-                {item.label}
-                {item.disabled && (
-                  <span className="ml-2 text-[10px]" style={{ color: c.text.muted }}>
-                    (Próximamente)
-                  </span>
-                )}
-              </span>
-            </Link>
-          );
-        })}
-      </nav>
+        {/* Avatar de Usuario */}
+        <div className="mt-auto mb-4">
+            <button className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 hover:border-indigo-500 transition-colors shadow-md relative">
+                <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white text-xs font-bold">
+                    {user?.email?.substring(0, 2).toUpperCase() || 'US'}
+                </div>
+            </button>
+        </div>
     </aside>
   );
 }
