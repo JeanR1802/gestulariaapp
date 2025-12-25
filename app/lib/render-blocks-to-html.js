@@ -510,6 +510,49 @@ function legacyRender(blocks) {
             return `<div class="${getClassOrStyle(data.backgroundColor, 'bg-slate-100', 'background-color').class} p-12 md:p-20 text-center" style="${getClassOrStyle(data.backgroundColor, 'bg-slate-100', 'background-color').style}"><h1 class="text-3xl md:text-4xl font-bold mb-4 ${titleClass.class}" style="${titleClass.style}">${data.title}</h1><p class="text-lg max-w-2xl mx-auto mb-8 ${subtitleClass.class}" style="${subtitleClass.style}">${data.subtitle}</p><a href="${data.buttonLink || '#'}" class="${btnClassesDefault}" style="${btnStyleDefault}">${data.buttonText}</a></div>`;
         }
       }
+      case 'hero_decision': {
+        // Hero de Decisión (Alto impacto para ventas)
+        console.log('[RENDER] Renderizando hero_decision con data:', JSON.stringify(data));
+        const bgImage = data.bgImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80';
+        const overlayOpacity = data.overlayOpacity !== undefined ? data.overlayOpacity : 40;
+        const align = data.align || 'center';
+        const height = data.height || 'large';
+        const badge = data.badge || '';
+        const title = data.title || 'Tu Título Impactante';
+        const subtitle = data.subtitle || '';
+        const ctaText = data.ctaText || 'Ver Más';
+        const ctaLink = data.ctaLink || '#';
+        
+        // Determinar altura
+        const heightClass = height === 'full' ? 'min-h-screen' : height === 'large' ? 'min-h-[600px] md:min-h-[700px]' : 'min-h-[400px] md:min-h-[500px]';
+        
+        // Determinar alineación
+        const alignClass = align === 'left' ? 'text-left items-start' : align === 'right' ? 'text-right items-end' : 'text-center items-center';
+        const containerAlign = align === 'left' ? 'mr-auto' : align === 'right' ? 'ml-auto' : 'mx-auto';
+        
+        return `
+          <section class="relative ${heightClass} flex items-center justify-center overflow-hidden" style="background-image: url('${bgImage}'); background-size: cover; background-position: center;">
+            <!-- Overlay oscuro para legibilidad -->
+            <div class="absolute inset-0 bg-black" style="opacity: ${overlayOpacity / 100};"></div>
+            
+            <!-- Contenido -->
+            <div class="relative z-10 max-w-4xl ${containerAlign} px-6 md:px-12 py-12 md:py-20 flex flex-col ${alignClass} gap-6">
+              ${badge ? `<span class="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs md:text-sm font-bold text-white uppercase tracking-wider">${badge}</span>` : ''}
+              
+              <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                ${title}
+              </h1>
+              
+              ${subtitle ? `<p class="text-lg md:text-xl text-white/90 max-w-2xl leading-relaxed">${subtitle}</p>` : ''}
+              
+              <a href="${ctaLink}" class="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-900 font-bold text-lg rounded-full shadow-2xl hover:bg-slate-100 transition-all hover:scale-105">
+                ${ctaText}
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+              </a>
+            </div>
+          </section>
+        `;
+      }
       case 'catalog': {
         const bg = getClassOrStyle(data.backgroundColor, 'bg-white', 'background-color');
         const titleC = getClassOrStyle(data.titleColor, 'text-slate-800', 'color');

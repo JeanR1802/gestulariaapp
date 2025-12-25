@@ -318,7 +318,7 @@ export const BLOCKS: BlocksConfig = {
             } as HeroDecisionData
         }
     ]
-  } as BlockConfig<HeroData>,
+  } as BlockConfig<HeroDecisionData>,
   featuredProduct: {
     name: 'Producto Destacado',
     icon: StarIcon,

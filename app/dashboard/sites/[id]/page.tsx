@@ -173,8 +173,16 @@ export default function EditorPage() {
         showNotification(`Diseño "${template.name}" aplicado`);
     };
 
-    const addBlock = (blockType: BlockType, data: BlockData) => {
+    const addBlock = (blockType: BlockType, initialData?: Partial<BlockData>) => {
         registerChange();
+        
+        // Obtener datos por defecto del bloque desde BLOCKS config
+        const blockConfig = BLOCKS[blockType];
+        const defaultData = blockConfig?.variants?.[0]?.defaultData || {};
+        
+        // Combinar datos por defecto con initialData personalizado
+        const data = { ...defaultData, ...initialData } as BlockData;
+        
         const newBlock: Block = { id: Date.now() + Math.random(), type: blockType, data };
         setBlocks(prevBlocks => [...prevBlocks, newBlock]);
         setNewBlockId(newBlock.id);
