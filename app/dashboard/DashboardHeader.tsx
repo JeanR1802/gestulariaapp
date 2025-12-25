@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import { SunIcon, MoonIcon, UserCircleIcon } from '@heroicons/react/24/solid';
+import { UserCircleIcon } from '@heroicons/react/24/solid';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
@@ -53,24 +54,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
       </div>
       
       <div className="flex items-center gap-3">
-        {/* Botón Toggle Tema - siempre visibeeele */}
-        <button
-          onClick={toggleTheme}
-          className="p-2.5 rounded-lg transition-all duration-200 hover:scale-105"
-          style={{ 
-            backgroundColor: c.bg.secondary,
-            borderColor: c.border.primary,
-            borderWidth: '1px',
-            color: c.text.secondary
-          }}
-          title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-        >
-          {theme === 'dark' ? (
-            <SunIcon className="w-5 h-5" />
-          ) : (
-            <MoonIcon className="w-5 h-5" />
-          )}
-        </button>
+        <ThemeToggle />
 
         {/* Perfil - muestra panel con correo y cerrar sesión */}
         <div ref={profileRef} className="relative">

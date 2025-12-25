@@ -1,9 +1,9 @@
 'use client';
-import React, { useRef, JSX } from 'react';
+import React, { useRef, JSX, useState } from 'react';
 import { useEditable } from 'use-editable';
 import { cn } from '@/lib/utils';
 import { usePreviewMode } from '@/app/contexts/PreviewModeContext';
-import { InputField } from './InputField';
+// import { InputField } from './InputField';
 import { Editable } from './TextBlock';
 
 // --- Interfaces de Datos ---
@@ -17,6 +17,8 @@ export interface ImageData {
 import { ColorPalette } from '../controls/ColorPalette';
 import { TextColorPalette } from '../controls/TextColorPalette';
 import { BlockComponentProps } from './index';
+import { ImageIcon } from 'lucide-react';
+import { MediaLibraryModal } from '@/app/components/editor/media/MediaLibraryModal';
 
 // --- Componente de Bloque (Visual + Inline Editing) ---
 export function ImageBlock({ data, isEditing, onUpdate }: BlockComponentProps<ImageData>) {
@@ -135,11 +137,68 @@ const ImageFullWidth = ({ data, isEditing, onUpdate }: BlockComponentProps<Image
 
 // --- Editor de Contenido ---
 export function ImageContentEditor({ data, updateData }: { data: ImageData; updateData: (key: keyof ImageData, value: string) => void }) {
+  const [isMediaOpen, setIsMediaOpen] = useState(false);
+
   return (
     <div className="space-y-4">
-      <InputField label="URL de la imagen" value={data.imageUrl} onChange={(e) => updateData('imageUrl', e.target.value)} />
-      <InputField label="Texto alternativo (para SEO)" value={data.alt} onChange={(e) => updateData('alt', e.target.value)} />
-      <InputField label="Pie de foto (opcional)" value={data.caption || ''} onChange={(e) => updateData('caption', e.target.value)} />
+      <label className="block text-xs font-bold text-slate-500 uppercase">Imagen</label>
+
+      {/* Preview Actual */}
+      <div className="relative aspect-video bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group">
+        {data.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={data.imageUrl} alt={data.alt} className="w-full h-full object-cover" />
+        ) : (
+          <div className="flex items-center justify-center h-full text-slate-400">
+            <ImageIcon className="w-8 h-8" />
+          </div>
+        )}
+
+        {/* Botón Overlay */}
+        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <button
+            onClick={() => setIsMediaOpen(true)}
+            className="px-4 py-2 bg-white text-slate-900 font-bold rounded-lg text-xs hover:scale-105 transition-transform"
+          >
+            Cambiar Imagen
+          </button>
+        </div>
+      </div>
+
+      {/* Input Manual (Fallback) */}
+      <div>
+        <label className="text-[10px] font-bold text-slate-400 mb-1 block">O pegar URL externa:</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={data.imageUrl || ''}
+            onChange={(e) => updateData('imageUrl', e.target.value)}
+            className="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="https://..."
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-slate-500 uppercase mt-2">Texto alternativo (para SEO)</label>
+        <input type="text" value={data.alt || ''} onChange={(e) => updateData('alt', e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-slate-500 uppercase mt-2">Pie de foto (opcional)</label>
+        <input type="text" value={data.caption || ''} onChange={(e) => updateData('caption', e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+      </div>
+
+      {/* MODAL DE MEDIOS */}
+      <MediaLibraryModal
+        isOpen={isMediaOpen}
+        onClose={() => setIsMediaOpen(false)}
+        onSelect={(url: string, meta?: any) => {
+          updateData('imageUrl', url);
+          if (meta?.alt) updateData('alt', meta.alt);
+          setIsMediaOpen(false);
+        }}
+      />
     </div>
   );
 }

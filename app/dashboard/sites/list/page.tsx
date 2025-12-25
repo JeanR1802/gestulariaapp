@@ -1,84 +1,116 @@
-// app/dashboard/sites/list/page.tsx
 'use client'
 
-import { useState, useEffect, Fragment } from 'react'
+import React, { useState, useEffect, Fragment } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Dialog, Transition } from '@headlessui/react'
 import { 
-  PlusIcon, 
-  PencilSquareIcon, 
-  ArrowTopRightOnSquareIcon, 
-  TrashIcon, 
-  GlobeAltIcon, 
-  XMarkIcon,
-  RocketLaunchIcon,
-  DocumentTextIcon,
-  ShoppingBagIcon,
-  EnvelopeIcon,
-  ArrowLeftIcon,
-  SparklesIcon
-} from '@heroicons/react/24/solid'
+  Plus, Trash2, X, Store, Package, Palette, ArrowRight,
+  ExternalLink, ShoppingBag, Layout, Lock, CheckCircle2
+} from 'lucide-react'
 import { generateSlug, cn } from '@/lib/utils'
 import { useTheme } from '@/app/contexts/ThemeContext'
-import { colorPalettes } from '@/app/lib/colors'
 
-interface Tenant {
-  id: string
-  name: string
-  slug: string
-  createdAt: string
+interface Tenant { id: string; name: string; slug: string; createdAt: string }
+
+// --- COMPONENTE: MINIATURAS VISUALES (Wireframes CSS) ---
+// Esto dibuja un "mini sitio web" dentro de la tarjeta
+const TemplatePreview = ({ type }: { type: string }) => {
+    // Base común: Navegación pequeñita
+    const Nav = () => <div className="h-2 w-full mb-2 flex items-center justify-between"><div className="w-4 h-1 rounded-full bg-current opacity-50"></div><div className="flex gap-1"><div className="w-2 h-1 rounded-full bg-current opacity-30"></div><div className="w-2 h-1 rounded-full bg-current opacity-30"></div></div></div>;
+    
+    switch (type) {
+        case 'fashion': // Estilo Editorial / Fotos Grandes
+            return (
+                <div className="w-full h-full p-3 flex flex-col bg-rose-50/50 text-rose-900">
+                    <Nav />
+                    <div className="flex-1 w-full bg-rose-200/50 rounded-sm mb-1"></div> {/* Hero Img */}
+                    <div className="grid grid-cols-2 gap-1 h-1/3">
+                        <div className="bg-rose-900/10 rounded-sm"></div>
+                        <div className="bg-rose-900/10 rounded-sm"></div>
+                    </div>
+                </div>
+            );
+        case 'food': // Estilo Menú / Restaurante
+            return (
+                <div className="w-full h-full p-3 flex flex-col bg-orange-50/50 text-orange-900">
+                    <Nav />
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-1/2 space-y-1">
+                             <div className="w-full h-1 bg-current opacity-40 rounded-full"></div>
+                             <div className="w-2/3 h-1 bg-current opacity-20 rounded-full"></div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-orange-200/50 shrink-0"></div> {/* Plato redondo */}
+                    </div>
+                    <div className="space-y-1 mt-auto">
+                        <div className="w-full h-4 bg-white/60 rounded-sm border border-orange-100"></div>
+                        <div className="w-full h-4 bg-white/60 rounded-sm border border-orange-100"></div>
+                    </div>
+                </div>
+            );
+        case 'tech': // Estilo Oscuro / Grid
+            return (
+                <div className="w-full h-full p-3 flex flex-col bg-slate-900 text-slate-100">
+                    <Nav />
+                    <div className="w-2/3 h-2 bg-blue-500 rounded-full mb-2"></div>
+                    <div className="grid grid-cols-3 gap-1 h-full">
+                        <div className="col-span-2 row-span-2 bg-slate-800 rounded-sm border border-slate-700"></div>
+                        <div className="bg-slate-800 rounded-sm border border-slate-700"></div>
+                        <div className="bg-slate-800 rounded-sm border border-slate-700"></div>
+                    </div>
+                </div>
+            );
+        case 'services': // Estilo Corporativo / Limpio
+            return (
+                <div className="w-full h-full p-3 flex flex-col bg-blue-50/30 text-blue-900">
+                    <Nav />
+                    <div className="w-full h-1/2 bg-blue-100/50 rounded-sm mb-2 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-blue-200/50"></div>
+                    </div>
+                    <div className="flex gap-1 h-full">
+                        <div className="w-1/3 bg-white border border-blue-100 rounded-sm"></div>
+                        <div className="w-1/3 bg-white border border-blue-100 rounded-sm"></div>
+                        <div className="w-1/3 bg-white border border-blue-100 rounded-sm"></div>
+                    </div>
+                </div>
+            );
+        default: // Blank / Estructura
+            return (
+                <div className="w-full h-full p-3 flex flex-col bg-slate-50 border border-dashed border-slate-300">
+                    <div className="w-full h-full flex items-center justify-center">
+                        <Plus className="w-6 h-6 text-slate-300" />
+                    </div>
+                </div>
+            );
+    }
 }
 
-// --- COMPONENTE DE MODAL BASE ---
+// --- DATOS ACTUALIZADOS ---
+const SITE_TEMPLATES = [
+    { id: 'blank', name: 'Lienzo en Blanco', desc: 'Sin estructura predefinida.', type: 'blank' },
+    { id: 'fashion', name: 'Moda & Estilo', desc: 'Visual, elegante, galerías.', type: 'fashion' },
+    { id: 'food', name: 'Restaurante', desc: 'Menús, reservas, apetitoso.', type: 'food' },
+    { id: 'tech', name: 'Tech Startups', desc: 'Oscuro, moderno, grids.', type: 'tech' },
+    { id: 'services', name: 'Consultoría', desc: 'Serio, limpio, confianza.', type: 'services' }
+];
+
+// --- MODAL BASE ---
 function ModalBase({ isOpen, onClose, title, children, size = 'max-w-md' }: { isOpen: boolean, onClose: () => void, title: string, children: React.ReactNode, size?: string }) {
-  const { theme, palette } = useTheme()
-  const c = colorPalettes[palette][theme]
-  
+  const { theme } = useTheme()
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 backdrop-blur-sm" style={{ backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.4)' }} />
-        </Transition.Child>
-
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true" />
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel 
-                className={cn("w-full transform overflow-hidden rounded-2xl p-6 text-left align-middle shadow-2xl transition-all", size)}
-                style={{ 
-                  backgroundColor: c.bg.secondary,
-                  borderColor: c.border.primary,
-                  borderWidth: '1px'
-                }}
-              >
-                <div className="flex justify-between items-center mb-6 pb-4" style={{ borderBottom: `1px solid ${c.border.secondary}` }}>
-                  <Dialog.Title as="h3" className="text-lg font-bold leading-6" style={{ color: c.text.primary }}>
-                    {title}
-                  </Dialog.Title>
-                  <button onClick={onClose} className="transition-colors" style={{ color: c.text.tertiary }} onMouseEnter={(e) => e.currentTarget.style.color = c.text.primary} onMouseLeave={(e) => e.currentTarget.style.color = c.text.tertiary}>
-                    <XMarkIcon className="w-5 h-5" />
-                  </button>
+          <div className="flex min-h-full items-center justify-center p-4">
+            <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                <Dialog.Panel className={cn("w-full transform overflow-hidden rounded-3xl p-8 shadow-2xl transition-all border", theme === 'light' ? 'bg-white border-gray-100' : 'bg-[#0F0F0F] border-white/10 text-white', size)}>
+                <div className="flex justify-between items-center mb-6">
+                    <Dialog.Title className="text-2xl font-bold tracking-tight">{title}</Dialog.Title>
+                    <button onClick={onClose}><X className="w-5 h-5 opacity-50 hover:opacity-100" /></button>
                 </div>
                 {children}
-              </Dialog.Panel>
+                </Dialog.Panel>
             </Transition.Child>
           </div>
         </div>
@@ -87,692 +119,210 @@ function ModalBase({ isOpen, onClose, title, children, size = 'max-w-md' }: { is
   )
 }
 
-// --- TIPOS DE SITIO (Configuración) ---
-const SITE_TYPES = [
-    { id: 'landing', title: 'Landing Page', desc: 'Para campañas, ofertas y captación de leads.', Icon: RocketLaunchIcon },
-    { id: 'content', title: 'Sitio de Contenido', desc: 'Para blogs, portafolios y empresas.', Icon: DocumentTextIcon },
-    { id: 'store', title: 'Tienda E-commerce', desc: 'Vende productos físicos o digitales.', Icon: ShoppingBagIcon },
-    { id: 'contact', title: 'Formulario', desc: 'Página simple de contacto o registro.', Icon: EnvelopeIcon },
-];
+// --- CREAR SITIO MODAL (ACTUALIZADO) ---
+function CreateSiteModal({ isOpen, onClose, onSiteCreated }: { isOpen: boolean, onClose: () => void, onSiteCreated: (id: string) => void }) {
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState(''); 
+  const [slug, setSlug] = useState(''); 
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(''); // Vacío al inicio para obligar selección
+  const [loading, setLoading] = useState(false);
+  
+  useEffect(() => { if(isOpen) { setStep(1); setName(''); setSlug(''); setSelectedTemplate(''); setLoading(false); } }, [isOpen]);
 
-// --- MODAL CREAR SITIO (Multistep) ---
-interface CreateSiteModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSiteCreated: (siteId: string) => void
-}
-
-function CreateSiteModal({ isOpen, onClose, onSiteCreated }: CreateSiteModalProps) {
-  const { theme, palette } = useTheme()
-  const c = colorPalettes[palette][theme]
-  const [step, setStep] = useState(1); // 1: Nombre, 2: Tipo
-  const [name, setName] = useState('')
-  const [slug, setSlug] = useState('')
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  // Reiniciar estado al abrir
-  useEffect(() => {
-    if (isOpen) {
-        setStep(1);
-        setName('');
-        setSlug('');
-        setSelectedType(null);
-        setError('');
-        setLoading(false);
-    }
-  }, [isOpen]);
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value;
-    setName(newName);
-    setSlug(generateSlug(newName));
-  };
-
-  const handleNextStep = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!name || !slug) return;
-      setStep(2);
-  };
-
-  const handleCreateSite = async () => {
-    if (!selectedType) return;
-    
+  const handleCreate = async () => {
+    if (!selectedTemplate) return;
     setLoading(true);
-    setError('');
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/tenants/create', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({ 
-            name, 
-            slug,
-            type: selectedType // Enviamos el tipo al backend (aunque el backend actual no lo use, queda listo)
-        }),
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ name, slug, type: 'store', template: selectedTemplate })
       });
       const data = await res.json();
-      if (res.ok) {
-        onSiteCreated(data.tenant.id); 
-      } else {
-        setError(data.error || 'No se pudo crear el sitio.');
-      }
-    } catch (err) {
-      setError('Ocurrió un error de red.');
-    } finally {
-      setLoading(false);
-    }
+      if (res.ok) onSiteCreated(data.tenant.id);
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  // PASO 1: Nombre y Dominio
-  if (step === 1) {
-      return (
-        <ModalBase isOpen={isOpen} onClose={onClose} title="Paso 1: Identidad del Sitio">
-          <form onSubmit={handleNextStep} className="space-y-5">
+  return (
+    <ModalBase 
+        isOpen={isOpen} 
+        onClose={onClose} 
+        title={step === 1 ? "Ponle nombre a tu sueño" : "Elige la estructura base"} 
+        size={step === 1 ? 'max-w-md' : 'max-w-5xl'} // Más ancho para las tarjetas nuevas
+    >
+      {step === 1 ? (
+          <form onSubmit={(e) => { e.preventDefault(); if(name && slug) setStep(2); }} className="space-y-6">
             <div>
-              <label htmlFor="siteName" className="block text-sm font-medium mb-1" style={{ color: c.text.secondary }}>Nombre del Proyecto</label>
-              <input 
-                type="text" 
-                id="siteName" 
-                value={name} 
-                onChange={handleNameChange} 
-                className="w-full rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 transition-all" 
-                style={{
-                  backgroundColor: c.bg.tertiary,
-                  borderColor: c.border.primary,
-                  borderWidth: '1px',
-                  color: c.text.primary
-                }}
-                placeholder="Ej: Mi Startup Increíble"
-                autoFocus
-              />
+              <label className="block text-sm font-bold mb-2 opacity-70">Nombre del Negocio</label>
+              <input autoFocus type="text" value={name} onChange={e => {setName(e.target.value); setSlug(generateSlug(e.target.value))}} className="w-full p-4 text-lg rounded-2xl bg-gray-50 dark:bg-white/5 border-2 border-transparent focus:border-blue-500 outline-none transition-all font-bold" placeholder="Ej: Cafetería Central" />
             </div>
-            
             <div>
-              <label htmlFor="siteSlug" className="block text-sm font-medium mb-1" style={{ color: c.text.secondary }}>Dirección URL</label>
-              <div className="flex items-center rounded-lg overflow-hidden focus-within:ring-2 transition-all" style={{ backgroundColor: c.bg.tertiary, borderColor: c.border.primary, borderWidth: '1px' }}>
-                <span className="px-3 text-sm py-2.5" style={{ color: c.text.tertiary, backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRight: `1px solid ${c.border.secondary}` }}>gestularia.com/</span>
-                <input 
-                  type="text" 
-                  id="siteSlug" 
-                  value={slug} 
-                  onChange={e => setSlug(generateSlug(e.target.value))} 
-                  className="flex-1 bg-transparent border-none px-3 py-2.5 focus:ring-0 text-sm" 
-                  style={{ color: c.text.primary }}
-                  placeholder="mi-startup"
-                />
-              </div>
+               <label className="block text-sm font-bold mb-2 opacity-70">URL (Enlace)</label>
+               <div className="flex bg-gray-50 dark:bg-white/5 rounded-2xl px-4 border-2 border-transparent focus-within:border-blue-500 transition-all items-center opacity-80">
+                   <span className="text-base font-bold opacity-40 select-none">gestularia.com/</span>
+                   <input type="text" value={slug} onChange={e => setSlug(generateSlug(e.target.value))} className="bg-transparent border-none p-4 w-full outline-none text-base font-bold" placeholder="mi-negocio" />
+               </div>
             </div>
-    
-            <div className="flex justify-end gap-3 pt-4">
-              <button 
-                type="button" 
-                onClick={onClose} 
-                className="px-4 py-2 text-sm font-medium rounded-lg transition-all"
-                style={{ color: c.text.secondary }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = c.text.primary
-                  e.currentTarget.style.backgroundColor = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = c.text.secondary
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                }}
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                disabled={!name || !slug} 
-                className="px-5 py-2 text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                style={{
-                  backgroundColor: c.accent.primary,
-                  color: theme === 'dark' ? '#0D1222' : '#FFFFFF'
-                }}
-                onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = c.accent.secondary)}
-                onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = c.accent.primary)}
-              >
-                Continuar <span aria-hidden="true">&rarr;</span>
-              </button>
+            <div className="pt-4 flex justify-end gap-3">
+               <button type="button" onClick={onClose} className="px-5 py-3 text-sm font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-white/5">Cancelar</button>
+               <button type="submit" disabled={!name} className="px-8 py-3 text-sm font-bold rounded-xl bg-blue-600 text-white shadow-lg hover:bg-blue-500 disabled:opacity-50 flex items-center gap-2">Siguiente <ArrowRight className="w-4 h-4" /></button>
             </div>
           </form>
-        </ModalBase>
-      );
-  }
-
-  // PASO 2: Selección de Tipo (Grid)
-  return (
-    <ModalBase isOpen={isOpen} onClose={onClose} title="Paso 2: Elige una plantilla" size="max-w-2xl">
-      <div className="space-y-6">
-          <p className="text-sm" style={{ color: c.text.secondary }}>
-            Selecciona la estructura base que mejor se adapte a <strong style={{ color: c.text.primary }}>{name}</strong>. Podrás cambiar esto más tarde.
-          </p>
-
-          {/* Grid de Opciones */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-             {SITE_TYPES.map((type) => {
-                 const isSelected = selectedType === type.id;
-                 return (
-                    <div 
-                        key={type.id}
-                        onClick={() => setSelectedType(type.id)}
-                        className="cursor-pointer rounded-xl p-5 border transition-all duration-200 group relative flex flex-col"
-                        style={{
-                          backgroundColor: isSelected 
-                            ? (theme === 'dark' ? 'rgba(0,245,255,0.1)' : 'rgba(0,149,255,0.1)')
-                            : c.bg.tertiary,
-                          borderColor: isSelected 
-                            ? c.accent.primary 
-                            : c.border.primary
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isSelected) {
-                            e.currentTarget.style.borderColor = c.accent.secondary
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isSelected) {
-                            e.currentTarget.style.borderColor = c.border.primary
-                          }
-                        }}
-                    >
-                        <type.Icon 
-                          className="w-8 h-8 mb-3 transition-colors" 
-                          style={{ color: isSelected ? c.accent.primary : c.text.tertiary }}
-                        />
-                        <h4 
-                          className="font-bold text-sm mb-1" 
-                          style={{ color: isSelected ? c.text.primary : c.text.secondary }}
-                        >
-                          {type.title}
-                        </h4>
-                        <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: c.text.tertiary }}>
-                          {type.desc}
-                        </p>
-                        
+      ) : (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-300">
+             <div>
+                <p className="text-lg opacity-60 mb-8 text-center max-w-2xl mx-auto">Estas plantillas incluyen estructuras y bloques pre-configurados para tu industria.</p>
+                
+                {/* GRID DE TARJETAS VISUALES */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                    {SITE_TEMPLATES.map((template) => (
                         <div 
-                          className="mt-auto w-full py-1.5 rounded text-center text-xs font-bold uppercase tracking-wider border transition-all"
-                          style={{
-                            backgroundColor: isSelected ? c.accent.primary : 'transparent',
-                            color: isSelected ? (theme === 'dark' ? '#0D1222' : '#FFFFFF') : c.text.tertiary,
-                            borderColor: isSelected ? c.accent.primary : c.border.secondary
-                          }}
+                            key={template.id}
+                            onClick={() => setSelectedTemplate(template.id)}
+                            className={cn(
+                                "group cursor-pointer relative flex flex-col transition-all duration-300",
+                                selectedTemplate === template.id ? "scale-105" : "hover:scale-105 opacity-80 hover:opacity-100"
+                            )}
                         >
-                            {isSelected ? 'Seleccionado' : 'Seleccionar'}
+                            {/* EL MARCO DEL "SITIO" (Wireframe) */}
+                            <div className={cn(
+                                "aspect-[3/4] rounded-2xl overflow-hidden border-4 shadow-sm transition-all relative bg-white",
+                                selectedTemplate === template.id 
+                                    ? "border-blue-600 ring-4 ring-blue-600/20 shadow-xl" 
+                                    : "border-gray-100 dark:border-white/10 group-hover:border-blue-200 dark:group-hover:border-blue-800"
+                            )}>
+                                <TemplatePreview type={template.type} />
+                                
+                                {/* Overlay Check */}
+                                {selectedTemplate === template.id && (
+                                    <div className="absolute inset-0 bg-blue-600/10 z-10 flex items-center justify-center backdrop-blur-[1px]">
+                                        <div className="bg-blue-600 text-white rounded-full p-2 shadow-lg animate-in zoom-in duration-200">
+                                            <CheckCircle2 className="w-6 h-6" />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Texto debajo */}
+                            <div className="text-center mt-3 px-1">
+                                <h4 className={cn("font-bold text-sm", selectedTemplate === template.id ? "text-blue-600" : "text-slate-700 dark:text-slate-300")}>{template.name}</h4>
+                            </div>
                         </div>
-                    </div>
-                 )
-             })}
+                    ))}
+                </div>
+             </div>
+
+             <div className="pt-6 border-t border-gray-100 dark:border-white/5 flex justify-between items-center">
+                 <button onClick={() => setStep(1)} className="px-5 py-3 text-sm font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-white/5">Atrás</button>
+                 <button 
+                    onClick={handleCreate} 
+                    disabled={loading || !selectedTemplate} 
+                    className="px-12 py-3 text-base font-bold rounded-xl bg-blue-600 text-white shadow-xl shadow-blue-600/30 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-all flex items-center gap-2"
+                 >
+                    {loading ? 'Preparando...' : 'Crear Tienda'}
+                 </button>
+             </div>
           </div>
-
-          {error && (
-            <div 
-              className="p-3 border rounded-lg text-sm text-center" 
-              style={{ 
-                backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-                borderColor: 'rgba(239, 68, 68, 0.2)',
-                color: '#ef4444'
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          <div className="flex justify-between items-center pt-4" style={{ borderTop: `1px solid ${c.border.secondary}` }}>
-             <button 
-                type="button" 
-                onClick={() => setStep(1)} 
-                className="text-sm flex items-center gap-1 px-2 py-1 rounded transition-all"
-                style={{ color: c.text.secondary }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = c.text.primary
-                  e.currentTarget.style.backgroundColor = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = c.text.secondary
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                }}
-              >
-                <ArrowLeftIcon className="w-3 h-3" /> Volver
-              </button>
-
-              <div className="flex gap-3">
-                <button 
-                    type="button" 
-                    onClick={onClose} 
-                    className="px-4 py-2 text-sm font-medium rounded-lg transition-all"
-                    style={{ color: c.text.secondary }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = c.text.primary
-                      e.currentTarget.style.backgroundColor = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = c.text.secondary
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                    }}
-                >
-                    Cancelar
-                </button>
-                <button 
-                    onClick={handleCreateSite}
-                    disabled={loading || !selectedType} 
-                    className="px-6 py-2 text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-                    style={{
-                      backgroundColor: c.accent.primary,
-                      color: theme === 'dark' ? '#0D1222' : '#FFFFFF'
-                    }}
-                    onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = c.accent.secondary)}
-                    onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = c.accent.primary)}
-                >
-                    {loading ? (
-                        <>
-                            <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: theme === 'dark' ? '#0D1222' : '#FFFFFF', borderTopColor: 'transparent' }}></div>
-                            Creando...
-                        </>
-                    ) : (
-                        <>
-                            <RocketLaunchIcon className="w-4 h-4" />
-                            Crear Sitio
-                        </>
-                    )}
-                </button>
-              </div>
-          </div>
-      </div>
-    </ModalBase>
-  );
-}
-
-// --- MODAL ELIMINAR SITIO ---
-interface DeleteSiteModalProps {
-  tenant: Tenant | null
-  onClose: () => void
-  onDelete: (id: string) => void
-}
-
-function DeleteSiteModal({ tenant, onClose, onDelete }: DeleteSiteModalProps) {
-  const { theme, palette } = useTheme()
-  const c = colorPalettes[palette][theme]
-  
-  if (!tenant) return null;
-  
-  return (
-    <ModalBase isOpen={!!tenant} onClose={onClose} title="Eliminar Sitio">
-      <div className="space-y-4">
-        <div 
-          className="rounded-lg p-4 flex gap-3 items-start" 
-          style={{ 
-            backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-            borderColor: 'rgba(239, 68, 68, 0.2)',
-            borderWidth: '1px'
-          }}
-        >
-          <TrashIcon className="w-6 h-6 shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
-          <div>
-             <h4 className="font-bold text-sm" style={{ color: '#ef4444' }}>Zona de Peligro</h4>
-             <p className="text-sm mt-1" style={{ color: c.text.secondary }}>
-               Estás a punto de eliminar <strong style={{ color: c.text.primary }}>{tenant.name}</strong>. Esta acción borrará todo el contenido y no se puede deshacer.
-             </p>
-          </div>
-        </div>
-        
-        <div className="flex justify-end gap-3 mt-6">
-          <button 
-            onClick={onClose} 
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all"
-            style={{ color: c.text.secondary }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = c.text.primary
-              e.currentTarget.style.backgroundColor = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = c.text.secondary
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
-          >
-            Cancelar
-          </button>
-          <button 
-            onClick={() => onDelete(tenant.id)} 
-            className="px-4 py-2 text-sm font-bold rounded-lg transition-all shadow-lg"
-            style={{
-              backgroundColor: '#ef4444',
-              color: '#fff'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-          >
-            Sí, eliminar sitio
-          </button>
-        </div>
-      </div>
+      )}
     </ModalBase>
   )
 }
 
-// --- COMPONENTE PRINCIPAL ---
+// --- PÁGINA PRINCIPAL (MISMAS LÓGICAS, SOLO CAMBIAMOS EL MODAL) ---
 export default function SitesPage() {
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [loading, setLoading] = useState(true)
-  const [deleteModalTarget, setDeleteModalTarget] = useState<Tenant | null>(null)
-  const [isCreateModalOpen, setCreateModalOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
   const router = useRouter()
-
-  const { theme, toggleTheme, palette } = useTheme()
-  const c = colorPalettes[palette][theme]
+  const { theme } = useTheme()
 
   useEffect(() => {
-    const loadTenants = async () => {
+    const load = async () => {
       try {
-        const token = localStorage.getItem('token')
-        const res = await fetch('/api/tenants', { headers: { Authorization: `Bearer ${token ?? ''}` } })
-        const data = await res.json()
-        setTenants(data.tenants || [])
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
+        const res = await fetch('/api/tenants', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+        const data = await res.json(); setTenants(data.tenants || [])
+      } finally { setLoading(false) }
     }
-    loadTenants()
+    load()
   }, [])
 
-  const deleteTenant = async (tenantId: string) => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`/api/tenants/${tenantId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token ?? ''}` }
-      })
-
-      if (res.ok) {
-        setTenants((prev) => prev.filter((t) => t.id !== tenantId))
-        setDeleteModalTarget(null)
-      } else {
-        alert('Error al eliminar')
-      }
-    } catch (err) {
-      console.error(err)
-    }
+  const deleteTenant = async () => {
+    if(!deleteId) return;
+    await fetch(`/api/tenants/${deleteId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+    setTenants(p => p.filter(t => t.id !== deleteId)); setDeleteId(null);
   }
-
-  const handleSiteCreated = (newSiteId: string) => {
-    router.push(`/dashboard/sites/${newSiteId}`)
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen" style={{ backgroundColor: theme === 'light' ? '#F3F4F6' : c.bg.primary }}>
-        <div className="relative w-16 h-16">
-           <div 
-             className="absolute top-0 left-0 w-full h-full border-4 rounded-full" 
-             style={{ borderColor: theme === 'dark' ? 'rgba(0,245,255,0.2)' : 'rgba(8,145,178,0.2)' }}
-           ></div>
-           <div 
-             className="absolute top-0 left-0 w-full h-full border-4 rounded-full border-t-transparent animate-spin"
-             style={{ borderColor: c.accent.primary }}
-           ></div>
-        </div>
-      </div>
-    )
-  }
+  const hasStore = tenants.length > 0;
+  const bgMain = theme === 'light' ? 'bg-[#F8FAFC]' : 'bg-[#020202]';
+  const textMain = theme === 'light' ? 'text-slate-900' : 'text-white';
 
   return (
-    <div className="min-h-screen font-sans transition-colors duration-200" style={{ backgroundColor: theme === 'light' ? '#F3F4F6' : c.bg.primary, color: c.text.primary }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        
-        {/* Header de Sección */}
-        <div className="mb-10">
-          {/* Botón Volver */}
-          <Link
-            href="/dashboard/sites"
-            className="inline-flex items-center gap-2 text-sm transition-colors group mb-6"
-            style={{ color: c.text.tertiary }}
-            onMouseEnter={(e) => e.currentTarget.style.color = c.accent.primary}
-            onMouseLeave={(e) => e.currentTarget.style.color = c.text.tertiary}
-          >
-            <ArrowLeftIcon className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-            <span>Volver al Panel de Control</span>
-          </Link>
-
-          {/* Título y Botón Crear */}
-          <div className="flex justify-between items-end">
+    <div className={cn("min-h-screen font-sans transition-colors duration-500", bgMain, textMain)}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex justify-between items-end mb-10">
             <div>
-                <h2 className="text-3xl font-bold mb-1 flex items-center gap-2" style={{ color: c.text.primary }}>
-                  Mis Sitios
-                  <span 
-                    className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                    style={{ 
-                      backgroundColor: theme === 'dark' ? 'rgba(0,245,255,0.1)' : 'rgba(8,145,178,0.1)',
-                      color: c.accent.primary,
-                      borderColor: c.border.accent,
-                      borderWidth: '1px'
-                    }}
-                  >
-                    {tenants.length}
-                  </span>
-                </h2>
-                <p className="text-sm" style={{ color: c.text.tertiary }}>Selecciona el sitio que deseas editar o publicar.</p>
+                <h1 className="text-3xl font-black tracking-tight mb-2">{hasStore ? "Mi Negocio" : "Bienvenido"}</h1>
+                <p className="opacity-60 text-sm">{hasStore ? "Gestiona el diseño y productos." : "Lanza tu tienda en segundos."}</p>
             </div>
-            <button
-                onClick={() => setCreateModalOpen(true)}
-                className="px-5 py-2.5 rounded-lg font-bold transition-all flex items-center gap-2"
-                style={{ 
-                  backgroundColor: c.accent.primary,
-                  color: theme === 'dark' ? '#0D1222' : '#FFFFFF',
-                  boxShadow: `0 0 20px ${c.accent.glow}`
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = c.accent.secondary
-                  e.currentTarget.style.boxShadow = theme === 'dark' ? '0 0 30px rgba(0,245,255,0.4)' : '0 0 30px rgba(8,145,178,0.3)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = c.accent.primary
-                  e.currentTarget.style.boxShadow = `0 0 20px ${c.accent.glow}`
-                }}
-            >
-                <PlusIcon className="h-5 w-5 transition-transform hover:rotate-90" />
-                Crear Sitio
-            </button>
-          </div>
+            {!hasStore ? (
+                <button onClick={() => setCreateOpen(true)} className="group flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5"><Plus className="w-5 h-5 group-hover:rotate-90" /> Crear Tienda</button>
+            ) : (
+                 <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/5 text-gray-400 rounded-full font-bold border border-transparent cursor-not-allowed"><Lock className="w-4 h-4" /> <span className="text-xs">Plan Básico (1/1)</span></button>
+            )}
         </div>
 
-        {/* Grid de Tarjetas */}
-        {tenants.length === 0 ? (
-          <div 
-            className="border-2 border-dashed rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[400px]"
-            style={{ 
-              borderColor: c.border.primary,
-              backgroundColor: theme === 'light' ? '#FBFFFE' : (theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)')
-            }}
-          >
-            <div 
-              className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-xl"
-              style={{ 
-                backgroundColor: c.bg.primary,
-                borderColor: c.border.secondary,
-                borderWidth: '1px'
-              }}
-            >
-                <GlobeAltIcon className="h-10 w-10" style={{ color: c.text.muted }} />
-            </div>
-            <h3 className="text-xl font-bold mb-2" style={{ color: c.text.primary }}>Tu portafolio está vacío</h3>
-            <p className="max-w-md mx-auto mb-8" style={{ color: c.text.tertiary }}>No tienes ningún sitio creado todavía. Dale vida a tu primera idea hoy mismo.</p>
-            <button
-              onClick={() => setCreateModalOpen(true)}
-              className="font-semibold flex items-center gap-2 transition-colors"
-              style={{ color: c.accent.primary }}
-              onMouseEnter={(e) => e.currentTarget.style.color = c.text.primary}
-              onMouseLeave={(e) => e.currentTarget.style.color = c.accent.primary}
-            >
-              <PlusIcon className="h-4 w-4" />
-              Crear mi primer sitio ahora
-            </button>
+        {loading ? (
+           <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"/></div>
+        ) : !hasStore ? (
+          <div className={cn("border-2 border-dashed rounded-[32px] p-24 flex flex-col items-center justify-center text-center group cursor-pointer hover:border-blue-500 transition-all bg-white/50 dark:bg-white/5", theme === 'light' ? 'border-slate-200' : 'border-white/10')} onClick={() => setCreateOpen(true)}>
+             <div className="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                <Store className="w-10 h-10 text-blue-600 dark:text-blue-500" />
+             </div>
+             <h3 className="text-3xl font-black mb-3 tracking-tight">Tu imperio empieza aquí</h3>
+             <p className="opacity-60 max-w-md text-lg mb-8 leading-relaxed">Sin código. Sin estrés. Elige una plantilla y vende.</p>
+             <button className="px-8 py-3 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-xl shadow-blue-600/20 transition-all hover:-translate-y-1">Elegir Plantilla &rarr;</button>
           </div>
         ) : (
-          <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+          <div className="grid gap-10 grid-cols-1">
             {tenants.map((tenant) => (
-              <div 
-                key={tenant.id} 
-                className="rounded-2xl overflow-hidden shadow-lg transition-all duration-300 group flex flex-col"
-                style={{ 
-                  backgroundColor: theme === 'light' ? '#FBFFFE' : c.bg.secondary,
-                  borderColor: c.border.secondary,
-                  borderWidth: '1px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = c.border.accent
-                  e.currentTarget.style.boxShadow = theme === 'dark' 
-                    ? '0 10px 40px -10px rgba(0,245,255,0.1)' 
-                    : '0 10px 40px -10px rgba(8,145,178,0.15)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = c.border.secondary
-                  e.currentTarget.style.boxShadow = ''
-                }}
-              >
-                {/* --- ÁREA DE PREVIEW (Top) --- */}
-                <div 
-                  className="h-44 relative flex items-center justify-center overflow-hidden"
-                  style={{ 
-                    backgroundColor: c.bg.primary,
-                    borderBottom: `1px solid ${c.border.secondary}`
-                  }}
-                >
-                    {/* Fondo decorativo estilo blueprint */}
-                    <div 
-                      className="absolute inset-0 opacity-5 bg-[radial-gradient(currentColor_1px,transparent_1px)] [background-size:16px_16px]"
-                      style={{ color: c.accent.primary }}
-                    ></div>
-                    
-                    {/* Thumbnail abstracto */}
-                    <div 
-                      className="w-24 h-16 rounded-lg shadow-2xl transform group-hover:scale-105 transition-transform duration-300 flex flex-col p-2 gap-1"
-                      style={{ 
-                        backgroundColor: c.bg.tertiary,
-                        borderColor: c.border.primary,
-                        borderWidth: '1px'
-                      }}
-                    >
-                       <div className="w-full h-2 rounded-full" style={{ backgroundColor: c.border.primary }}></div>
-                       <div className="flex gap-1">
-                          <div className="w-1/3 h-8 rounded" style={{ backgroundColor: theme === 'dark' ? 'rgba(0,245,255,0.2)' : 'rgba(8,145,178,0.2)' }}></div>
-                          <div className="w-2/3 h-8 rounded" style={{ backgroundColor: c.border.secondary }}></div>
-                       </div>
-                    </div>
-
-                    {/* Botones flotantes (aparecen en hover) */}
-                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const protocol = window.location.protocol
-                            const host = window.location.host.includes('localhost') ? 'localhost:3000' : 'gestularia.com'
-                            window.open(`${protocol}//${tenant.slug}.${host}`, '_blank')
-                          }}
-                          className="p-2 backdrop-blur rounded-lg shadow-lg transition-colors"
-                          style={{ 
-                            backgroundColor: theme === 'dark' ? 'rgba(13,18,34,0.9)' : 'rgba(255,255,255,0.9)',
-                            color: c.text.tertiary,
-                            borderColor: c.border.primary,
-                            borderWidth: '1px'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = c.accent.primary}
-                          onMouseLeave={(e) => e.currentTarget.style.color = c.text.tertiary}
-                          title="Ver en vivo"
-                        >
-                          <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setDeleteModalTarget(tenant); }}
-                          className="p-2 backdrop-blur rounded-lg shadow-lg transition-colors"
-                          style={{ 
-                            backgroundColor: theme === 'dark' ? 'rgba(13,18,34,0.9)' : 'rgba(255,255,255,0.9)',
-                            color: c.text.tertiary,
-                            borderColor: c.border.primary,
-                            borderWidth: '1px'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = c.error}
-                          onMouseLeave={(e) => e.currentTarget.style.color = c.text.tertiary}
-                          title="Eliminar"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
+              <div key={tenant.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex justify-between items-center mb-6 px-2">
+                    <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_12px_#22c55e]"></div><span className="text-sm font-bold opacity-60 uppercase tracking-widest">En Línea</span></div>
+                    <div className="flex gap-2">
+                        <a href={`http://${tenant.slug}.gestularia.com`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-white/5 rounded-full text-sm font-bold border border-gray-200 dark:border-white/10 hover:border-blue-500 transition-all"><ExternalLink className="w-4 h-4" /><span className="hidden sm:inline">Ver Sitio</span></a>
+                        <button onClick={() => setDeleteId(tenant.id)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-full transition-colors opacity-60 hover:opacity-100"><Trash2 className="w-5 h-5" /></button>
                     </div>
                 </div>
-
-                {/* --- CUERPO DE LA TARJETA (Bottom) --- */}
-                <div className="p-5 flex flex-col flex-1">
-                  <div className="mb-4">
-                    <h3 
-                      className="text-lg font-bold truncate mb-1 transition-colors" 
-                      title={tenant.name}
-                      style={{ color: c.text.primary }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = c.accent.primary}
-                      onMouseLeave={(e) => e.currentTarget.style.color = c.text.primary}
-                    >
-                      {tenant.name}
-                    </h3>
-                    <p className="text-xs font-mono truncate" style={{ color: c.text.muted }}>
-                      {tenant.slug}.gestularia.com
-                    </p>
-                  </div>
-                  
-                  {/* Estado */}
-                  <div className="flex items-center gap-2 mb-6">
-                    <div className="flex h-2 w-2 relative">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-0 rounded-[40px] overflow-hidden border shadow-2xl min-h-[400px]", theme === 'light' ? 'bg-white border-slate-200 shadow-slate-200/50' : 'bg-[#0A0A0A] border-white/10 shadow-black/80')}>
+                    <div className="relative group md:border-r border-gray-100 dark:border-white/5 overflow-hidden flex flex-col">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/5 dark:to-indigo-900/5 transition-opacity" />
+                        <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-10 text-center group-hover:-translate-y-2 transition-transform duration-500">
+                            <div className="w-20 h-20 mb-6 rounded-3xl bg-white dark:bg-white/5 shadow-xl flex items-center justify-center text-blue-600 dark:text-blue-400 ring-1 ring-black/5 dark:ring-white/10"><Palette className="w-9 h-9" /></div>
+                            <h3 className="text-3xl font-black mb-3">Diseño</h3>
+                            <p className="text-base opacity-60 mb-8 max-w-[280px]">Personaliza el look de tu tienda visualmente.</p>
+                            <Link href={`/dashboard/sites/${tenant.id}?tab=design`} className="px-8 py-3.5 rounded-full font-bold bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-blue-600 dark:hover:bg-blue-400 hover:text-white dark:hover:text-black transition-all shadow-lg flex items-center justify-center gap-2"><Layout className="w-4 h-4" /> Ir al Editor</Link>
+                        </div>
                     </div>
-                    <span className="text-xs font-medium uppercase tracking-wide" style={{ color: c.text.secondary }}>Publicado</span>
-                  </div>
-
-                  {/* Botón Principal (Full Width) */}
-                  <Link
-                    href={`/dashboard/sites/${tenant.id}`}
-                    className="mt-auto w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all text-center shadow-sm"
-                    style={{ 
-                      backgroundColor: c.bg.tertiary,
-                      color: c.text.primary,
-                      borderColor: c.border.secondary,
-                      borderWidth: '1px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = c.accent.primary
-                      e.currentTarget.style.color = theme === 'dark' ? '#0D1222' : '#FFFFFF'
-                      e.currentTarget.style.borderColor = c.accent.primary
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = c.bg.tertiary
-                      e.currentTarget.style.color = c.text.primary
-                      e.currentTarget.style.borderColor = c.border.secondary
-                    }}
-                  >
-                    Editar Sitio
-                  </Link>
+                    <div className="relative group overflow-hidden flex flex-col">
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-900/5 dark:to-amber-900/5 transition-opacity" />
+                        <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-10 text-center group-hover:-translate-y-2 transition-transform duration-500">
+                            <div className="w-20 h-20 mb-6 rounded-3xl bg-white dark:bg-white/5 shadow-xl flex items-center justify-center text-orange-600 dark:text-orange-400 ring-1 ring-black/5 dark:ring-white/10"><Package className="w-9 h-9" /></div>
+                            <h3 className="text-3xl font-black mb-3">Catálogo</h3>
+                            <p className="text-base opacity-60 mb-8 max-w-[280px]">Gestiona inventario y precios.</p>
+                            <Link href={`/dashboard/sites/${tenant.id}?tab=products`} className="px-8 py-3.5 rounded-full font-bold bg-white dark:bg-white/5 text-slate-900 dark:text-white border border-gray-200 dark:border-white/10 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-all shadow-lg flex items-center justify-center gap-2 w-full max-w-[280px]"><ShoppingBag className="w-4 h-4" /> Productos</Link>
+                        </div>
+                    </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
-
-      {/* Modals */}
-      <CreateSiteModal 
-        isOpen={isCreateModalOpen}
-        onClose={() => setCreateModalOpen(false)} 
-        onSiteCreated={handleSiteCreated} 
-      />
-      
-      <DeleteSiteModal
-        tenant={deleteModalTarget}
-        onClose={() => setDeleteModalTarget(null)}
-        onDelete={deleteTenant}
-      />
+      <CreateSiteModal isOpen={createOpen} onClose={() => setCreateOpen(false)} onSiteCreated={(id) => { setCreateOpen(false); router.push(`/dashboard/sites/${id}`); }} />
+      <ModalBase isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="¿Borrar Negocio?">
+         <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-xl border border-red-100 dark:border-red-900/20 mb-4"><p className="text-sm text-red-800 dark:text-red-300"><strong>¡Cuidado!</strong> Esta acción es irreversible.</p></div>
+         <div className="flex justify-end gap-3"><button onClick={() => setDeleteId(null)} className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-white/5">Cancelar</button><button onClick={deleteTenant} className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 text-white shadow-lg hover:bg-red-500">Borrar</button></div>
+      </ModalBase>
     </div>
   )
 }

@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
 import { DashboardSidebar } from './DashboardSidebar';
 import { SidebarProvider, useSidebar } from '@/app/contexts/SidebarContext';
 import { cn } from '@/lib/utils';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface DashboardWrapperProps {
   children: React.ReactNode;
@@ -30,9 +31,17 @@ function DashboardContent({ children, isEditor }: { children: React.ReactNode; i
 }
 
 export function DashboardWrapper({ children, userEmail, isEditor }: DashboardWrapperProps) {
+  const { theme } = useTheme();
+
   return (
     <SidebarProvider>
-      <div className="dashboard-root flex h-screen overflow-hidden bg-slate-50 dark:bg-[#020617] transition-colors duration-500">
+      <div
+        className="dashboard-root flex h-screen overflow-hidden transition-colors duration-500"
+        style={{
+          backgroundColor: theme === 'light' ? '#F8FAFC' : '#0D1222',
+          color: theme === 'light' ? '#0f172a' : '#ffffff'
+        }}
+      >
         <DashboardContent isEditor={isEditor}>
           {children}
         </DashboardContent>

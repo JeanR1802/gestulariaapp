@@ -1,6 +1,7 @@
 // app/components/editor/blocks/index.tsx (REFACTORIZADO CON CATEGORÍAS)
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
+import { cn } from '@/lib/utils';
 import {
   ViewfinderCircleIcon,
   PhotoIcon,
@@ -23,6 +24,9 @@ import { HeaderBlock, HeaderContentEditor, HeaderStyleEditor, HeaderData } from 
 import HeaderPresentational from '../../blocks/HeaderPresentational';
 import { HeroBlock, HeroContentEditor, HeroStyleEditor, HeroData } from './HeroBlock';
 import HeroPresentational from '../../blocks/HeroPresentational';
+import { HeroDecision, HeroDecisionData } from './Hero/HeroDecision';
+import { LayoutTemplate, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon } from 'lucide-react';
+import { MediaLibraryModal } from '../media/MediaLibraryModal';
 import { TextBlock, TextContentEditor, TextStyleEditor, TextData } from './TextBlock';
 import TextPresentational from '../../blocks/TextPresentational';
 import { ImageBlock, ImageContentEditor, ImageStyleEditor, ImageData } from './ImageBlock';
@@ -66,7 +70,7 @@ import { GalleryPreviewGrid, GalleryPreviewCarousel, GalleryPreviewFeatured } fr
 // --- TIPOS GENÉRICOS Y DE CONFIGURACIÓN ---
 
 // Unión de todos los tipos de datos de los bloques
-export type BlockData = HeaderData | HeroData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData | FeaturedProductData | StackData | BannerData | GalleryData;
+export type BlockData = HeaderData | HeroData | HeroDecisionData | TextData | ImageData | CardsData | CtaData | PricingData | FooterData | TestimonialData | FaqData | TeamData | CatalogData | FeaturedProductData | StackData | BannerData | GalleryData;
 
 // Props que recibirá cada componente de renderizado de bloque (ej: TextBlock, HeaderBlock)
 export interface BlockComponentProps<T extends BlockData> {
@@ -100,6 +104,7 @@ export interface BlockConfig<T extends BlockData> {
 export type BlocksConfig = {
   header: BlockConfig<HeaderData>;
   hero: BlockConfig<HeroData>;
+  hero_decision: BlockConfig<HeroDecisionData>;
   featuredProduct: BlockConfig<FeaturedProductData>;
   catalog: BlockConfig<CatalogData>;
   team: BlockConfig<TeamData>;
@@ -148,6 +153,170 @@ export const BLOCKS: BlocksConfig = {
         { name: 'Centrado Clásico', description: 'Título, subtítulo y botón centrados.', preview: HeroPreviewDefault, defaultData: { variant: 'default', title: 'Título Principal Impactante', subtitle: 'Describe tu propuesta de valor de forma clara y concisa.', buttonText: 'Llamada a la Acción', backgroundColor: 'bg-slate-100', titleColor: 'text-slate-800', subtitleColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as HeroData },
         { name: 'Izquierda con Imagen', description: 'Texto a la izquierda, imagen a la derecha.', preview: HeroPreviewLeftImage, defaultData: { variant: 'leftImage', title: 'Título Descriptivo', subtitle: 'Complementa tu mensaje con una imagen poderosa.', buttonText: 'Ver Más', imageUrl: '', backgroundColor: 'bg-white', titleColor: 'text-slate-800', subtitleColor: 'text-slate-600', buttonBgColor: 'bg-blue-600', buttonTextColor: 'text-white' } as HeroData },
         { name: 'Mínimo Oscuro', description: 'Diseño elegante sobre un fondo oscuro.', preview: HeroPreviewDarkMinimal, defaultData: { variant: 'darkMinimal', title: 'Menos es Más', buttonText: 'Explorar', backgroundColor: 'bg-slate-900', titleColor: 'text-white', subtitle: '', subtitleColor: 'text-slate-300', buttonBgColor: 'bg-white', buttonTextColor: 'text-slate-800' } as HeroData },
+    ],
+  } as BlockConfig<HeroData>,
+  hero_decision: {
+    name: 'Hero de Decisión',
+    description: 'Portada de alto impacto para ventas.',
+    icon: LayoutTemplate,
+    category: 'Principal',
+    theme: { bg: 'bg-purple-50', icon: 'text-purple-600' },
+    renderer: HeroDecision,
+    editor: ({ data, updateData }: { data: HeroDecisionData; updateData: (k: string, v: any) => void }) => {
+        const [isMediaOpen, setIsMediaOpen] = useState(false);
+
+        return (
+            <div className="space-y-6">
+                
+                {/* 1. IMAGEN DE FONDO (Lo primero que se ve) */}
+                <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Imagen de Fondo</label>
+                    <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group cursor-pointer" onClick={() => setIsMediaOpen(true)}>
+                        <img src={data.bgImage || "https://via.placeholder.com/400"} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-white text-xs font-bold flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Cambiar</span>
+                        </div>
+                    </div>
+                    
+                    {/* Control de Oscuridad (Overlay) */}
+                    <div className="px-1">
+                        <div className="flex justify-between text-xs mb-2">
+                            <span className="text-slate-500">Oscuridad (Legibilidad)</span>
+                            <span className="font-bold text-slate-700">{data.overlayOpacity || 40}%</span>
+                        </div>
+                        <input 
+                            type="range" min="0" max="90" step="10"
+                            value={data.overlayOpacity || 40}
+                            onChange={(e) => updateData('overlayOpacity', Number(e.target.value))}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        />
+                    </div>
+                </div>
+
+                <hr className="border-slate-100" />
+
+                {/* 2. TEXTOS DE VENTA */}
+                <div className="space-y-4">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mensaje</label>
+                    
+                    <div>
+                        <span className="text-[10px] font-bold text-blue-600 mb-1 block">ETIQUETA (Opcional)</span>
+                        <input 
+                            type="text" 
+                            value={data.badge || ''} 
+                            onChange={(e) => updateData('badge', e.target.value)}
+                            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Ej: NUEVO LANZAMIENTO"
+                        />
+                    </div>
+
+                    <div>
+                        <span className="text-[10px] font-bold text-slate-500 mb-1 block">TÍTULO IMPACTANTE</span>
+                        <textarea 
+                            value={data.title || ''} 
+                            onChange={(e) => updateData('title', e.target.value)}
+                            rows={2}
+                            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                            placeholder="La promesa principal..."
+                        />
+                    </div>
+
+                    <div>
+                        <span className="text-[10px] font-bold text-slate-500 mb-1 block">SUBTÍTULO PERSUASIVO</span>
+                        <textarea 
+                            value={data.subtitle || ''} 
+                            onChange={(e) => updateData('subtitle', e.target.value)}
+                            rows={3}
+                            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                            placeholder="Explica por qué deberían comprar..."
+                        />
+                    </div>
+                </div>
+
+                <hr className="border-slate-100" />
+
+                {/* 3. LLAMADA A LA ACCIÓN (CTA) */}
+                <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Botón (CTA)</label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <input 
+                            type="text" 
+                            value={data.ctaText || ''} 
+                            onChange={(e) => updateData('ctaText', e.target.value)}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Texto (Ej: Comprar)"
+                        />
+                        <input 
+                            type="text" 
+                            value={data.ctaLink || ''} 
+                            onChange={(e) => updateData('ctaLink', e.target.value)}
+                            className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="Enlace (URL)"
+                        />
+                    </div>
+                </div>
+
+                <hr className="border-slate-100" />
+
+                {/* 4. DISPOSICIÓN (LAYOUT) */}
+                <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alineación</label>
+                    <div className="flex bg-slate-100 p-1 rounded-xl">
+                        <button onClick={() => updateData('align', 'left')} className={cn("flex-1 py-2 rounded-lg flex justify-center transition-all", data.align === 'left' ? "bg-white text-blue-600 shadow-sm" : "text-slate-400")}>
+                            <AlignLeft className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => updateData('align', 'center')} className={cn("flex-1 py-2 rounded-lg flex justify-center transition-all", (!data.align || data.align === 'center') ? "bg-white text-blue-600 shadow-sm" : "text-slate-400")}>
+                            <AlignCenter className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => updateData('align', 'right')} className={cn("flex-1 py-2 rounded-lg flex justify-center transition-all", data.align === 'right' ? "bg-white text-blue-600 shadow-sm" : "text-slate-400")}>
+                            <AlignRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Altura</label>
+                    <div className="flex bg-slate-100 p-1 rounded-xl">
+                        {['medium', 'large', 'full'].map(h => (
+                            <button 
+                                key={h}
+                                onClick={() => updateData('height', h)} 
+                                className={cn(
+                                    "flex-1 py-2 rounded-lg text-[10px] font-bold uppercase transition-all", 
+                                    data.height === h ? "bg-white text-blue-600 shadow-sm" : "text-slate-400"
+                                )}
+                            >
+                                {h === 'full' ? 'Pantalla' : h === 'large' ? 'Alta' : 'Media'}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* MODAL DE MEDIOS CONECTADO */}
+                <MediaLibraryModal 
+                    isOpen={isMediaOpen} 
+                    onClose={() => setIsMediaOpen(false)}
+                    onSelect={(url) => updateData('bgImage', url)}
+                />
+            </div>
+        );
+    },
+    variants: [
+        {
+            name: 'Predeterminado',
+            description: 'Hero de decisión con imagen de fondo',
+            preview: ({ data }: { data: HeroDecisionData }) => <HeroDecision data={data} />,
+            defaultData: {
+                badge: 'NUEVA COLECCIÓN',
+                title: 'Define tu estilo hoy',
+                subtitle: 'Descubre la calidad premium que nos diferencia. Envíos gratis a todo el país en compras mayores a $999.',
+                ctaText: 'Ver Catálogo',
+                bgImage: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80',
+                overlayOpacity: 40,
+                align: 'center',
+                height: 'large'
+            } as HeroDecisionData
+        }
     ]
   } as BlockConfig<HeroData>,
   featuredProduct: {

@@ -1,13 +1,12 @@
 'use client';
-import { useState, useEffect, useCallback, Fragment, useRef } from 'react';
+
+import React, { useState, useEffect, useCallback, Fragment, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import React from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { BLOCKS, BlockType, BlockData, Block, BlockConfig } from '@/app/components/editor/blocks';
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 import { MobileToolbar } from '@/app/components/editor/controls/MobileToolbar';
-import { PlusIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import { Transition } from '@headlessui/react';
 import { PreviewModeContext } from '@/app/contexts/PreviewModeContext';
@@ -15,7 +14,18 @@ import { MobileAddComponentPanel } from '@/app/components/editor/panels/MobileAd
 import { DesktopAddComponentPanel } from '@/app/components/editor/panels/DesktopAddComponentPanel';
 import { AddBlockPanel } from '@/app/components/editor/panels/AddBlockPanel';
 
+import { 
+    ArrowLeft, ExternalLink, Save, Plus, Smartphone, Tablet, Monitor, 
+    Layers, X, Settings, Palette, Type, LayoutTemplate, Grid, CheckCircle2, Undo2, Redo2
+} from 'lucide-react';
+
+import { EditorSidebar } from '@/app/components/editor/EditorSidebar';
+import { PREDEFINED_TEMPLATES } from '@/app/lib/templates-data';
+import { useHistory } from '@/app/hooks/useHistory';
+import { SettingsPanel } from '@/app/components/editor/panels/SettingsPanel';
+
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
+
 
 export default function EditorPage() {
     const router = useRouter();
@@ -28,17 +38,49 @@ export default function EditorPage() {
     const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
     const [isMobileEdit, setIsMobileEdit] = useState(false);
     const [previewMode, setPreviewMode] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+    const [isRealMobile, setIsRealMobile] = useState(false);
     const [newBlockId, setNewBlockId] = useState<number | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState('Todos');
-    const [isAddComponentPanelOpen, setIsAddComponentPanelOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+    // --- HISTORIAL (UNDO/REDO) ---
+    const { addToHistory, undo, redo, canUndo, canRedo } = useHistory<Block[]>([]);
+
+    const registerChange = useCallback(() => {
+        try { addToHistory(blocks); } catch (e) { /* ignore */ }
+    }, [addToHistory, blocks]);
+
+    const handleUndo = useCallback(() => {
+        const previous = undo(blocks);
+        if (previous) setBlocks(previous);
+    }, [undo, blocks]);
+
+    const handleRedo = useCallback(() => {
+        const next = redo(blocks);
+        if (next) setBlocks(next);
+    }, [redo, blocks]);
+
+    // Atajos teclado: Ctrl+Z / Ctrl+Shift+Z
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) handleRedo();
+                else handleUndo();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleUndo, handleRedo]);
+    
+    // --- ESTADO DEL SIDEBAR ---
+    const [sidebarTab, setSidebarTab] = useState<'templates' | 'components'>('templates'); // Por defecto 'templates' para que elijan diseño al inicio
+    const [selectedCategory, setSelectedCategory] = useState('Todos');
+    
+    const [isAddComponentPanelOpen, setIsAddComponentPanelOpen] = useState(false);
     const blockRefs = useRef<Record<number, HTMLDivElement | null>>({});
     const previousBlocksRef = useRef<Block[] | null>(null);
     const canvasRef = useRef<HTMLDivElement | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-    const [viewportWidth, setViewportWidth] = useState<number | null>(null);
-    const [viewportHeight, setViewportHeight] = useState<number | null>(null);
-    const editorFirstFocusRef = useRef<HTMLButtonElement | null>(null);
     const [activeBlockType, setActiveBlockType] = useState<BlockType | null>(null);
     const [editorTab, setEditorTab] = useState<'content' | 'style'>('content');
 
@@ -52,9 +94,17 @@ export default function EditorPage() {
         }, {} as Record<string, Array<{ key: string } & BlockConfig<BlockData>>>)
     }, []);
 
-    const canvasWidthClass = previewMode === 'mobile' ? 'max-w-xs' : previewMode === 'tablet' ? 'max-w-2xl' : 'max-w-4xl';
-    const effectiveCanvasWidthClass = editingBlockId !== null ? 'max-w-4xl w-full' : canvasWidthClass;
+    useEffect(() => {
+        const checkMobile = () => setIsRealMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
+    const canvasWidthClass = isRealMobile 
+        ? 'w-full max-w-full' 
+        : previewMode === 'mobile' ? 'w-[375px]' : previewMode === 'tablet' ? 'w-[768px]' : 'w-full max-w-6xl';
+    
     const editingBlock = editingBlockId !== null ? blocks.find(b => b.id === editingBlockId) ?? null : null;
 
     const showNotification = React.useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -75,17 +125,11 @@ export default function EditorPage() {
                 const content = data.tenant.pages[0]?.content || '[]';
                 try {
                     const parsedContent = JSON.parse(content);
+                    // Si viene vacío, podríamos cargar un template por defecto, pero dejémoslo vacío
                     setBlocks(Array.isArray(parsedContent) ? parsedContent : []);
-                } catch {
-                    setBlocks([]);
-                }
-            } else { router.push('/dashboard/sites'); }
-        } catch (error) {
-            console.error('Error al cargar:', error);
-            router.push('/dashboard/sites');
-        } finally {
-            setLoading(false);
-        }
+                } catch { setBlocks([]); }
+            } else { router.push('/dashboard/sites/list'); }
+        } catch (error) { router.push('/dashboard/sites/list'); } finally { setLoading(false); }
     }, [id, router]);
 
     useEffect(() => { loadTenant(); }, [loadTenant]);
@@ -103,17 +147,34 @@ export default function EditorPage() {
             };
             const token = localStorage.getItem('token');
             const res = await fetch(`/api/tenants/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(updatedTenant) });
-            if (res.ok) {
-                showNotification('Sitio guardado exitosamente');
-            } else { throw new Error('Failed to save'); }
-        } catch (error) {
-            showNotification('Error al guardar el sitio', 'error');
-        } finally {
-            setSaving(false);
-        }
+            if (res.ok) showNotification('Guardado correctamente');
+            else throw new Error('Failed');
+        } catch (error) { showNotification('Error al guardar', 'error'); } 
+        finally { setSaving(false); }
     }, [blocks, id, showNotification, tenant]);
 
+    // --- APLICAR PLANTILLA ---
+    const applyTemplate = (templateKey: string) => {
+        registerChange();
+        const template = PREDEFINED_TEMPLATES[templateKey];
+        if(!template) return;
+
+        if (blocks.length > 0) {
+            if(!confirm('¿Reemplazar todo el contenido actual por esta plantilla?')) return;
+        }
+
+        // Generamos nuevos IDs para evitar conflictos
+        const newBlocks = template.blocks.map(b => ({
+            ...b,
+            id: Date.now() + Math.random()
+        }));
+        
+        setBlocks(newBlocks);
+        showNotification(`Diseño "${template.name}" aplicado`);
+    };
+
     const addBlock = (blockType: BlockType, data: BlockData) => {
+        registerChange();
         const newBlock: Block = { id: Date.now() + Math.random(), type: blockType, data };
         setBlocks(prevBlocks => [...prevBlocks, newBlock]);
         setNewBlockId(newBlock.id);
@@ -121,32 +182,19 @@ export default function EditorPage() {
         setIsAddComponentPanelOpen(false);
     };
 
-    const updateBlockData = useCallback((blockId: number, newData: BlockData) => {
-        setBlocks(prev => prev.map(b => b.id === blockId ? { ...b, data: newData } : b));
-    }, []);
-
-    const handleDataChange = useCallback((newData: BlockData) => {
-        if (editingBlockId) {
-            updateBlockData(editingBlockId, newData);
-        }
-    }, [editingBlockId, updateBlockData]);
 
     const updateBlockProperty = useCallback((blockId: number, key: string, value: unknown) => {
-        setBlocks(prevBlocks =>
-            prevBlocks.map(b =>
-                b.id === blockId
-                    ? { ...b, data: { ...b.data, [key]: value } }
-                    : b
-            )
-        );
+        setBlocks(prevBlocks => prevBlocks.map(b => b.id === blockId ? { ...b, data: { ...b.data, [key]: value } } : b));
     }, []);
 
     const deleteBlock = (blockId: number) => {
+        registerChange();
         setBlocks(blocks.filter(block => block.id !== blockId));
         if (editingBlockId === blockId) setEditingBlockId(null);
     };
 
     const moveBlock = (fromIndex: number, toIndex: number) => {
+        registerChange();
         const newBlocks = [...blocks];
         const [movedBlock] = newBlocks.splice(fromIndex, 1);
         newBlocks.splice(toIndex, 0, movedBlock);
@@ -158,98 +206,13 @@ export default function EditorPage() {
         updateBlockProperty(editingBlockId, key, value);
     }, [editingBlockId, updateBlockProperty]);
 
-    const replaceEditorData = useCallback((newData: BlockData) => {
-        if (!editingBlockId) return;
-        updateBlockData(editingBlockId, newData);
-    }, [editingBlockId, updateBlockData]);
-
-    // Scroll automático al bloque nuevo
     useEffect(() => {
         if (newBlockId && blockRefs.current[newBlockId]) {
-            const blockElement = blockRefs.current[newBlockId];
-            setTimeout(() => {
-                blockElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-
-            const timer = setTimeout(() => {
-                setNewBlockId(null);
-            }, 1600);
-
+            setTimeout(() => blockRefs.current[newBlockId]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+            const timer = setTimeout(() => setNewBlockId(null), 1600);
             return () => clearTimeout(timer);
         }
     }, [newBlockId]);
-
-    // Scroll automático al bloque que se está editando
-    useEffect(() => {
-        if (editingBlockId && blockRefs.current[editingBlockId]) {
-            const blockElement = blockRefs.current[editingBlockId] as HTMLElement;
-            // small delay to allow layout to settle, but keep it short for responsiveness
-            const timer = setTimeout(() => {
-                const container = scrollContainerRef.current;
-                const extra = (viewportHeight && viewportWidth && viewportWidth < 768) ? Math.round(viewportHeight * 0.52) + 24 : 80;
-
-                const doScroll = () => {
-                    try {
-                        if (container) {
-                            const containerRect = container.getBoundingClientRect();
-                            const blockRect = blockElement.getBoundingClientRect();
-                            const currentScroll = container.scrollTop;
-                            const targetTop = currentScroll + (blockRect.top - containerRect.top) - extra;
-                            container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
-                        } else {
-                            // fallback to window
-                            const blockRect = blockElement.getBoundingClientRect();
-                            const target = window.scrollY + blockRect.top - extra;
-                            window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
-                        }
-                    } catch (err) {
-                        // best-effort fallback
-                        if (window.innerWidth < 768) blockElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        else blockElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                };
-
-                // trigger via rAF to improve smoothness on mobile
-                if (typeof window !== 'undefined' && window.requestAnimationFrame) {
-                    window.requestAnimationFrame(() => {
-                        doScroll();
-                    });
-                } else {
-                    doScroll();
-                }
-            }, 50);
-
-            return () => clearTimeout(timer);
-        }
-    }, [editingBlockId, viewportHeight, viewportWidth]);
-
-    // Manejar dimensiones del viewport para cálculos responsivos
-    useEffect(() => {
-        const update = () => { setViewportWidth(window.innerWidth); setViewportHeight(window.innerHeight); };
-        update();
-        window.addEventListener('resize', update);
-        return () => window.removeEventListener('resize', update);
-    }, []);
-
-    // Añadir padding-bottom al canvas en móvil mientras se edita para que el bloque no quede oculto
-    useEffect(() => {
-        const el = canvasRef.current;
-        if (!el) return;
-        if (editingBlockId !== null) {
-            if (window.innerWidth < 768) {
-                // altura aproximada del panel móvil (50vh). Añadimos margen extra.
-                el.style.paddingBottom = '52vh';
-            } else {
-                el.style.paddingBottom = '';
-            }
-        } else {
-            el.style.paddingBottom = '';
-        }
-        // Limpieza al desmontar
-        return () => {
-            if (el) el.style.paddingBottom = '';
-        };
-    }, [editingBlockId]);
 
     const cancelEdit = useCallback(() => {
         if (previousBlocksRef.current) {
@@ -260,454 +223,181 @@ export default function EditorPage() {
     }, []);
 
     const saveEdit = useCallback(async () => {
-        // Guardar todo el sitio (saveTenant ya limpia editingBlockId al inicio)
         await saveTenant();
         previousBlocksRef.current = null;
         setEditingBlockId(null);
     }, [saveTenant]);
 
-    if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div></div>;
+    // ------- SETTINGS HANDLER -------
+    const handleSaveSettings = async (data: any) => {
+        try {
+            if (tenant) {
+                setTenant({ ...tenant, name: data.name, slug: data.slug });
+            }
+            toast.success('Configuración guardada');
+        } catch (e) {
+            toast.error('Error guardando configuración');
+        }
+    };
+
+    if (loading) return <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]"><div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div></div>;
 
     const activeBlock = editingBlock;
     const ActiveBlockConfig = activeBlock ? BLOCKS[activeBlock.type] : null;
     const ActiveEditor = ActiveBlockConfig?.editor as React.FC<{ data: BlockData; updateData: (key: string, value: unknown) => void }> | undefined;
     const ActiveStyleEditor = ActiveBlockConfig?.styleEditor as React.FC<{ data: BlockData; updateData: (key: string, value: unknown) => void }> | undefined;
-    const ActiveIcon = ActiveBlockConfig?.icon as React.ElementType | undefined;
+    const providerMode = isRealMobile ? 'mobile' : (editingBlockId !== null ? 'desktop' : previewMode);
 
-    // Forzamos preview a 'desktop' mientras se edita un bloque para que se muestre completo
-    const providerMode = editingBlockId !== null ? 'desktop' : previewMode;
     return (
         <PreviewModeContext.Provider value={{ mode: providerMode, isMobile: providerMode === 'mobile', isTablet: providerMode === 'tablet', isDesktop: providerMode === 'desktop' }}>
             <>
-                <ToastContainer position="top-right" autoClose={3500} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
-                <div className="flex flex-col h-screen bg-slate-50 font-sans">
-                    <header className={cn("bg-white border-b border-teal-100 shadow-sm z-30 shrink-0", activeBlock ? 'hidden' : '')}>
-                        <div className="max-w-screen-xl mx-auto px-4 py-3 flex justify-between items-center">
-                            <div className="flex items-center gap-4">
-                                <button onClick={() => router.push('/dashboard/sites')} className="text-teal-600 hover:text-teal-700 text-xl font-semibold transition-colors">←</button>
-                                <div>
-                                    <h1 className="font-semibold text-slate-800">{tenant?.name}</h1>
-                                    <p className="text-xs text-teal-600">{tenant?.slug}.gestularia.com</p>
+                <ToastContainer position="bottom-right" theme="colored" autoClose={3000} />
+                <div className="flex flex-col h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-hidden">
+                    
+                    {/* HEADER */}
+                    <header className={cn("bg-white/90 backdrop-blur-md border-b border-slate-200 z-40 shrink-0 transition-all duration-300 relative", activeBlock ? 'translate-y-[-100%] md:translate-y-0' : 'translate-y-0')}>
+                        <div className="w-full mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
+                            <div className="flex items-center gap-4 z-10">
+                                <button onClick={() => router.push('/dashboard/sites/list')} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-all"><ArrowLeft className="w-5 h-5" /></button>
+
+                                {/* SEPARADOR */}
+                                <div className="h-6 w-px bg-slate-200 hidden sm:block mx-2"></div>
+
+                                {/* UNDO / REDO */}
+                                <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-1">
+                                    <button 
+                                        onClick={handleUndo} 
+                                        disabled={!canUndo}
+                                        className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                                        title="Deshacer (Ctrl+Z)"
+                                    >
+                                        <Undo2 className="w-4 h-4" />
+                                    </button>
+                                    <button 
+                                        onClick={handleRedo} 
+                                        disabled={!canRedo}
+                                        className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                                        title="Rehacer (Ctrl+Shift+Z)"
+                                    >
+                                        <Redo2 className="w-4 h-4" />
+                                    </button>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => {
-                                        const isLocal = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
-                                        const url = isLocal
-                                            ? `http://${tenant?.slug}.localhost:3000`
-                                            : `https://${tenant?.slug}.gestularia.com`;
-                                        window.open(url, '_blank');
-                                    }}
-                                    className="px-3 py-1.5 text-sm font-medium text-teal-700 bg-teal-50 rounded-md hover:bg-teal-100 transition-colors"
+
+                                {/* SETTINGS BUTTON */}
+                                <button 
+                                    onClick={() => setIsSettingsOpen(true)}
+                                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200"
+                                    title="Configuración del Sitio"
                                 >
-                                    Ir al sitio
+                                    <Settings className="w-5 h-5" />
                                 </button>
-                                <button onClick={saveTenant} disabled={saving} className="px-4 py-1.5 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:opacity-50 transition-colors shadow-sm">{saving ? 'Guardando...' : 'Guardar'}</button>
+
+                                <div className="hidden sm:block"><h1 className="font-bold text-slate-900 leading-tight">{tenant?.name}</h1></div>
+                            </div>
+                            {!isRealMobile && (
+                                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+                                    <button onClick={() => setPreviewMode('mobile')} className={cn("p-2 rounded-md transition-all", previewMode === 'mobile' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Smartphone className="w-4 h-4" /></button>
+                                    <button onClick={() => setPreviewMode('tablet')} className={cn("p-2 rounded-md transition-all", previewMode === 'tablet' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Tablet className="w-4 h-4" /></button>
+                                    <button onClick={() => setPreviewMode('desktop')} className={cn("p-2 rounded-md transition-all", previewMode === 'desktop' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Monitor className="w-4 h-4" /></button>
+                                </div>
+                            )}
+                            <div className="flex items-center gap-3 z-10">
+                                <button onClick={() => window.open(`http://${tenant?.slug}.gestularia.com`, '_blank')} className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><ExternalLink className="w-4 h-4" /> <span className="hidden lg:inline">Ver en vivo</span></button>
+                                <button onClick={saveTenant} disabled={saving} className="px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2">{saving ? <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></div> : <Save className="w-4 h-4" />}<span>{saving ? 'Guardando...' : 'Guardar'}</span></button>
                             </div>
                         </div>
                     </header>
 
-                    <main className="flex flex-1 overflow-hidden">
-                        {/* Sidebar izquierdo - solo visible cuando NO hay bloque editándose en desktop */}
-                        <aside className={cn(
-                            "w-80 bg-white border-r border-teal-100 p-4 flex flex-col shadow-sm transition-all duration-300",
-                            activeBlock ? "hidden" : "hidden md:flex"
-                        )}>
-                            <h2 className="font-semibold text-teal-900 px-2 pb-2 flex-shrink-0">Componentes</h2>
-                            <div className="flex flex-wrap gap-2 mb-4 flex-shrink-0">
-                                {['Todos', ...categoryOrder].map(category => (
-                                    <button
-                                        key={category}
-                                        onClick={() => setSelectedCategory(category)}
-                                        className={cn(
-                                            "px-2.5 py-1 text-xs font-semibold rounded-full transition-colors",
-                                            selectedCategory === category
-                                                ? "bg-teal-600 text-white shadow-sm"
-                                                : "bg-teal-50 text-teal-700 hover:bg-teal-100"
-                                        )}
-                                    >
-                                        {category}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="overflow-y-auto space-y-4">
-                                {categoryOrder
-                                    .filter(category => selectedCategory === 'Todos' || selectedCategory === category)
-                                    .map(category => (
-                                        <div key={category}>
-                                            <h3 className="text-xs font-semibold uppercase text-slate-500 tracking-wider px-2 mb-2">{category}</h3>
-                                            <div className="space-y-1">
-                                                {(categorizedBlocks[category] || []).map((blockInfo) => {
-                                                    const Icon = blockInfo.icon;
-                                                    return (
-                                                        <button key={blockInfo.key} onClick={() => setActiveBlockType(blockInfo.key as BlockType)} className="w-full p-2 text-left rounded-lg hover:bg-slate-100 transition-colors">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className={`w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 ${blockInfo.theme.bg}`}><Icon className={`w-6 h-6 ${blockInfo.theme.icon}`} /></div>
-                                                                <div>
-                                                                    <p className="font-semibold text-sm text-slate-800">{blockInfo.name}</p>
-                                                                    <p className="text-xs text-slate-500">{blockInfo.description}</p>
-                                                                </div>
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    ))}
-                            </div>
-                        </aside>
+                    <main className="flex flex-1 overflow-hidden relative">
+                        
+                        {/* --- SIDEBAR IZQUIERDO (replaced by shared component) --- */}
+                        <EditorSidebar isOpen={!!activeBlock} onAddBlock={(type) => addBlock(type, {})} onApplyTemplate={(key) => applyTemplate(key)} />
 
-                        {/* Canvas central - ajusta margen cuando hay panel de edición */}
-                        <div ref={scrollContainerRef} style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth', overscrollBehavior: 'contain', touchAction: 'pan-y' }} className={cn(
-                            "flex-1 overflow-y-auto transition-all duration-300",
-                            activeBlock ? "md:mr-96" : ""
-                        )}>
-                            <div className="p-4 md:p-8">
-                                <div id="editor-canvas" ref={canvasRef} style={{ touchAction: 'pan-y' }} className={cn(
-                                    "mx-auto card-bg rounded-2xl card-shadow p-4 md:p-8",
-                                    canvasWidthClass,
-                                    activeBlock ? 'min-h-screen flex items-start justify-center py-12' : 'min-h-[60vh] flex flex-col gap-0'
-                                )}>
+                        {/* --- CANVAS CENTRAL --- */}
+                        <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto relative bg-[#F8FAFC] transition-all duration-300", isRealMobile ? "p-0" : "p-4 md:p-10", !isRealMobile && activeBlock ? "mr-[400px]" : "")}>
+                            <div id="editor-canvas" ref={canvasRef} className={cn("mx-auto transition-all duration-500 ease-in-out relative", canvasWidthClass, !isRealMobile && (previewMode === 'mobile' || previewMode === 'tablet') ? "bg-white shadow-[0_0_50px_-12px_rgba(0,0,0,0.2)] border-[8px] border-slate-900 rounded-[3rem] overflow-hidden min-h-[800px]" : "bg-white shadow-sm min-h-screen md:min-h-[calc(100vh-100px)] md:rounded-xl", isRealMobile ? "pb-24" : (activeBlock ? "pb-96" : "pb-24"))}>
+                                {!isRealMobile && (previewMode === 'mobile' || previewMode === 'tablet') && (
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-xl z-20 flex justify-center items-center gap-4 pointer-events-none"><div className="w-1.5 h-1.5 rounded-full bg-slate-700"></div><div className="w-10 h-1 rounded-full bg-slate-800"></div></div>
+                                )}
+                                <div className={cn("w-full h-full", !isRealMobile && (previewMode === 'mobile' || previewMode === 'tablet') ? "pt-8" : "")}>
                                     {activeBlock ? (
-                                        <div className="w-full mx-auto">
-                                            <div className="w-full p-2 md:p-0 rounded-lg bg-transparent">
-                                                <BlockRenderer
-                                                    key={activeBlock.id}
-                                                    ref={el => { blockRefs.current[activeBlock.id] = el; }}
-                                                    isHighlighted={activeBlock.id === newBlockId}
-                                                    block={activeBlock}
-                                                    isEditing={true}
-                                                    isMobileEdit={isMobileEdit}
-                                                    onUpdate={(key, value) => updateBlockProperty(activeBlock.id, key, value)}
-                                                    onDelete={() => deleteBlock(activeBlock.id)}
-                                                    onEdit={undefined}
-                                                    onClose={() => setEditingBlockId(null)}
-                                                    onMoveUp={undefined}
-                                                    onMoveDown={undefined}
-                                                />
-                                            </div>
+                                        <div className="bg-slate-50/50 min-h-full">
+                                            <BlockRenderer key={activeBlock.id} ref={el => { blockRefs.current[activeBlock.id] = el; }} block={activeBlock} isEditing={true} isMobileEdit={isMobileEdit} onUpdate={(key, value) => updateBlockProperty(activeBlock.id, key, value)} onDelete={() => deleteBlock(activeBlock.id)} onClose={() => setEditingBlockId(null)} />
                                         </div>
                                     ) : (
-                                        blocks.map((block, index) => (
-                                        <BlockRenderer
-                                            key={block.id}
-                                            ref={el => { blockRefs.current[block.id] = el; }}
-                                            isHighlighted={block.id === newBlockId}
-                                            block={block}
-                                            isEditing={editingBlockId === block.id}
-                                            isMobileEdit={isMobileEdit}
-                                            onUpdate={(key, value) => updateBlockProperty(block.id, key, value)}
-                                            onDelete={() => deleteBlock(block.id)}
-                                            onEdit={editingBlockId === null
-                                                ? () => { previousBlocksRef.current = blocks; setEditingBlockId(block.id); }
-                                                : undefined}
-                                            onClose={() => setEditingBlockId(null)}
-                                            onMoveUp={editingBlockId === null && index > 0 ? () => moveBlock(index, index - 1) : undefined}
-                                            onMoveDown={editingBlockId === null && index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined}
-                                        />
-                                        ))
-                                    )}
-                                    {!activeBlock && blocks.length > 0 && (
-                                        <div className="mt-8 pt-6 border-t border-teal-100/50">
-                                            <button
-                                                onClick={() => {
-                                                    setIsAddComponentPanelOpen(true);
-                                                }}
-                                                className="w-full bg-teal-50 text-teal-700 py-3 rounded-lg font-semibold hover:bg-teal-100 transition-colors flex items-center justify-center gap-2 shadow-sm"
-                                            >
-                                                <PlusIcon className="w-5 h-5" />
-                                                Añadir Bloque
-                                            </button>
-                                        </div>
-                                    )}
-                                    {blocks.length === 0 && (
-                                        <div className="text-center py-24 rounded-lg card-bg card-shadow">
-                                            <p className="text-5xl mb-4">🎨</p>
-                                            <p className="font-semibold text-teal-900 mb-4 text-lg">Tu lienzo está en blanco</p>
-                                            <button
-                                                onClick={() => {
-                                                    setIsAddComponentPanelOpen(true);
-                                                }}
-                                                className="bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 mx-auto shadow-sm"
-                                            >
-                                                <PlusIcon className="w-5 h-5" />
-                                                Añadir tu primer bloque
-                                            </button>
-                                        </div>
+                                        <>
+                                            {blocks.map((block, index) => (
+                                                <BlockRenderer key={block.id} ref={el => { blockRefs.current[block.id] = el; }} isHighlighted={block.id === newBlockId} block={block} isEditing={editingBlockId === block.id} isMobileEdit={isMobileEdit} onUpdate={(key, value) => updateBlockProperty(block.id, key, value)} onDelete={() => deleteBlock(block.id)} onEdit={() => { previousBlocksRef.current = blocks; setEditingBlockId(block.id); }} onClose={() => setEditingBlockId(null)} onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} />
+                                            ))}
+                                            <div className="p-8 flex justify-center pb-32">
+                                                {blocks.length === 0 ? (
+                                                    <div className="text-center py-20">
+                                                        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4"><Palette className="w-8 h-8 text-blue-500" /></div>
+                                                        <h3 className="text-xl font-bold text-slate-800 mb-2">Tu lienzo está vacío</h3>
+                                                        <p className="text-slate-500 mb-6">Elige una plantilla del menú izquierdo o añade bloques.</p>
+                                                        <button onClick={() => setSidebarTab('components')} className="px-6 py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2 mx-auto"><Plus className="w-5 h-5" /> Explorar Bloques</button>
+                                                    </div>
+                                                ) : (
+                                                    <button onClick={() => setIsAddComponentPanelOpen(true)} className="group w-full border-2 border-dashed border-slate-200 rounded-xl p-4 flex items-center justify-center gap-2 text-slate-400 font-bold hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-all"><Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" /> Añadir Bloque al Final</button>
+                                                )}
+                                            </div>
+                                        </>
                                     )}
                                 </div>
                             </div>
                         </div>
-                        {activeBlockType && <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />}
-                        {isAddComponentPanelOpen && (
-                            <MobileAddComponentPanel
-                                onClose={() => setIsAddComponentPanelOpen(false)}
-                                onSelectBlock={(type) => { setActiveBlockType(type); setIsAddComponentPanelOpen(false); }}
-                                selectedCategory={selectedCategory}
-                                setSelectedCategory={setSelectedCategory}
-                            />
-                        )}
-                        {isAddComponentPanelOpen && (previewMode === 'desktop' || previewMode === 'tablet') && (
-                            <DesktopAddComponentPanel
-                                onClose={() => setIsAddComponentPanelOpen(false)}
-                                onSelectBlock={(type) => { setActiveBlockType(type); setIsAddComponentPanelOpen(false); }}
-                                selectedCategory={selectedCategory}
-                                setSelectedCategory={setSelectedCategory}
-                            />
-                        )}
+
+                        {/* --- PANEL DERECHO (EDICIÓN) --- */}
+                        <Transition show={!!activeBlock && !isRealMobile} as={Fragment} enter="transform transition ease-out duration-300" enterFrom="translate-x-full" enterTo="translate-x-0" leave="transform transition ease-in duration-200" leaveFrom="translate-x-0" leaveTo="translate-x-full">
+                            <aside className="fixed right-0 top-0 h-full w-[400px] bg-white border-l border-slate-200 shadow-[-10px_0_40px_-10px_rgba(0,0,0,0.1)] z-50 flex flex-col">
+                                {activeBlock && (
+                                    <>
+                                        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 bg-white">
+                                            <div className="flex items-center gap-3"><div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", ActiveBlockConfig?.theme.bg)}>{ActiveBlockConfig?.icon && React.createElement(ActiveBlockConfig.icon, { className: cn("w-4 h-4", ActiveBlockConfig.theme.icon) })}</div><span className="font-bold text-slate-800">Editar {ActiveBlockConfig?.name}</span></div>
+                                            <button onClick={saveEdit} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-800 transition-colors"><X className="w-5 h-5" /></button>
+                                        </div>
+                                        <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100">
+                                            <div className="flex p-1 bg-slate-200/50 rounded-xl">
+                                                <button onClick={() => setEditorTab('content')} className={cn("flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2", editorTab === 'content' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Type className="w-4 h-4" /> Contenido</button>
+                                                <button onClick={() => setEditorTab('style')} className={cn("flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2", editorTab === 'style' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Palette className="w-4 h-4" /> Estilo</button>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
+                                            {editorTab === 'content' ? (ActiveEditor ? <ActiveEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} /> : <div className="text-center text-slate-400 py-10">Sin opciones de contenido</div>) : (ActiveStyleEditor ? <ActiveStyleEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} /> : <div className="text-center text-slate-400 py-10">Sin opciones de estilo</div>)}
+                                        </div>
+                                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3">
+                                            <button onClick={cancelEdit} className="flex-1 py-3 font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Cancelar</button>
+                                            <button onClick={saveEdit} className="flex-1 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all">Guardar Cambios</button>
+                                        </div>
+                                    </>
+                                )}
+                            </aside>
+                        </Transition>
                     </main>
 
                     <MobileToolbar isEditing={isMobileEdit} onToggleEditing={setIsMobileEdit} />
-
-                    {isMobileEdit && !editingBlockId && (
-                        <div className="md:hidden fixed bottom-6 right-6 z-40">
-                            <button
-                                onClick={() => { setPreviewMode('mobile'); setIsAddComponentPanelOpen(true); }}
-                                className="w-14 h-14 bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform hover:bg-teal-700"
-                            >
-                                <PlusIcon className="w-7 h-7" />
-                            </button>
-                        </div>
+                    {isRealMobile && !editingBlockId && <div className="fixed bottom-6 right-6 z-50"><button onClick={() => setIsAddComponentPanelOpen(true)} className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-xl flex items-center justify-center transform active:scale-90 transition-transform hover:bg-blue-700"><Plus className="w-7 h-7" /></button></div>}
+                    {activeBlockType && <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />}
+                    {isAddComponentPanelOpen && (
+                        <MobileAddComponentPanel
+                            onClose={() => setIsAddComponentPanelOpen(false)}
+                            onSelectBlock={(type) => { setActiveBlockType(type); setIsAddComponentPanelOpen(false); }}
+                            onApplyTemplate={(key) => {
+                                applyTemplate(key);
+                                setIsAddComponentPanelOpen(false);
+                            }}
+                        />
                     )}
-
-                    {/* Panel de edición Desktop - side by side con el canvas */}
-                    {activeBlock && (
-                        <>
-                                    <Transition
-                                        show={!!activeBlock}
-                                        as={Fragment}
-                                        enter="transform transition ease-out duration-300"
-                                        enterFrom="translate-x-full opacity-0"
-                                        enterTo="translate-x-0 opacity-100"
-                                        leave="transform transition ease-in duration-200"
-                                        leaveFrom="translate-x-0 opacity-100"
-                                        leaveTo="translate-x-full opacity-0"
-                                    >
-                                        <aside className="hidden md:block fixed right-0 top-16 h-[calc(100vh-4rem)] w-96 bg-white border-l border-slate-200 shadow-2xl z-[60] overflow-hidden">
-                                            <div className="h-full flex flex-col">
-                                                {/* Header del panel */}
-                                                <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-10 h-10 rounded-md flex items-center justify-center ${ActiveBlockConfig?.theme.bg}`}>
-                                                            {ActiveIcon && <ActiveIcon className={`w-6 h-6 ${ActiveBlockConfig?.theme.icon}`} />}
-                                                        </div>
-                                                        <div>
-                                                            <h3 className="font-semibold text-slate-800">Editar {ActiveBlockConfig?.name}</h3>
-                                                            <p className="text-xs text-slate-500">Bloque #{activeBlock.id}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            onClick={cancelEdit}
-                                                            className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white rounded-md hover:bg-slate-100 transition-colors"
-                                                        >
-                                                            Cancelar
-                                                        </button>
-                                                        <button
-                                                            onClick={saveEdit}
-                                                            disabled={saving}
-                                                            className="px-3 py-1.5 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:opacity-50 transition-colors"
-                                                        >
-                                                            {saving ? 'Guardando...' : 'Guardar'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                {/* Tabs */}
-                                                <div className="px-4 pt-3 pb-2 border-b border-slate-100 bg-white">
-                                                    <nav className="flex gap-1">
-                                                        <button 
-                                                            onClick={() => setEditorTab('content')} 
-                                                            className={cn(
-                                                                'flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                                                                editorTab === 'content' 
-                                                                    ? 'bg-teal-100 text-teal-900 shadow-sm' 
-                                                                    : 'text-slate-600 hover:text-teal-700 hover:bg-slate-50'
-                                                            )}
-                                                        >
-                                                            Contenido
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => setEditorTab('style')} 
-                                                            className={cn(
-                                                                'flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                                                                editorTab === 'style' 
-                                                                    ? 'bg-teal-100 text-teal-900 shadow-sm' 
-                                                                    : 'text-slate-600 hover:text-teal-700 hover:bg-slate-50'
-                                                            )}
-                                                        >
-                                                            Estilo
-                                                        </button>
-                                                    </nav>
-                                                </div>
-
-                                                {/* Contenido del editor */}
-                                                <div className="flex-1 overflow-y-auto p-4">
-                                                    {editorTab === 'content' ? (
-                                                        ActiveEditor ? (
-                                                            <ActiveEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} />
-                                                        ) : (
-                                                            <div className="text-center py-8 text-slate-500">
-                                                                <p>No hay editor de contenido para este bloque.</p>
-                                                            </div>
-                                                        )
-                                                    ) : editorTab === 'style' ? (
-                                                        ActiveStyleEditor ? (
-                                                            <ActiveStyleEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} />
-                                                        ) : (
-                                                            <div className="text-center py-8 text-slate-500">
-                                                                <p>No hay editor de estilo para este bloque.</p>
-                                                            </div>
-                                                        )
-                                                    ) : null}
-                                                </div>
-                                            </div>
-                                        </aside>
-                                    </Transition>
-
-                                    {/* Panel móvil - optimizado para ver el bloque en tiempo real */}
-                                    <Transition show={!!activeBlock} as={Fragment}>
-                                        <div className="md:hidden">
-                                            <Transition.Child 
-                                                as={Fragment} 
-                                                enter="ease-out duration-200" 
-                                                enterFrom="opacity-0" 
-                                                enterTo="opacity-100" 
-                                                leave="ease-in duration-150" 
-                                                leaveFrom="opacity-100" 
-                                                leaveTo="opacity-0"
-                                            >
-                                                {/* Overlay visual pero no intercepta gestos: permitimos scroll en el canvas detrás */}
-                                                <div className="fixed inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/40 z-[50] pointer-events-none" />
-                                            </Transition.Child>
-
-                                            <Transition.Child 
-                                                as={Fragment} 
-                                                enter="transform transition ease-in-out duration-200" 
-                                                enterFrom="translate-y-full" 
-                                                enterTo="translate-y-0" 
-                                                leave="transform transition ease-in-out duration-150" 
-                                                leaveFrom="translate-y-0" 
-                                                leaveTo="translate-y-full"
-                                            >
-                                                <div className="fixed inset-x-0 bottom-0 z-[60] h-[50vh] bg-white rounded-t-3xl shadow-2xl overflow-hidden border-t-4 border-teal-500">
-                                                    <div className="h-full flex flex-col">
-                                                        {/* Drag handle con indicador */}
-                                                        <div className="flex flex-col items-center pt-2 pb-2 bg-gradient-to-b from-teal-50 to-white">
-                                                            <div className="w-12 h-1.5 bg-teal-400 rounded-full mb-1"></div>
-                                                            <p className="text-[10px] text-teal-600 font-semibold uppercase tracking-wider">
-                                                                Vista previa arriba ↑
-                                                            </p>
-                                                        </div>
-
-                                                        {/* Header compacto */}
-                                                        <div className="flex items-center justify-between px-4 py-2 border-b border-teal-100 bg-teal-50/50">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className={`w-8 h-8 rounded-md flex items-center justify-center ${ActiveBlockConfig?.theme.bg}`}>
-                                                                    {ActiveIcon && <ActiveIcon className={`w-5 h-5 ${ActiveBlockConfig?.theme.icon}`} />}
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-semibold text-sm text-slate-800">{ActiveBlockConfig?.name}</h3>
-                                                                    <p className="text-[10px] text-slate-500">Mira los cambios arriba</p>
-                                                                </div>
-                                                            </div>
-                                                            <button 
-                                                                onClick={cancelEdit} 
-                                                                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-white transition-colors"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                </svg>
-                                                            </button>
-                                                        </div>
-
-                                                        {/* Tabs compactos */}
-                                                        <div className="px-3 pt-2 pb-1 border-b border-slate-100 bg-white">
-                                                            <nav className="flex gap-1.5">
-                                                                <button 
-                                                                    onClick={() => setEditorTab('content')} 
-                                                                    className={cn(
-                                                                        'flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                                                                        editorTab === 'content' 
-                                                                            ? 'bg-teal-500 text-white shadow-md' 
-                                                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                                                    )}
-                                                                >
-                                                                    📝 Contenido
-                                                                </button>
-                                                                <button 
-                                                                    onClick={() => setEditorTab('style')} 
-                                                                    className={cn(
-                                                                        'flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                                                                        editorTab === 'style' 
-                                                                            ? 'bg-teal-500 text-white shadow-md' 
-                                                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                                                    )}
-                                                                >
-                                                                    🎨 Estilo
-                                                                </button>
-                                                            </nav>
-                                                        </div>
-
-                                                        {/* Contenido con hint superior */}
-                                                        <div className="flex-1 overflow-y-auto">
-                                                            {/* Banner recordatorio */}
-                                                            <div className="sticky top-0 z-10 bg-gradient-to-r from-teal-500 to-emerald-500 text-white px-3 py-2 text-xs flex items-center gap-2 shadow-md">
-                                                                <svg className="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                                                </svg>
-                                                                <span className="font-medium">Los cambios se ven en tiempo real arriba ↑</span>
-                                                            </div>
-                                                            
-                                                            <div className="p-4">
-                                                                {editorTab === 'content' ? (
-                                                                    ActiveEditor ? (
-                                                                        <ActiveEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} />
-                                                                    ) : (
-                                                                        <div className="text-center py-8 text-slate-500">
-                                                                            <p>No hay editor de contenido para este bloque.</p>
-                                                                        </div>
-                                                                    )
-                                                                ) : editorTab === 'style' ? (
-                                                                    ActiveStyleEditor ? (
-                                                                        <ActiveStyleEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} />
-                                                                    ) : (
-                                                                        <div className="text-center py-8 text-slate-500">
-                                                                            <p>No hay editor de estilo para este bloque.</p>
-                                                                        </div>
-                                                                    )
-                                                                ) : null}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Footer con botón de cerrar destacado */}
-                                                        <div className="border-t border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between gap-3">
-                                                            <button
-                                                                onClick={cancelEdit}
-                                                                className="px-4 py-2 bg-white text-slate-700 rounded-lg font-medium hover:bg-slate-100 transition-colors"
-                                                            >
-                                                                Cancelar
-                                                            </button>
-                                                            <button
-                                                                onClick={saveEdit}
-                                                                disabled={saving}
-                                                                className="px-6 py-2.5 bg-teal-600 text-white rounded-xl font-semibold shadow-lg hover:bg-teal-700 transition-colors flex items-center gap-2"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                                {saving ? 'Guardando...' : 'Guardar'}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </Transition.Child>
-                                        </div>
-                                    </Transition>
-                        </>
+                    {isAddComponentPanelOpen && !isRealMobile && <DesktopAddComponentPanel onClose={() => setIsAddComponentPanelOpen(false)} onSelectBlock={(type) => { setActiveBlockType(type); setIsAddComponentPanelOpen(false); }} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />}
+                    {/* SETTINGS PANEL */}
+                    {tenant && (
+                        <SettingsPanel
+                            isOpen={isSettingsOpen}
+                            onClose={() => setIsSettingsOpen(false)}
+                            siteData={tenant}
+                            onSave={handleSaveSettings}
+                        />
                     )}
-
                 </div>
             </>
         </PreviewModeContext.Provider>

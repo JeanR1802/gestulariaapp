@@ -194,3 +194,62 @@ html, body {
     animation: none !important;
   }
 } 
+/* --- app/globals.css --- */
+
+@layer utilities {
+  /* Scrollbar Minimalista Premium */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px; /* Muy delgada */
+    height: 5px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent; /* Fondo invisible */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0; /* Color gris muy suave (slate-200) */
+    border-radius: 10px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1; /* Un poco más oscuro al pasar el mouse (slate-300) */
+  }
+
+  /* Ocultar scrollbar pero permitir scroll (útil para contenedores limpios) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+
+@layer utilities {
+  /* Ocultar barra de scroll pero permitir funcionalidad (Estilo Móvil) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Scrollbar Premium (Fina y sutil para escritorio) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px; /* Extremadamente fina */
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.3); /* Gris muy transparente */
+    border-radius: 20px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.5);
+  }
+}
