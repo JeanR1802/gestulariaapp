@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, Fragment, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,7 +8,6 @@ import { BLOCKS, BlockType, BlockData, Block, BlockConfig } from '@/app/componen
 import { BlockRenderer } from '@/app/components/editor/BlockRenderer';
 import { MobileToolbar } from '@/app/components/editor/controls/MobileToolbar';
 import { cn } from '@/lib/utils';
-import { Transition } from '@headlessui/react';
 import { PreviewModeContext } from '@/app/contexts/PreviewModeContext';
 import { MobileAddComponentPanel } from '@/app/components/editor/panels/MobileAddComponentPanel';
 import { DesktopAddComponentPanel } from '@/app/components/editor/panels/DesktopAddComponentPanel';
@@ -16,7 +15,7 @@ import { AddBlockPanel } from '@/app/components/editor/panels/AddBlockPanel';
 
 import { 
     ArrowLeft, ExternalLink, Save, Plus, Smartphone, Tablet, Monitor, 
-    Layers, X, Settings, Palette, Type, LayoutTemplate, Grid, CheckCircle2, Undo2, Redo2
+    Undo2, Redo2, Settings, Palette
 } from 'lucide-react';
 
 import { EditorSidebar } from '@/app/components/editor/EditorSidebar';
@@ -26,7 +25,6 @@ import { SettingsPanel } from '@/app/components/editor/panels/SettingsPanel';
 
 interface Tenant { name: string; slug: string; pages: { slug: string; content: string; }[]; }
 
-
 export default function EditorPage() {
     const router = useRouter();
     const params = useParams();
@@ -35,12 +33,23 @@ export default function EditorPage() {
     const [blocks, setBlocks] = useState<Block[]>([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    
+    // ESTADOS DEL EDITOR
     const [editingBlockId, setEditingBlockId] = useState<number | null>(null);
     const [isMobileEdit, setIsMobileEdit] = useState(false);
     const [previewMode, setPreviewMode] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
     const [isRealMobile, setIsRealMobile] = useState(false);
     const [newBlockId, setNewBlockId] = useState<number | null>(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    
+    // PANELES DE AGREGAR
+    const [isAddComponentPanelOpen, setIsAddComponentPanelOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState('Todos');
+    const [activeBlockType, setActiveBlockType] = useState<BlockType | null>(null); // Para el fallback
+
+    // REFS
+    const blockRefs = useRef<Record<number, HTMLDivElement | null>>({});
+    const canvasRef = useRef<HTMLDivElement | null>(null);
 
     // --- HISTORIAL (UNDO/REDO) ---
     const { addToHistory, undo, redo, canUndo, canRedo } = useHistory<Block[]>([]);
@@ -59,41 +68,18 @@ export default function EditorPage() {
         if (next) setBlocks(next);
     }, [redo, blocks]);
 
-    // Atajos teclado: Ctrl+Z / Ctrl+Shift+Z
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
                 e.preventDefault();
-                if (e.shiftKey) handleRedo();
-                else handleUndo();
+                if (e.shiftKey) handleRedo(); else handleUndo();
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handleUndo, handleRedo]);
-    
-    // --- ESTADO DEL SIDEBAR ---
-    const [sidebarTab, setSidebarTab] = useState<'templates' | 'components'>('templates'); // Por defecto 'templates' para que elijan diseño al inicio
-    const [selectedCategory, setSelectedCategory] = useState('Todos');
-    
-    const [isAddComponentPanelOpen, setIsAddComponentPanelOpen] = useState(false);
-    const blockRefs = useRef<Record<number, HTMLDivElement | null>>({});
-    const previousBlocksRef = useRef<Block[] | null>(null);
-    const canvasRef = useRef<HTMLDivElement | null>(null);
-    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-    const [activeBlockType, setActiveBlockType] = useState<BlockType | null>(null);
-    const [editorTab, setEditorTab] = useState<'content' | 'style'>('content');
 
-    const categoryOrder = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'] as const;
-    const categorizedBlocks = React.useMemo(() => {
-        return Object.entries(BLOCKS).reduce((acc, [key, blockInfo]) => {
-            const category = (blockInfo as BlockConfig & { category?: string }).category || 'General';
-            if (!acc[category]) acc[category] = [];
-            acc[category].push({ key, ...(blockInfo as BlockConfig) });
-            return acc;
-        }, {} as Record<string, Array<{ key: string } & BlockConfig>>)
-    }, []);
-
+    // DETECCIÓN MÓVIL
     useEffect(() => {
         const checkMobile = () => setIsRealMobile(window.innerWidth < 768);
         checkMobile();
@@ -105,14 +91,15 @@ export default function EditorPage() {
         ? 'w-full max-w-full' 
         : previewMode === 'mobile' ? 'w-[375px]' : previewMode === 'tablet' ? 'w-[768px]' : 'w-full max-w-6xl';
     
+    // BLOQUE ACTIVO (Objeto completo)
     const editingBlock = editingBlockId !== null ? blocks.find(b => b.id === editingBlockId) ?? null : null;
 
     const showNotification = React.useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
         if (type === 'error') toast.error(message);
-        else if (type === 'info') toast.info(message);
         else toast.success(message);
     }, []);
 
+    // CARGAR DATOS
     const loadTenant = useCallback(async () => {
         if (!id) return;
         setLoading(true);
@@ -125,7 +112,6 @@ export default function EditorPage() {
                 const content = data.tenant.pages[0]?.content || '[]';
                 try {
                     const parsedContent = JSON.parse(content);
-                    // Si viene vacío, podríamos cargar un template por defecto, pero dejémoslo vacío
                     setBlocks(Array.isArray(parsedContent) ? parsedContent : []);
                 } catch { setBlocks([]); }
             } else { router.push('/dashboard/sites/list'); }
@@ -134,12 +120,12 @@ export default function EditorPage() {
 
     useEffect(() => { loadTenant(); }, [loadTenant]);
 
+    // GUARDAR DATOS
     const saveTenant = useCallback(async () => {
         if (!tenant) return;
         setSaving(true);
         try {
-            setEditingBlockId(null);
-            await new Promise(resolve => setTimeout(resolve, 50));
+            // setEditingBlockId(null); // Opcional: No cerrar editor al guardar
             const jsonContent = JSON.stringify(blocks);
             const updatedTenant = {
                 ...tenant,
@@ -153,43 +139,39 @@ export default function EditorPage() {
         finally { setSaving(false); }
     }, [blocks, id, showNotification, tenant]);
 
-    // --- APLICAR PLANTILLA ---
+    // --- ACCIONES DEL EDITOR ---
+
     const applyTemplate = (templateKey: string) => {
         registerChange();
         const template = PREDEFINED_TEMPLATES[templateKey];
         if(!template) return;
+        if (blocks.length > 0 && !confirm('¿Reemplazar todo el contenido actual?')) return;
 
-        if (blocks.length > 0) {
-            if(!confirm('¿Reemplazar todo el contenido actual por esta plantilla?')) return;
-        }
-
-        // Generamos nuevos IDs para evitar conflictos
-        const newBlocks = template.blocks.map(b => ({
-            ...b,
-            id: Date.now() + Math.random()
-        }));
-        
+        const newBlocks = template.blocks.map(b => ({ ...b, id: Date.now() + Math.random() }));
         setBlocks(newBlocks);
         showNotification(`Diseño "${template.name}" aplicado`);
     };
 
+    // CORRECCIÓN CLAVE: Aceptar initialData
     const addBlock = (blockType: BlockType, initialData?: Partial<BlockData>) => {
         registerChange();
         
-        // Obtener datos por defecto del bloque desde BLOCKS config
         const blockConfig = BLOCKS[blockType];
-        const defaultData = blockConfig?.variants?.[0]?.defaultData || blockConfig?.initialData || {};
+        const defaultData = blockConfig?.initialData || {};
         
-        // Combinar datos por defecto con initialData personalizado
+        // Merge de datos: Prioridad a initialData (que viene del botón Variante)
         const data = { ...defaultData, ...initialData } as BlockData;
         
         const newBlock: Block = { id: Date.now() + Math.random(), type: blockType, data };
+        
         setBlocks(prevBlocks => [...prevBlocks, newBlock]);
         setNewBlockId(newBlock.id);
-        setActiveBlockType(null);
-        setIsAddComponentPanelOpen(false);
+        setActiveBlockType(null); // Limpiar fallback
+        setIsAddComponentPanelOpen(false); // Cerrar panel
+        
+        // Auto-seleccionar el nuevo bloque para editar (Opcional, buena UX)
+        if (!isRealMobile) setEditingBlockId(newBlock.id);
     };
-
 
     const updateBlockProperty = useCallback((blockId: number, key: string, value: unknown) => {
         setBlocks(prevBlocks => prevBlocks.map(b => b.id === blockId ? { ...b, data: { ...b.data, [key]: value } } : b));
@@ -209,11 +191,12 @@ export default function EditorPage() {
         setBlocks(newBlocks);
     };
 
-    const applyEditorUpdate = useCallback((key: string, value: unknown) => {
-        if (!editingBlockId) return;
-        updateBlockProperty(editingBlockId, key, value);
-    }, [editingBlockId, updateBlockProperty]);
+    const handleSaveSettings = async (data: any) => {
+        if (tenant) setTenant({ ...tenant, name: data.name, slug: data.slug });
+        toast.success('Configuración local actualizada');
+    };
 
+    // --- SCROLL AUTOMÁTICO AL NUEVO BLOQUE ---
     useEffect(() => {
         if (newBlockId && blockRefs.current[newBlockId]) {
             setTimeout(() => blockRefs.current[newBlockId]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
@@ -222,39 +205,9 @@ export default function EditorPage() {
         }
     }, [newBlockId]);
 
-    const cancelEdit = useCallback(() => {
-        if (previousBlocksRef.current) {
-            setBlocks(previousBlocksRef.current);
-            previousBlocksRef.current = null;
-        }
-        setEditingBlockId(null);
-    }, []);
-
-    const saveEdit = useCallback(async () => {
-        await saveTenant();
-        previousBlocksRef.current = null;
-        setEditingBlockId(null);
-    }, [saveTenant]);
-
-    // ------- SETTINGS HANDLER -------
-    const handleSaveSettings = async (data: any) => {
-        try {
-            if (tenant) {
-                setTenant({ ...tenant, name: data.name, slug: data.slug });
-            }
-            toast.success('Configuración guardada');
-        } catch (e) {
-            toast.error('Error guardando configuración');
-        }
-    };
+    const providerMode = isRealMobile ? 'mobile' : (editingBlockId !== null ? 'desktop' : previewMode);
 
     if (loading) return <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]"><div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div></div>;
-
-    const activeBlock = editingBlock;
-    const ActiveBlockConfig = activeBlock ? BLOCKS[activeBlock.type] : null;
-    const ActiveEditor = ActiveBlockConfig?.editor as React.FC<{ data: BlockData; updateData: (key: string, value: unknown) => void }> | undefined;
-    const ActiveStyleEditor = ActiveBlockConfig?.styleEditor as React.FC<{ data: BlockData; updateData: (key: string, value: unknown) => void }> | undefined;
-    const providerMode = isRealMobile ? 'mobile' : (editingBlockId !== null ? 'desktop' : previewMode);
 
     return (
         <PreviewModeContext.Provider value={{ mode: providerMode, isMobile: providerMode === 'mobile', isTablet: providerMode === 'tablet', isDesktop: providerMode === 'desktop' }}>
@@ -263,132 +216,147 @@ export default function EditorPage() {
                 <div className="flex flex-col h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-hidden">
                     
                     {/* HEADER */}
-                    <header className={cn("bg-white/90 backdrop-blur-md border-b border-slate-200 z-40 shrink-0 transition-all duration-300 relative", activeBlock ? 'translate-y-[-100%] md:translate-y-0' : 'translate-y-0')}>
-                        <div className="w-full mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
-                            <div className="flex items-center gap-4 z-10">
-                                <button onClick={() => router.push('/dashboard/sites/list')} className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-all"><ArrowLeft className="w-5 h-5" /></button>
-
-                                {/* SEPARADOR */}
-                                <div className="h-6 w-px bg-slate-200 hidden sm:block mx-2"></div>
-
-                                {/* UNDO / REDO */}
-                                <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-1">
-                                    <button 
-                                        onClick={handleUndo} 
-                                        disabled={!canUndo}
-                                        className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-                                        title="Deshacer (Ctrl+Z)"
-                                    >
-                                        <Undo2 className="w-4 h-4" />
-                                    </button>
-                                    <button 
-                                        onClick={handleRedo} 
-                                        disabled={!canRedo}
-                                        className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-                                        title="Rehacer (Ctrl+Shift+Z)"
-                                    >
-                                        <Redo2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                {/* SETTINGS BUTTON */}
-                                <button 
-                                    onClick={() => setIsSettingsOpen(true)}
-                                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200"
-                                    title="Configuración del Sitio"
-                                >
-                                    <Settings className="w-5 h-5" />
-                                </button>
-
-                                <div className="hidden sm:block"><h1 className="font-bold text-slate-900 leading-tight">{tenant?.name}</h1></div>
+                    <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 z-40 shrink-0 h-16 flex items-center justify-between px-4 sm:px-6">
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => router.push('/dashboard/sites/list')} className="p-2 rounded-full hover:bg-slate-100 text-slate-500"><ArrowLeft className="w-5 h-5" /></button>
+                            
+                            <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-1">
+                                <button onClick={handleUndo} disabled={!canUndo} className="p-1.5 rounded-md hover:bg-white text-slate-500 disabled:opacity-30"><Undo2 className="w-4 h-4" /></button>
+                                <button onClick={handleRedo} disabled={!canRedo} className="p-1.5 rounded-md hover:bg-white text-slate-500 disabled:opacity-30"><Redo2 className="w-4 h-4" /></button>
                             </div>
-                            {!isRealMobile && (
-                                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
-                                    <button onClick={() => setPreviewMode('mobile')} className={cn("p-2 rounded-md transition-all", previewMode === 'mobile' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Smartphone className="w-4 h-4" /></button>
-                                    <button onClick={() => setPreviewMode('tablet')} className={cn("p-2 rounded-md transition-all", previewMode === 'tablet' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Tablet className="w-4 h-4" /></button>
-                                    <button onClick={() => setPreviewMode('desktop')} className={cn("p-2 rounded-md transition-all", previewMode === 'desktop' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Monitor className="w-4 h-4" /></button>
-                                </div>
-                            )}
-                            <div className="flex items-center gap-3 z-10">
-                                <button onClick={() => window.open(`http://${tenant?.slug}.gestularia.com`, '_blank')} className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><ExternalLink className="w-4 h-4" /> <span className="hidden lg:inline">Ver en vivo</span></button>
-                                <button onClick={saveTenant} disabled={saving} className="px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2">{saving ? <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full"></div> : <Save className="w-4 h-4" />}<span>{saving ? 'Guardando...' : 'Guardar'}</span></button>
+
+                            <button onClick={() => setIsSettingsOpen(true)} className="p-2 hover:bg-slate-100 text-slate-500 rounded-lg"><Settings className="w-5 h-5" /></button>
+                            <div className="hidden sm:block font-bold text-slate-900">{tenant?.name}</div>
+                        </div>
+
+                        {!isRealMobile && (
+                            <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+                                <button onClick={() => setPreviewMode('mobile')} className={cn("p-2 rounded-md", previewMode === 'mobile' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500")}><Smartphone className="w-4 h-4" /></button>
+                                <button onClick={() => setPreviewMode('tablet')} className={cn("p-2 rounded-md", previewMode === 'tablet' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500")}><Tablet className="w-4 h-4" /></button>
+                                <button onClick={() => setPreviewMode('desktop')} className={cn("p-2 rounded-md", previewMode === 'desktop' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500")}><Monitor className="w-4 h-4" /></button>
                             </div>
+                        )}
+
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => window.open(`http://${tenant?.slug}.gestularia.com`, '_blank')} className="hidden sm:flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600"><ExternalLink className="w-4 h-4" /> Ver en vivo</button>
+                            <button onClick={saveTenant} disabled={saving} className="px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">{saving ? '...' : <Save className="w-4 h-4" />}<span>Guardar</span></button>
                         </div>
                     </header>
 
+                    {/* MAIN LAYOUT */}
                     <main className="flex flex-1 overflow-hidden relative">
                         
-                        {/* --- SIDEBAR IZQUIERDO (ahora también controla la edición) --- */}
-                        {!isRealMobile && (
-                            <EditorSidebar 
-                                isOpen={true} 
-                                onAddBlock={(type, initialData) => addBlock(type, initialData)} 
-                                onApplyTemplate={(key) => applyTemplate(key)}
-                                // Conectamos el bloque actualmente seleccionado para editar
-                                editingBlock={editingBlock}
-                                onCloseEditor={() => setEditingBlockId(null)}
-                                onUpdateBlock={(blockId, key, value) => updateBlockProperty(blockId, key, value)}
-                            />
-                        )}
+                        {/* 1. SIDEBAR IZQUIERDO (Ahora maneja Navegación Y Edición) */}
+                        <EditorSidebar 
+                            isOpen={true} // Siempre visible en escritorio
+                            editingBlock={editingBlock} // Pasamos el bloque activo
+                            onCloseEditor={() => setEditingBlockId(null)} // Cerrar edición
+                            onUpdateBlock={updateBlockProperty} // Guardar cambios
+                            // Props de navegación:
+                            onAddBlock={(type, data) => addBlock(type, data)} // CORREGIDO: Pasa data
+                            onApplyTemplate={applyTemplate}
+                        />
 
-                        {/* --- CANVAS CENTRAL --- */}
-                        <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto relative bg-[#F8FAFC] transition-all duration-300", isRealMobile ? "p-0" : "p-4 md:p-10")}> 
-                            <div id="editor-canvas" ref={canvasRef} className={cn("mx-auto transition-all duration-500 ease-in-out relative", canvasWidthClass, !isRealMobile && (previewMode === 'mobile' || previewMode === 'tablet') ? "bg-white shadow-[0_0_50px_-12px_rgba(0,0,0,0.2)] border-[8px] border-slate-900 rounded-[3rem] overflow-hidden min-h-[800px]" : "bg-white shadow-sm min-h-screen md:min-h-[calc(100vh-100px)] md:rounded-xl", isRealMobile ? "pb-24" : (activeBlock ? "pb-96" : "pb-24"))}>
-                                {!isRealMobile && (previewMode === 'mobile' || previewMode === 'tablet') && (
-                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-xl z-20 flex justify-center items-center gap-4 pointer-events-none"><div className="w-1.5 h-1.5 rounded-full bg-slate-700"></div><div className="w-10 h-1 rounded-full bg-slate-800"></div></div>
+                        {/* 2. CANVAS CENTRAL */}
+                        <div className="flex-1 overflow-y-auto bg-[#F8FAFC] relative transition-all duration-300 p-4 md:p-10" onClick={(e) => { if(e.target === e.currentTarget) setEditingBlockId(null); }}>
+                            <div className={cn("mx-auto transition-all duration-500 ease-in-out relative min-h-[800px] bg-white shadow-sm md:rounded-xl overflow-hidden", canvasWidthClass, isRealMobile ? "pb-32" : "pb-32")}>
+                                {/* Frame de dispositivo en modo preview */}
+                                {!isRealMobile && (previewMode !== 'desktop') && (
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-xl z-20 pointer-events-none" />
                                 )}
-                                <div className={cn("w-full h-full", !isRealMobile && (previewMode === 'mobile' || previewMode === 'tablet') ? "pt-8" : "")}>
-                                    {activeBlock ? (
-                                        <div className="bg-slate-50/50 min-h-full">
-                                            <BlockRenderer key={activeBlock.id} ref={el => { blockRefs.current[activeBlock.id] = el; }} block={activeBlock} isEditing={true} isMobileEdit={isMobileEdit} onUpdate={(key, value) => updateBlockProperty(activeBlock.id, key, value)} onDelete={() => deleteBlock(activeBlock.id)} onClose={() => setEditingBlockId(null)} />
+                                
+                                <div className={cn("w-full h-full", !isRealMobile && (previewMode !== 'desktop') ? "pt-8 border-[8px] border-slate-900 rounded-[2.5rem]" : "")}>
+                                    
+                                    {blocks.length === 0 ? (
+                                        <div className="text-center py-20 flex flex-col items-center justify-center h-full">
+                                            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-4"><Palette className="w-8 h-8 text-blue-500" /></div>
+                                            <h3 className="text-xl font-bold text-slate-800">Lienzo Vacío</h3>
+                                            <p className="text-slate-500 mb-6 max-w-xs mx-auto">Añade tu primer bloque desde el menú lateral o usa una plantilla.</p>
+                                            <button onClick={() => setIsAddComponentPanelOpen(true)} className="px-6 py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg flex items-center gap-2"><Plus className="w-5 h-5" /> Añadir Bloque</button>
                                         </div>
                                     ) : (
-                                        <>
-                                            {blocks.map((block, index) => (
-                                                <BlockRenderer key={block.id} ref={el => { blockRefs.current[block.id] = el; }} isHighlighted={block.id === newBlockId} block={block} isEditing={editingBlockId === block.id} isMobileEdit={isMobileEdit} onUpdate={(key, value) => updateBlockProperty(block.id, key, value)} onDelete={() => deleteBlock(block.id)} onEdit={() => { previousBlocksRef.current = blocks; setEditingBlockId(block.id); }} onClose={() => setEditingBlockId(null)} onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} />
-                                            ))}
-                                            <div className="p-8 flex justify-center pb-32">
-                                                {blocks.length === 0 ? (
-                                                    <div className="text-center py-20">
-                                                        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4"><Palette className="w-8 h-8 text-blue-500" /></div>
-                                                        <h3 className="text-xl font-bold text-slate-800 mb-2">Tu lienzo está vacío</h3>
-                                                        <p className="text-slate-500 mb-6">Elige una plantilla del menú izquierdo o añade bloques.</p>
-                                                        <button onClick={() => setSidebarTab('components')} className="px-6 py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2 mx-auto"><Plus className="w-5 h-5" /> Explorar Bloques</button>
-                                                    </div>
-                                                ) : (
-                                                    <button onClick={() => setIsAddComponentPanelOpen(true)} className="group w-full border-2 border-dashed border-slate-200 rounded-xl p-4 flex items-center justify-center gap-2 text-slate-400 font-bold hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-all"><Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" /> Añadir Bloque al Final</button>
-                                                )}
-                                            </div>
-                                        </>
+                                        blocks.map((block, index) => (
+                                            <BlockRenderer 
+                                                key={block.id} 
+                                                ref={el => { blockRefs.current[block.id] = el; }} 
+                                                block={block} 
+                                                isEditing={editingBlockId === block.id} 
+                                                isMobileEdit={isMobileEdit} 
+                                                onUpdate={(key, value) => updateBlockProperty(block.id, key, value)} 
+                                                onDelete={() => deleteBlock(block.id)} 
+                                                onEdit={() => { setEditingBlockId(block.id); }} 
+                                                onClose={() => setEditingBlockId(null)} 
+                                                onMoveUp={index > 0 ? () => moveBlock(index, index - 1) : undefined} 
+                                                onMoveDown={index < blocks.length - 1 ? () => moveBlock(index, index + 1) : undefined} 
+                                                isHighlighted={block.id === newBlockId}
+                                            />
+                                        ))
+                                    )}
+                                    {blocks.length > 0 && (
+                                        <div className="p-8 flex justify-center">
+                                            <button onClick={() => setIsAddComponentPanelOpen(true)} className="group w-full max-w-md border-2 border-dashed border-slate-200 rounded-xl p-4 flex items-center justify-center gap-2 text-slate-400 font-bold hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-all">
+                                                <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" /> Añadir Bloque al Final
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
                         </div>
+
+                        {/* ELIMINADO EL PANEL DERECHO "FLOTANTE" - AHORA TODO ESTÁ EN EL SIDEBAR IZQUIERDO */}
+                    
                     </main>
 
+                    {/* MÓVIL: BOTÓN FLOTANTE */}
                     <MobileToolbar isEditing={isMobileEdit} onToggleEditing={setIsMobileEdit} />
-                    {isRealMobile && !editingBlockId && <div className="fixed bottom-6 right-6 z-50"><button onClick={() => setIsAddComponentPanelOpen(true)} className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-xl flex items-center justify-center transform active:scale-90 transition-transform hover:bg-blue-700"><Plus className="w-7 h-7" /></button></div>}
-                    {activeBlockType && <AddBlockPanel blockType={activeBlockType} onAddBlock={addBlock} onClose={() => setActiveBlockType(null)} />}
+                    {isRealMobile && !editingBlockId && (
+                        <div className="fixed bottom-6 right-6 z-50">
+                            <button onClick={() => setIsAddComponentPanelOpen(true)} className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-xl flex items-center justify-center hover:bg-blue-700 active:scale-90 transition-transform"><Plus className="w-7 h-7" /></button>
+                        </div>
+                    )}
+
+                    {/* PANELES MODALES (AGREGAR BLOQUE) */}
+                    
+                    {/* Fallback para bloques sin variante específica */}
+                    {activeBlockType && (
+                        <AddBlockPanel 
+                            blockType={activeBlockType} 
+                            onAddBlock={(type, data) => addBlock(type, data)} 
+                            onClose={() => setActiveBlockType(null)} 
+                        />
+                    )}
+
+                    {/* Panel Móvil Renovado */}
                     {isAddComponentPanelOpen && (
                         <MobileAddComponentPanel
                             onClose={() => setIsAddComponentPanelOpen(false)}
-                            onSelectBlock={(type) => { setActiveBlockType(type); setIsAddComponentPanelOpen(false); }}
-                            onApplyTemplate={(key) => {
-                                applyTemplate(key);
+                            // CORRECCIÓN: Aceptamos initialData y agregamos DIRECTAMENTE
+                            onSelectBlock={(type, initialData) => { 
+                                if (initialData) {
+                                    addBlock(type, initialData); 
+                                } else {
+                                    setActiveBlockType(type); // Fallback antiguo
+                                }
                                 setIsAddComponentPanelOpen(false);
                             }}
+                            onApplyTemplate={(key) => { applyTemplate(key); setIsAddComponentPanelOpen(false); }}
                         />
                     )}
-                    {isAddComponentPanelOpen && !isRealMobile && <DesktopAddComponentPanel onClose={() => setIsAddComponentPanelOpen(false)} onSelectBlock={(type) => { setActiveBlockType(type); setIsAddComponentPanelOpen(false); }} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />}
-                    {/* SETTINGS PANEL */}
-                    {tenant && (
-                        <SettingsPanel
-                            isOpen={isSettingsOpen}
-                            onClose={() => setIsSettingsOpen(false)}
-                            siteData={tenant}
-                            onSave={handleSaveSettings}
+
+                    {/* Panel Escritorio Flotante (Si se usa desde el canvas) */}
+                    {isAddComponentPanelOpen && !isRealMobile && (
+                        <DesktopAddComponentPanel 
+                            onClose={() => setIsAddComponentPanelOpen(false)} 
+                            onSelectBlock={(type) => {
+                                setActiveBlockType(type);
+                                setIsAddComponentPanelOpen(false); 
+                            }} 
+                            selectedCategory={selectedCategory} 
+                            setSelectedCategory={setSelectedCategory} 
                         />
                     )}
+
+                    {tenant && <SettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} siteData={tenant} onSave={handleSaveSettings} />}
                 </div>
             </>
         </PreviewModeContext.Provider>
