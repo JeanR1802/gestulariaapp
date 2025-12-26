@@ -17,9 +17,9 @@ export function DesktopAddComponentPanel({ onClose, onSelectBlock, selectedCateg
         if (!acc[category]) {
             acc[category] = [];
         }
-        acc[category].push({ key, ...(blockInfo as BlockConfig<BlockData>) });
+        acc[category].push({ key, ...(blockInfo as BlockConfig) });
         return acc;
-    }, {} as Record<string, Array<{ key: string } & BlockConfig<BlockData>>>);
+    }, {} as Record<string, Array<{ key: string } & BlockConfig>>);
 
     const categoryOrder: (keyof typeof categorizedBlocks)[] = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'];
 
@@ -67,7 +67,7 @@ export function DesktopAddComponentPanel({ onClose, onSelectBlock, selectedCateg
                                                     return (
                                                         <button key={blockInfo.key} onClick={() => onSelectBlock(blockInfo.key as BlockType)} className="w-full p-3 text-left rounded-lg hover:bg-slate-100 transition-colors border border-slate-200">
                                                             <div className="flex items-center gap-3">
-                                                                <div className={`w-12 h-12 rounded-md flex items-center justify-center flex-shrink-0 ${blockInfo.theme.bg}`}><Icon className={`w-7 h-7 ${blockInfo.theme.icon}`} /></div>
+                                                                <div className={`w-12 h-12 rounded-md flex items-center justify-center flex-shrink-0 ${blockInfo.theme?.bg || 'bg-slate-100'}`}><Icon className={`w-7 h-7 ${blockInfo.theme?.icon || 'text-slate-600'}`} /></div>
                                                                 <div>
                                                                     <p className="font-semibold text-slate-800">{blockInfo.name}</p>
                                                                     <p className="text-sm text-slate-500">{blockInfo.description}</p>

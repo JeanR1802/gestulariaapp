@@ -21,10 +21,10 @@ export const BlockRenderer = forwardRef<HTMLDivElement, EditorBlockRendererProps
   const { block, isEditing = false, isHighlighted = false, isMobileEdit = false, onUpdate, onDelete, onEdit, onClose, onMoveUp, onMoveDown } = props;
   if (!block) return null;
 
-  const config = BLOCKS[block.type] as BlockConfig<BlockData> | undefined;
+  const config = BLOCKS[block.type] as BlockConfig | undefined;
   if (!config) return null;
 
-  const Component = config.renderer as React.FC<BlockComponentProps<BlockData>>;
+  const Component = (config.renderer || config.component) as React.FC<BlockComponentProps<BlockData>>;
 
   // Wrap the renderer in a div so the editor can attach refs and highlight styles.
   return (

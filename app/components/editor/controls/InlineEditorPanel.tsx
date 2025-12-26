@@ -99,7 +99,7 @@ function InlineEditorPanelImpl({ block, onDataChange, onClose, onDelete, onMoveU
     }, [localData, onDataChange]);
 
     const handleLocalUpdate = (key: string, value: unknown) => {
-        setLocalData(currentData => ({ ...currentData, [key]: value }));
+        setLocalData((currentData: any) => ({ ...currentData, [key]: value }));
     };
 
     const isMobile = useMediaQuery('(max-width: 799px)'); // lg breakpoint for this component

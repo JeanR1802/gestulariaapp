@@ -87,11 +87,11 @@ export default function EditorPage() {
     const categoryOrder = ['Estructura', 'Principal', 'Contenido', 'Comercio', 'Interacción'] as const;
     const categorizedBlocks = React.useMemo(() => {
         return Object.entries(BLOCKS).reduce((acc, [key, blockInfo]) => {
-            const category = (blockInfo as BlockConfig<BlockData> & { category?: string }).category || 'General';
+            const category = (blockInfo as BlockConfig & { category?: string }).category || 'General';
             if (!acc[category]) acc[category] = [];
-            acc[category].push({ key, ...(blockInfo as BlockConfig<BlockData>) });
+            acc[category].push({ key, ...(blockInfo as BlockConfig) });
             return acc;
-        }, {} as Record<string, Array<{ key: string } & BlockConfig<BlockData>>>)
+        }, {} as Record<string, Array<{ key: string } & BlockConfig>>)
     }, []);
 
     useEffect(() => {
@@ -178,7 +178,7 @@ export default function EditorPage() {
         
         // Obtener datos por defecto del bloque desde BLOCKS config
         const blockConfig = BLOCKS[blockType];
-        const defaultData = blockConfig?.variants?.[0]?.defaultData || {};
+        const defaultData = blockConfig?.variants?.[0]?.defaultData || blockConfig?.initialData || {};
         
         // Combinar datos por defecto con initialData personalizado
         const data = { ...defaultData, ...initialData } as BlockData;
@@ -318,11 +318,21 @@ export default function EditorPage() {
 
                     <main className="flex flex-1 overflow-hidden relative">
                         
-                        {/* --- SIDEBAR IZQUIERDO (replaced by shared component) --- */}
-                        <EditorSidebar isOpen={!!activeBlock} onAddBlock={(type) => addBlock(type, {})} onApplyTemplate={(key) => applyTemplate(key)} />
+                        {/* --- SIDEBAR IZQUIERDO (ahora también controla la edición) --- */}
+                        {!isRealMobile && (
+                            <EditorSidebar 
+                                isOpen={true} 
+                                onAddBlock={(type, initialData) => addBlock(type, initialData)} 
+                                onApplyTemplate={(key) => applyTemplate(key)}
+                                // Conectamos el bloque actualmente seleccionado para editar
+                                editingBlock={editingBlock}
+                                onCloseEditor={() => setEditingBlockId(null)}
+                                onUpdateBlock={(blockId, key, value) => updateBlockProperty(blockId, key, value)}
+                            />
+                        )}
 
                         {/* --- CANVAS CENTRAL --- */}
-                        <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto relative bg-[#F8FAFC] transition-all duration-300", isRealMobile ? "p-0" : "p-4 md:p-10", !isRealMobile && activeBlock ? "mr-[400px]" : "")}>
+                        <div ref={scrollContainerRef} className={cn("flex-1 overflow-y-auto relative bg-[#F8FAFC] transition-all duration-300", isRealMobile ? "p-0" : "p-4 md:p-10")}> 
                             <div id="editor-canvas" ref={canvasRef} className={cn("mx-auto transition-all duration-500 ease-in-out relative", canvasWidthClass, !isRealMobile && (previewMode === 'mobile' || previewMode === 'tablet') ? "bg-white shadow-[0_0_50px_-12px_rgba(0,0,0,0.2)] border-[8px] border-slate-900 rounded-[3rem] overflow-hidden min-h-[800px]" : "bg-white shadow-sm min-h-screen md:min-h-[calc(100vh-100px)] md:rounded-xl", isRealMobile ? "pb-24" : (activeBlock ? "pb-96" : "pb-24"))}>
                                 {!isRealMobile && (previewMode === 'mobile' || previewMode === 'tablet') && (
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-xl z-20 flex justify-center items-center gap-4 pointer-events-none"><div className="w-1.5 h-1.5 rounded-full bg-slate-700"></div><div className="w-10 h-1 rounded-full bg-slate-800"></div></div>
@@ -354,33 +364,6 @@ export default function EditorPage() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* --- PANEL DERECHO (EDICIÓN) --- */}
-                        <Transition show={!!activeBlock && !isRealMobile} as={Fragment} enter="transform transition ease-out duration-300" enterFrom="translate-x-full" enterTo="translate-x-0" leave="transform transition ease-in duration-200" leaveFrom="translate-x-0" leaveTo="translate-x-full">
-                            <aside className="fixed right-0 top-0 h-full w-[400px] bg-white border-l border-slate-200 shadow-[-10px_0_40px_-10px_rgba(0,0,0,0.1)] z-50 flex flex-col">
-                                {activeBlock && (
-                                    <>
-                                        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 bg-white">
-                                            <div className="flex items-center gap-3"><div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", ActiveBlockConfig?.theme.bg)}>{ActiveBlockConfig?.icon && React.createElement(ActiveBlockConfig.icon, { className: cn("w-4 h-4", ActiveBlockConfig.theme.icon) })}</div><span className="font-bold text-slate-800">Editar {ActiveBlockConfig?.name}</span></div>
-                                            <button onClick={saveEdit} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-800 transition-colors"><X className="w-5 h-5" /></button>
-                                        </div>
-                                        <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100">
-                                            <div className="flex p-1 bg-slate-200/50 rounded-xl">
-                                                <button onClick={() => setEditorTab('content')} className={cn("flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2", editorTab === 'content' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Type className="w-4 h-4" /> Contenido</button>
-                                                <button onClick={() => setEditorTab('style')} className={cn("flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2", editorTab === 'style' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}><Palette className="w-4 h-4" /> Estilo</button>
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
-                                            {editorTab === 'content' ? (ActiveEditor ? <ActiveEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} /> : <div className="text-center text-slate-400 py-10">Sin opciones de contenido</div>) : (ActiveStyleEditor ? <ActiveStyleEditor data={activeBlock.data as BlockData} updateData={(k: string, v: unknown) => applyEditorUpdate(k, v)} /> : <div className="text-center text-slate-400 py-10">Sin opciones de estilo</div>)}
-                                        </div>
-                                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3">
-                                            <button onClick={cancelEdit} className="flex-1 py-3 font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Cancelar</button>
-                                            <button onClick={saveEdit} className="flex-1 py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all">Guardar Cambios</button>
-                                        </div>
-                                    </>
-                                )}
-                            </aside>
-                        </Transition>
                     </main>
 
                     <MobileToolbar isEditing={isMobileEdit} onToggleEditing={setIsMobileEdit} />

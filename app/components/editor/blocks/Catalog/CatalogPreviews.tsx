@@ -1,58 +1,46 @@
 import React from 'react';
-import { CatalogData } from '../CatalogBlock';
 
-const ImageIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-slate-400"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>;
-
-export function CatalogPreviewGrid({ data }: { data: CatalogData }) {
-  return (
-    <div className="bg-white w-full p-4 flex flex-col items-center gap-3 border border-slate-200 rounded">
-      <div className="bg-slate-700 h-2 w-1/2 rounded-sm" />
-      <div className="grid grid-cols-2 gap-2 w-full mt-2">
-        {[1, 2].map(i => (
-          <div key={i} className="border rounded-md overflow-hidden">
-            <div className="w-full bg-slate-200 aspect-video flex items-center justify-center"><ImageIcon/></div>
-            <div className="p-1.5 w-full flex flex-col items-start gap-1">
-                <div className="bg-slate-500 h-1.5 w-full rounded-full" />
-                <div className="bg-slate-400 h-1 w-1/3 rounded-full" />
-            </div>
-          </div>
-        ))}
-      </div>
+// Base común
+const CatalogPreviewBase = ({ children }: { children: React.ReactNode }) => (
+    <div className="w-full h-full bg-white flex flex-col p-2 gap-2 pointer-events-none select-none">
+        {children}
     </div>
-  );
-}
+);
 
-export function CatalogPreviewMinimalGrid({ data }: { data: CatalogData }) {
-    return (
-      <div className="bg-white w-full p-4 flex flex-col items-center gap-3 border border-slate-200 rounded">
-        <div className="bg-slate-700 h-2 w-1/2 rounded-sm" />
-        <div className="grid grid-cols-2 gap-2 w-full mt-2">
-          {[1, 2].map(i => (
-            <div key={i} className="flex flex-col gap-1">
-                <div className="w-full bg-slate-200 aspect-square rounded-md flex items-center justify-center"><ImageIcon/></div>
-                <div className="bg-slate-500 h-1.5 w-full rounded-full" />
-                <div className="bg-slate-400 h-1 w-1/2 rounded-full" />
-            </div>
-          ))}
+// Variante 1: Grid Simple (Tarjetas)
+export const CatalogPreviewGrid = () => (
+    <CatalogPreviewBase>
+        <div className="flex flex-col items-center gap-1 mb-1">
+            <div className="w-12 h-1 bg-slate-300 rounded-full"></div>
+            <div className="w-8 h-0.5 bg-slate-200 rounded-full"></div>
         </div>
-      </div>
-    );
-}
+        <div className="grid grid-cols-2 gap-2">
+            {[1, 2].map(i => (
+                <div key={i} className="flex flex-col gap-1">
+                    <div className="w-full aspect-square bg-slate-100 rounded-sm relative">
+                        <div className="absolute bottom-1 right-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
+                    </div>
+                    <div className="w-full h-1 bg-slate-200 rounded-full"></div>
+                    <div className="w-1/2 h-1 bg-slate-300 rounded-full"></div>
+                </div>
+            ))}
+        </div>
+    </CatalogPreviewBase>
+);
 
-// --- NUEVA VISTA PREVIA DEL CARRUSEL ---
-export function CatalogPreviewCarousel({ data }: { data: CatalogData }) {
-    return (
-      <div className="bg-white w-full p-4 flex flex-col items-center gap-3 border border-slate-200 rounded">
-        <div className="bg-slate-700 h-2 w-1/2 rounded-sm" />
-        <div className="flex w-full items-center justify-start gap-2 mt-2 overflow-hidden">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="flex flex-col gap-1 flex-shrink-0 w-1/3">
-                <div className="w-full bg-slate-200 aspect-square rounded-md flex items-center justify-center"><ImageIcon/></div>
-                <div className="bg-slate-500 h-1.5 w-full rounded-full" />
-                <div className="bg-slate-400 h-1 w-1/2 rounded-full" />
+// Variante 2: Carrusel / Destacado
+export const CatalogPreviewFeatured = () => (
+    <CatalogPreviewBase>
+        <div className="flex gap-2 h-full items-center">
+            <div className="w-1/2 h-4/5 bg-slate-100 rounded-sm relative">
+                 <div className="absolute top-2 left-2 w-6 h-1 bg-slate-800 rounded-full"></div>
             </div>
-          ))}
+            <div className="w-1/2 flex flex-col gap-2">
+                <div className="w-full h-2 bg-slate-800 rounded-sm"></div>
+                <div className="w-full h-1 bg-slate-200 rounded-full"></div>
+                <div className="w-full h-1 bg-slate-200 rounded-full"></div>
+                <div className="w-10 h-3 bg-blue-500 rounded-sm mt-1"></div>
+            </div>
         </div>
-      </div>
-    );
-}
+    </CatalogPreviewBase>
+);

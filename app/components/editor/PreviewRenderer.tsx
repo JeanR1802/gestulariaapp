@@ -24,67 +24,67 @@ export function PreviewRenderer({ block }: PreviewRendererProps) {
   const renderBlockContent = () => {
     switch (block.type) {
       case 'header': {
-        const Component = BLOCKS.header.renderer;
+        const Component = BLOCKS.header.component;
         return <Component data={block.data as HeaderData} isEditing={false} />;
       }
       case 'hero': {
-        const Component = BLOCKS.hero.renderer;
+        const Component = BLOCKS.hero.component;
         return <Component data={block.data as HeroData} isEditing={false} />;
       }
       case 'featuredProduct': {
-        const Component = BLOCKS.featuredProduct.renderer;
+        const Component = BLOCKS.featuredProduct.component;
         return <Component data={block.data as FeaturedProductData} isEditing={false} />;
       }
       case 'catalog': {
-        const Component = BLOCKS.catalog.renderer;
+        const Component = BLOCKS.catalog.component;
         return <Component data={block.data as CatalogData} isEditing={false} />;
       }
       case 'team': {
-        const Component = BLOCKS.team.renderer;
+        const Component = BLOCKS.team.component;
         return <Component data={block.data as TeamData} isEditing={false} />;
       }
       case 'testimonial': {
-        const Component = BLOCKS.testimonial.renderer;
+        const Component = BLOCKS.testimonial.component;
         return <Component data={block.data as TestimonialData} isEditing={false} />;
       }
       case 'faq': {
-        const Component = BLOCKS.faq.renderer;
+        const Component = BLOCKS.faq.component;
         return <Component data={block.data as FaqData} isEditing={false} />;
       }
       case 'text': {
-        const Component = BLOCKS.text.renderer;
+        const Component = BLOCKS.text.component;
         return <Component data={block.data as TextData} isEditing={false} />;
       }
       case 'image': {
-        const Component = BLOCKS.image.renderer;
+        const Component = BLOCKS.image.component;
         return <Component data={block.data as ImageData} isEditing={false} />;
       }
       case 'gallery': {
-        const Component = BLOCKS.gallery.renderer;
+        const Component = BLOCKS.gallery.component;
         return <Component data={block.data as GalleryData} isEditing={false} />;
       }
       case 'cards': {
-        const Component = BLOCKS.cards.renderer;
+        const Component = BLOCKS.cards.component;
         return <Component data={block.data as CardsData} isEditing={false} />;
       }
       case 'cta': {
-        const Component = BLOCKS.cta.renderer;
+        const Component = BLOCKS.cta.component;
         return <Component data={block.data as CtaData} isEditing={false} />;
       }
       case 'pricing': {
-        const Component = BLOCKS.pricing.renderer;
+        const Component = BLOCKS.pricing.component;
         return <Component data={block.data as PricingData} isEditing={false} />;
       }
       case 'footer': {
-        const Component = BLOCKS.footer.renderer;
+        const Component = BLOCKS.footer.component;
         return <Component data={block.data as FooterData} isEditing={false} />;
       }
       case 'stack': {
-        const Component = BLOCKS.stack.renderer;
+        const Component = BLOCKS.stack.component;
         return <Component data={block.data as import('./blocks/StackBlock').StackData} isEditing={false} />;
       }
       case 'banner': {
-        const Component = BLOCKS.banner.renderer;
+        const Component = BLOCKS.banner.component;
         return <Component data={block.data as import('./blocks/BannerBlock').BannerData} isEditing={false} />;
       }
       default:
