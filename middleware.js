@@ -10,16 +10,36 @@ export function middleware(request) {
 
   const mainDomain = process.env.NODE_ENV === 'development'
     ? 'localhost:3000'
-    : 'gestularia.com';
+    : 'locablo.com';
 
-  // Si el hostname es el dominio principal O es una dirección IP,
+  // Dominios que apuntan a la landing page principal
+  const isRootDomain = 
+    hostname === mainDomain || 
+    hostname === `www.${mainDomain}` ||
+    hostname === 'locablo.com' || 
+    hostname === 'www.locablo.com' ||
+    hostname === 'gestularia.com' ||
+    hostname === 'www.gestularia.com' ||
+    hostname === 'localhost' ||
+    hostname.startsWith('localhost:');
+
+  // Si el hostname es un dominio raíz O es una dirección IP,
   // no hacemos nada y dejamos que muestre la página de inicio.
-  if (hostname === mainDomain || hostname === `www.${mainDomain}` || IP_REGEX.test(hostname.split(':')[0])) {
+  if (isRootDomain || IP_REGEX.test(hostname.split(':')[0])) {
     return NextResponse.next();
   }
 
   // Extraer el subdominio de manera segura
-  const subdomain = hostname.replace(`.${mainDomain}`, '');
+  let subdomain = hostname;
+  if (hostname.endsWith('.locablo.com')) {
+    subdomain = hostname.replace('.locablo.com', '');
+  } else if (hostname.endsWith('.gestularia.com')) {
+    subdomain = hostname.replace('.gestularia.com', '');
+  } else if (hostname.endsWith('.localhost:3000')) {
+    subdomain = hostname.replace('.localhost:3000', '');
+  } else {
+    subdomain = hostname.replace(`.${mainDomain}`, '');
+  }
 
   const systemSubdomains = ['www', 'api', 'admin', 'mail', 'ftp', 'app'];
   if (systemSubdomains.includes(subdomain)) {
