@@ -10,7 +10,7 @@ export function middleware(request) {
 
   const mainDomain = process.env.NODE_ENV === 'development'
     ? 'localhost:3000'
-    : 'gestularia.com';
+    : 'locablo.com'; // <--- CAMBIO AQUÍ
 
   // Si el hostname es el dominio principal O es una dirección IP,
   // no hacemos nada y dejamos que muestre la página de inicio.

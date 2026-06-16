@@ -3,32 +3,37 @@ import { connectToDatabase } from '@/lib/database'
 import { generateUserKey, createToken } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
+const normalizeEmail = (value) => value?.trim().toLowerCase()
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 export async function POST(request) {
   try {
     const { email, password } = await request.json()
+    const emailNormalized = normalizeEmail(email)
     
-    if (!email || !password) {
+    if (!emailNormalized || !password) {
       return NextResponse.json({ error: 'Email y contraseña requeridos' }, { status: 400 })
     }
 
     const db = await connectToDatabase()
     
     // Verificar si el usuario ya existe
-    const existingUser = await db.collection('users').findOne({ email })
+    const emailRegex = new RegExp(`^${escapeRegex(emailNormalized)}$`, 'i')
+    const existingUser = await db.collection('users').findOne({ email: emailRegex })
     if (existingUser) {
       return NextResponse.json({ error: 'El usuario ya existe' }, { status: 400 })
     }
 
     // Crear usuario con llave única
-    const userData = await generateUserKey(email, password)
+    const userData = await generateUserKey(emailNormalized, password)
     await db.collection('users').insertOne(userData)
     
     // Crear token
-    const token = await createToken(userData.uniqueKey, email)
+    const token = await createToken(userData.uniqueKey, userData.email)
     
     return NextResponse.json({ 
       token,
-      user: { email, key: userData.uniqueKey }
+      user: { email: userData.email, key: userData.uniqueKey }
     })
   } catch (error) {
     console.error('Register error:', error)

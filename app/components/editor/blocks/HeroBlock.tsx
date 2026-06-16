@@ -24,101 +24,12 @@ export interface HeroData {
   imageUrl?: string;
 }
 
-// --- Lógica para manejar colores personalizados ---
-const getStyles = (colorValue: string | undefined, defaultClass: string) => {
-  const colorMap: Record<string, string> = {
-    'text-white': '#ffffff', 'text-black': '#000000',
-    'text-slate-50': '#f8fafc', 'text-slate-100': '#f1f5f9', 'text-slate-200': '#e2e8f0',
-    'text-slate-300': '#cbd5e1', 'text-slate-400': '#94a3b8', 'text-slate-500': '#64748b',
-    'text-slate-600': '#475569', 'text-slate-700': '#334155', 'text-slate-800': '#1e293b',
-    'text-slate-900': '#0f172a', 'text-blue-600': '#2563eb', 'text-blue-500': '#3b82f6',
-  };
-  
-  if (colorValue?.startsWith('[#')) {
-    return { className: '', style: { color: colorValue.slice(1, -1) } };
-  }
-  
-  const finalClass = colorValue || defaultClass;
-  return {
-    className: finalClass,
-    style: { color: colorMap[finalClass] || '#1e293b' },
-  };
-};
+// --- Lógica mínima para colores personalizados (solo hex) ---
+const getCustomTextStyle = (colorValue?: string) =>
+  colorValue?.startsWith('[#') ? { color: colorValue.slice(1, -1) } : undefined;
 
-const getBackgroundStyles = (
-  colorValue: string | undefined,
-  defaultClass = 'bg-slate-100'
-) => {
-  const bgMap: Record<string, string> = {
-    'bg-white': '#ffffff', 'bg-black': '#000000',
-    'bg-slate-50': '#f8fafc', 'bg-slate-100': '#f1f5f9', 'bg-slate-200': '#e2e8f0',
-    'bg-slate-300': '#cbd5e1', 'bg-slate-400': '#94a3b8', 'bg-slate-500': '#64748b',
-    'bg-slate-600': '#475569', 'bg-slate-700': '#334155', 'bg-slate-800': '#1e293b',
-    'bg-slate-900': '#0f172a', 'bg-blue-600': '#2563eb', 'bg-blue-500': '#3b82f6',
-  };
-  
-  if (colorValue?.startsWith('[#')) {
-    return { className: '', style: { backgroundColor: colorValue.slice(1, -1) } };
-  }
-  
-  const finalClass = colorValue || defaultClass;
-  return {
-    className: finalClass,
-    style: { backgroundColor: bgMap[finalClass] || '#f1f5f9' },
-  };
-};
-
-const getButtonStyles = (
-  bgColor: string | undefined,
-  textColor: string | undefined,
-  defaultBg: string = 'bg-blue-600',
-  defaultText: string = 'text-white'
-) => {
-  const isCustomBg = bgColor?.startsWith('[#');
-  const isCustomText = textColor?.startsWith('[#');
-  const style: React.CSSProperties = {};
-  
-  // Mapa de clases Tailwind a valores hex
-  const bgMap: Record<string, string> = {
-    'bg-blue-600': '#2563eb',
-    'bg-blue-500': '#3b82f6',
-    'bg-slate-900': '#0f172a',
-    'bg-slate-800': '#1e293b',
-    'bg-white': '#ffffff',
-    'bg-black': '#000000',
-  };
-  const textMap: Record<string, string> = {
-    'text-white': '#ffffff',
-    'text-slate-800': '#1e293b',
-    'text-slate-900': '#0f172a',
-    'text-black': '#000000',
-  };
-  
-  // Si es color custom (ej. [#aabbcc]), extraer el hex y aplicar como inline
-  if (isCustomBg && bgColor) {
-    style.backgroundColor = bgColor.slice(1, -1);
-  } else {
-    // Si es clase Tailwind o default, convertir a hex inline
-    const bgClass = bgColor || defaultBg;
-    style.backgroundColor = bgMap[bgClass] || '#2563eb';
-  }
-  
-  if (isCustomText && textColor) {
-    style.color = textColor.slice(1, -1);
-  } else {
-    // Si es clase Tailwind o default, convertir a hex inline
-    const textClass = textColor || defaultText;
-    style.color = textMap[textClass] || '#ffffff';
-  }
-
-  return {
-    className: cn(
-      !isCustomBg ? bgColor || defaultBg : '',
-      !isCustomText ? textColor || defaultText : ''
-    ),
-    style: style,
-  };
-};
+const getCustomBgStyle = (colorValue?: string) =>
+  colorValue?.startsWith('[#') ? { backgroundColor: colorValue.slice(1, -1) } : undefined;
 
 // --- Componente de Bloque (Visual + Edición Inline) ---
 export function HeroBlock({ data, isEditing, onUpdate }: BlockComponentProps<HeroData>) {
@@ -136,10 +47,9 @@ export function HeroBlock({ data, isEditing, onUpdate }: BlockComponentProps<Her
 // --- Variantes ---
 const HeroDefault = ({ data, isEditing, onUpdate }: BlockComponentProps<HeroData>) => {
   const { isMobile, isTablet, isDesktop } = usePreviewMode();
-  const bg = getBackgroundStyles(data.backgroundColor);
-  const titleStyles = getStyles(data.titleColor, 'text-slate-800');
-  const subtitleStyles = getStyles(data.subtitleColor, 'text-slate-600');
-  const buttonStyles = getButtonStyles(data.buttonBgColor, data.buttonTextColor);
+  const bgStyle = getCustomBgStyle(data.backgroundColor);
+  const titleStyle = getCustomTextStyle(data.titleColor);
+  const subtitleStyle = getCustomTextStyle(data.subtitleColor);
 
   const handleUpdate = (key: keyof HeroData, value: string) => {
     if (onUpdate) onUpdate(key, value);
@@ -147,48 +57,31 @@ const HeroDefault = ({ data, isEditing, onUpdate }: BlockComponentProps<HeroData
 
   return (
     <div
-      className={cn(
-        'text-center',
-        { 'py-24 px-8': isDesktop, 'py-20 px-6': isTablet, 'py-16 px-4': isMobile },
-        bg.className
-      )}
-      style={bg.style}
+      className={cn('text-center bg-white', { 'py-24 px-8': isDesktop, 'py-20 px-6': isTablet, 'py-16 px-4': isMobile })}
+      style={bgStyle}
     >
       <Editable
         tagName="h1"
         value={data.title}
         onUpdate={(v) => handleUpdate('title', v)}
         isEditing={isEditing}
-        className={cn(
-          `font-bold`,
-          { 'text-5xl mb-6': isDesktop, 'text-4xl mb-4': isTablet, 'text-3xl mb-3': isMobile },
-          titleStyles.className
-        )}
-        style={titleStyles.style}
+        className={cn('font-bold', { 'text-5xl mb-6': isDesktop, 'text-4xl mb-4': isTablet, 'text-3xl mb-3': isMobile })}
+        style={titleStyle}
       />
       <Editable
         tagName="p"
         value={data.subtitle}
         onUpdate={(v) => handleUpdate('subtitle', v)}
         isEditing={isEditing}
-        className={cn(
-          `max-w-3xl mx-auto`,
-          { 'text-xl mb-10': isDesktop, 'text-lg mb-8': isTablet, 'text-base mb-6': isMobile },
-          subtitleStyles.className
-        )}
-        style={subtitleStyles.style}
+        className={cn('max-w-3xl mx-auto', { 'text-xl mb-10': isDesktop, 'text-lg mb-8': isTablet, 'text-base mb-6': isMobile })}
+        style={subtitleStyle}
       />
       <Editable
         tagName="a"
         value={data.buttonText}
         onUpdate={(v) => handleUpdate('buttonText', v)}
         isEditing={isEditing}
-        className={cn(
-          `inline-block rounded-md font-semibold transition-transform hover:scale-105`,
-          { 'px-8 py-4 text-lg': isDesktop, 'px-7 py-3 text-base': isTablet, 'px-6 py-2.5 text-sm': isMobile },
-          buttonStyles.className
-        )}
-        style={buttonStyles.style}
+        className={cn('inline-block bg-gray-800 text-white font-bold rounded', { 'px-8 py-4 text-lg': isDesktop, 'px-7 py-3 text-base': isTablet, 'px-6 py-2.5 text-sm': isMobile })}
       />
     </div>
   );
@@ -196,10 +89,9 @@ const HeroDefault = ({ data, isEditing, onUpdate }: BlockComponentProps<HeroData
 
 const HeroLeftImage = ({ data, isEditing, onUpdate }: BlockComponentProps<HeroData>) => {
   const { isMobile, isTablet, isDesktop } = usePreviewMode();
-  const bg = getBackgroundStyles(data.backgroundColor, 'bg-white');
-  const titleStyles = getStyles(data.titleColor, 'text-slate-800');
-  const subtitleStyles = getStyles(data.subtitleColor, 'text-slate-600');
-  const buttonStyles = getButtonStyles(data.buttonBgColor, data.buttonTextColor);
+  const bgStyle = getCustomBgStyle(data.backgroundColor);
+  const titleStyle = getCustomTextStyle(data.titleColor);
+  const subtitleStyle = getCustomTextStyle(data.subtitleColor);
 
   const handleUpdate = (key: keyof HeroData, value: string) => {
     if (onUpdate) onUpdate(key, value);
@@ -207,11 +99,8 @@ const HeroLeftImage = ({ data, isEditing, onUpdate }: BlockComponentProps<HeroDa
 
   return (
     <div
-      className={cn(
-        { 'py-24 px-8': isDesktop, 'py-20 px-6': isTablet, 'py-16 px-4': isMobile },
-        bg.className
-      )}
-      style={bg.style}
+      className={cn('bg-white', { 'py-24 px-8': isDesktop, 'py-20 px-6': isTablet, 'py-16 px-4': isMobile })}
+      style={bgStyle}
     >
       <div
         className={cn('mx-auto grid items-center', {
@@ -226,43 +115,29 @@ const HeroLeftImage = ({ data, isEditing, onUpdate }: BlockComponentProps<HeroDa
             value={data.title}
             onUpdate={(v) => handleUpdate('title', v)}
             isEditing={isEditing}
-            className={cn(
-              `font-bold`,
-              { 'text-5xl mb-6': isDesktop, 'text-4xl mb-4': isTablet, 'text-3xl mb-3': isMobile },
-              titleStyles.className
-            )}
-            style={titleStyles.style}
+            className={cn('font-bold', { 'text-5xl mb-6': isDesktop, 'text-4xl mb-4': isTablet, 'text-3xl mb-3': isMobile })}
+            style={titleStyle}
           />
           <Editable
             tagName="p"
             value={data.subtitle}
             onUpdate={(v) => handleUpdate('subtitle', v)}
             isEditing={isEditing}
-            className={cn(
-              { 'text-xl mb-10': isDesktop, 'text-lg mb-8': isTablet, 'text-base mb-6': isMobile },
-              subtitleStyles.className
-            )}
-            style={subtitleStyles.style}
+            className={cn({ 'text-xl mb-10': isDesktop, 'text-lg mb-8': isTablet, 'text-base mb-6': isMobile })}
+            style={subtitleStyle}
           />
           <Editable
             tagName="a"
             value={data.buttonText}
             onUpdate={(v) => handleUpdate('buttonText', v)}
             isEditing={isEditing}
-            className={cn(
-              `inline-block rounded-md font-semibold transition-transform hover:scale-105`,
-              { 'px-8 py-4 text-lg': isDesktop, 'px-7 py-3 text-base': isTablet, 'px-6 py-2.5 text-sm': isMobile },
-              buttonStyles.className
-            )}
-            style={buttonStyles.style}
+            className={cn('inline-block bg-gray-800 text-white font-bold rounded', { 'px-8 py-4 text-lg': isDesktop, 'px-7 py-3 text-base': isTablet, 'px-6 py-2.5 text-sm': isMobile })}
           />
         </div>
-        <div className="rounded-lg overflow-hidden bg-slate-100">
-          <img
-            src={data.imageUrl || 'https://placehold.co/600x400/e2e8f0/64748b?text=Imagen'}
-            alt={data.title}
-            className="w-full h-full object-cover aspect-video"
-          />
+        <div className="w-full">
+          <div className="w-full h-64 bg-gray-300 flex items-center justify-center border border-gray-400">
+            Imagen Placeholder
+          </div>
         </div>
       </div>
     </div>
@@ -271,14 +146,8 @@ const HeroLeftImage = ({ data, isEditing, onUpdate }: BlockComponentProps<HeroDa
 
 const HeroDarkMinimal = ({ data, isEditing, onUpdate }: BlockComponentProps<HeroData>) => {
   const { isMobile, isTablet, isDesktop } = usePreviewMode();
-  const bg = getBackgroundStyles(data.backgroundColor, 'bg-slate-900');
-  const titleStyles = getStyles(data.titleColor, 'text-white');
-  const buttonStyles = getButtonStyles(
-    data.buttonBgColor,
-    data.buttonTextColor,
-    'bg-white',
-    'text-slate-800'
-  );
+  const bgStyle = getCustomBgStyle(data.backgroundColor);
+  const titleStyle = getCustomTextStyle(data.titleColor);
 
   const handleUpdate = (key: keyof HeroData, value: string) => {
     if (onUpdate) onUpdate(key, value);
@@ -286,36 +155,23 @@ const HeroDarkMinimal = ({ data, isEditing, onUpdate }: BlockComponentProps<Hero
 
   return (
     <div
-      className={cn(
-        'text-center',
-        { 'py-32 px-8': isDesktop, 'py-28 px-6': isTablet, 'py-24 px-4': isMobile },
-        bg.className
-      )}
-      style={bg.style}
+      className={cn('text-center bg-white', { 'py-32 px-8': isDesktop, 'py-28 px-6': isTablet, 'py-24 px-4': isMobile })}
+      style={bgStyle}
     >
       <Editable
         tagName="h1"
         value={data.title}
         onUpdate={(v) => handleUpdate('title', v)}
         isEditing={isEditing}
-        className={cn(
-          `font-bold`,
-          { 'text-6xl mb-12': isDesktop, 'text-5xl mb-10': isTablet, 'text-4xl mb-8': isMobile },
-          titleStyles.className
-        )}
-        style={titleStyles.style}
+        className={cn('font-bold', { 'text-6xl mb-12': isDesktop, 'text-5xl mb-10': isTablet, 'text-4xl mb-8': isMobile })}
+        style={titleStyle}
       />
       <Editable
         tagName="a"
         value={data.buttonText}
         onUpdate={(v) => handleUpdate('buttonText', v)}
         isEditing={isEditing}
-        className={cn(
-          `inline-block rounded-md font-semibold transition-transform hover:scale-105`,
-          { 'px-10 py-5 text-xl': isDesktop, 'px-8 py-4 text-lg': isTablet, 'px-7 py-3 text-base': isMobile },
-          buttonStyles.className
-        )}
-        style={buttonStyles.style}
+        className={cn('inline-block bg-gray-800 text-white font-bold rounded', { 'px-10 py-5 text-xl': isDesktop, 'px-8 py-4 text-lg': isTablet, 'px-7 py-3 text-base': isMobile })}
       />
     </div>
   );

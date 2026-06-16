@@ -2,27 +2,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import { WelcomeLoader } from '@/app/components/landing/WelcomeLoader';
-import { PrismaBackground } from '@/app/components/landing/PrismaBackground';
-import { HeroSection } from '@/app/components/landing/HeroSection';
-import { WhatsAppFloatingBtn } from '@/app/components/landing/WhatsAppFloatingBtn';
-import { LandingNavbar } from '@/app/components/landing/LandingNavbar';
-
-// Placeholder ligero
-const SectionLoader = () => (
-  <div className="w-full h-[400px] flex items-center justify-center bg-transparent">
-      <div className="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
-  </div>
-);
-
-const BentoGrid = dynamic(() => import('@/app/components/landing/BentoGrid').then(mod => ({ default: mod.BentoGrid })), { 
-  ssr: false,
-  loading: () => <SectionLoader />
-});
-const InteractiveShowcase = dynamic(() => import('@/app/components/landing/InteractiveShowcase').then(mod => ({ default: mod.InteractiveShowcase })), { ssr: false });
-const PricingSection = dynamic(() => import('@/app/components/landing/PricingSection').then(mod => ({ default: mod.PricingSection })), { ssr: false });
-const AboutSection = dynamic(() => import('@/app/components/landing/AboutSection').then(mod => ({ default: mod.AboutSection })), { ssr: false });
 
 export default function LandingPage() {
   const [loading, setLoading] = useState(true);
@@ -35,47 +14,82 @@ export default function LandingPage() {
     }
   }, [loading]);
 
-  return (
-    // Main fijo sin scroll
-    <main className="fixed inset-0 w-full h-full overflow-hidden font-sans bg-transparent text-slate-900">
-      
-      {/* Navbar solo en landing */}
-      <LandingNavbar />
-      
-      {/* Fondo fijo fuera del scroll (Rendimiento máximo) */}
-      <PrismaBackground />
-      <WelcomeLoader onLoadingComplete={() => setLoading(false)} />
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
-      {/* --- ESTE ES EL NUEVO CONTENEDOR DE SCROLL --- */}
+  return (
+    <main className="min-h-screen w-full bg-white text-black">
+      <header className="w-full border-b border-gray-200 py-4">
+        <div className="max-w-5xl mx-auto px-4 flex items-center justify-between">
+          <div className="font-semibold">Gestularia</div>
+          <nav className="flex items-center gap-4">
+            <a href="#features" className="text-sm">Características</a>
+            <a href="#pricing" className="text-sm">Precios</a>
+            <a href="/login" className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700">Entrar</a>
+          </nav>
+        </div>
+      </header>
+
       <div
         id="main-scroll-container"
-        className="app-scroll-container transition-opacity duration-700 relative"
+        className="app-scroll-container"
         style={{ opacity: loading ? 0 : 1 }}
       >
-          <HeroSection />
-          
-          {showHeavyComponents && (
-            <>
-              <div className="render-lazy">
-                  <BentoGrid />
-              </div>
-              <div className="render-lazy">
-                  <InteractiveShowcase />
-              </div>
-              <div className="render-lazy">
-                  <PricingSection />
-              </div>
-              <div className="render-lazy">
-                  <AboutSection />
-              </div>
+        <section className="py-12 border-b border-gray-200 flex flex-col items-center">
+          <div className="max-w-3xl w-full px-4 flex flex-col items-center gap-4">
+            <h1 className="text-3xl font-semibold text-center">Gestiona tu negocio en un solo lugar</h1>
+            <p className="text-center">Panel simple para ventas, clientes e inventario.</p>
+            <div className="flex gap-3">
+              <a href="/register" className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700">Crear cuenta</a>
+              <a href="#pricing" className="bg-gray-100 text-black px-4 py-2 rounded hover:bg-gray-200">Ver planes</a>
+            </div>
+          </div>
+        </section>
 
-              <footer className="py-8 text-center text-[10px] text-slate-700 uppercase tracking-widest border-t border-white/5 bg-[#050505] relative z-10 render-lazy">
-                © {new Date().getFullYear()} Gestularia. Todos los derechos reservados.
-              </footer>
-            </>
-          )}
+        {showHeavyComponents && (
+          <>
+            <section id="features" className="py-12 border-b border-gray-200 flex flex-col items-center">
+              <div className="max-w-4xl w-full px-4">
+                <h2 className="text-xl font-semibold mb-4">Características</h2>
+                <ul className="list-disc pl-6">
+                  <li>Gestión de ventas</li>
+                  <li>Control de inventario</li>
+                  <li>Reportes básicos</li>
+                </ul>
+              </div>
+            </section>
 
-          {!loading && <WhatsAppFloatingBtn />}
+            <section className="py-12 border-b border-gray-200 flex flex-col items-center">
+              <div className="max-w-4xl w-full px-4">
+                <h2 className="text-xl font-semibold mb-4">Demostración</h2>
+                <p>Vista general del panel y herramientas principales.</p>
+              </div>
+            </section>
+
+            <section id="pricing" className="py-12 border-b border-gray-200 flex flex-col items-center">
+              <div className="max-w-4xl w-full px-4">
+                <h2 className="text-xl font-semibold mb-4">Precios</h2>
+                <ul className="list-disc pl-6">
+                  <li>Plan Básico</li>
+                  <li>Plan Pro</li>
+                  <li>Plan Empresa</li>
+                </ul>
+              </div>
+            </section>
+
+            <section className="py-12 border-b border-gray-200 flex flex-col items-center">
+              <div className="max-w-4xl w-full px-4">
+                <h2 className="text-xl font-semibold mb-4">Sobre Gestularia</h2>
+                <p>Solución simple para negocios que necesitan control y visibilidad.</p>
+              </div>
+            </section>
+
+            <footer className="py-8 text-center">
+              © {new Date().getFullYear()} Gestularia
+            </footer>
+          </>
+        )}
       </div>
     </main>
   );

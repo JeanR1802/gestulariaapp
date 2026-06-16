@@ -18,23 +18,13 @@ export interface TextData {
 
 // --- Helpers seguros para colores ---
 const getStyles = (color: string | undefined, defaultClass: string) => {
-  const colorMap: Record<string, string> = {
-    'text-white': '#ffffff', 'text-slate-600': '#475569', 'text-slate-700': '#334155',
-    'text-slate-800': '#1e293b', 'text-slate-900': '#0f172a', 'text-blue-600': '#2563eb',
-  };
-  if (!color) return { className: defaultClass, style: { color: colorMap[defaultClass] || '#334155' } };
-  if (color.startsWith('[#')) return { className: '', style: { color: color.slice(1, -1) } };
-  return { className: color, style: { color: colorMap[color] || '#334155' } };
+  if (color?.startsWith('[#')) return { className: '', style: { color: color.slice(1, -1) } };
+  return { className: defaultClass, style: {} };
 };
 
 const getBackgroundStyles = (color: string | undefined, defaultClass = 'bg-white') => {
-  const bgMap: Record<string, string> = {
-    'bg-white': '#ffffff', 'bg-slate-50': '#f8fafc', 'bg-slate-100': '#f1f5f9',
-    'bg-yellow-100': '#fef9c3', 'bg-blue-600': '#2563eb',
-  };
-  if (!color) return { className: defaultClass, style: { backgroundColor: bgMap[defaultClass] || '#ffffff' } };
-  if (color.startsWith('[#')) return { className: '', style: { backgroundColor: color.slice(1, -1) } };
-  return { className: color, style: { backgroundColor: bgMap[color] || '#ffffff' } };
+  if (color?.startsWith('[#')) return { className: '', style: { backgroundColor: color.slice(1, -1) } };
+  return { className: defaultClass, style: {} };
 };
 
 // --- Editable Inline Component (reusable) ---
@@ -83,14 +73,14 @@ export function TextBlock({ data, isEditing, onUpdate }: BlockComponentProps<Tex
   const handleUpdate = (key: keyof TextData, value: string) => {
     if (onUpdate) onUpdate(key, value);
   };
-  const bg = getBackgroundStyles(data.backgroundColor, 'bg-transparent');
-  const text = getStyles(data.textColor, 'text-slate-700');
+  const bg = getBackgroundStyles(data.backgroundColor, 'bg-white');
+  const text = getStyles(data.textColor, 'text-gray-700');
 
   if (data.variant === 'quote') {
     return (
       <div className={cn('py-8 px-4', bg.className)} style={bg.style}>
         <blockquote
-          className={cn('border-l-4 border-slate-300 pl-6 italic max-w-3xl mx-auto', text.className)}
+          className={cn('border-l-4 border-gray-300 pl-6 max-w-3xl mx-auto', text.className)}
           style={text.style}
         >
           <Editable
@@ -110,13 +100,13 @@ export function TextBlock({ data, isEditing, onUpdate }: BlockComponentProps<Tex
     return (
       <div className={cn('py-4 px-4', bg.className)} style={bg.style}>
         <div className="max-w-4xl mx-auto">
-          <div className={cn('p-4 rounded-lg', bg.className || 'bg-yellow-100/60')}>
+          <div className={cn('p-4 rounded border border-gray-200 bg-gray-50')}>
             <Editable
               tagName="p"
               value={data.content}
               onUpdate={v => handleUpdate('content', v)}
               isEditing={isEditing}
-              className={cn(text.className || 'text-yellow-800')}
+              className={cn(text.className || 'text-gray-700')}
               style={text.style}
             />
           </div>

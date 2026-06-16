@@ -207,39 +207,39 @@ export default function EditorPage() {
 
     const providerMode = isRealMobile ? 'mobile' : (editingBlockId !== null ? 'desktop' : previewMode);
 
-    if (loading) return <div className="flex items-center justify-center min-h-screen bg-[#F8FAFC]"><div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div></div>;
+    if (loading) return <div className="flex items-center justify-center min-h-screen bg-gray-100"><div className="border border-gray-300 rounded p-4 bg-white">Cargando...</div></div>;
 
     return (
         <PreviewModeContext.Provider value={{ mode: providerMode, isMobile: providerMode === 'mobile', isTablet: providerMode === 'tablet', isDesktop: providerMode === 'desktop' }}>
             <>
                 <ToastContainer position="bottom-right" theme="colored" autoClose={3000} />
-                <div className="flex flex-col h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-hidden">
+                <div className="flex flex-col h-screen bg-gray-100 font-sans text-gray-900 overflow-hidden">
                     
                     {/* HEADER */}
-                    <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 z-40 shrink-0 h-16 flex items-center justify-between px-4 sm:px-6">
+                    <header className="bg-white border-b border-gray-200 z-40 shrink-0 h-16 flex items-center justify-between px-4 sm:px-6">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => router.push('/dashboard/sites/list')} className="p-2 rounded-full hover:bg-slate-100 text-slate-500"><ArrowLeft className="w-5 h-5" /></button>
+                            <button onClick={() => router.push('/dashboard/sites/list')} className="border rounded p-2 hover:bg-gray-100"><ArrowLeft className="w-5 h-5" /></button>
                             
-                            <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-1">
-                                <button onClick={handleUndo} disabled={!canUndo} className="p-1.5 rounded-md hover:bg-white text-slate-500 disabled:opacity-30"><Undo2 className="w-4 h-4" /></button>
-                                <button onClick={handleRedo} disabled={!canRedo} className="p-1.5 rounded-md hover:bg-white text-slate-500 disabled:opacity-30"><Redo2 className="w-4 h-4" /></button>
+                            <div className="flex items-center bg-white border border-gray-200 rounded p-1 gap-1">
+                                <button onClick={handleUndo} disabled={!canUndo} className="border rounded p-1.5 hover:bg-gray-100 disabled:opacity-40"><Undo2 className="w-4 h-4" /></button>
+                                <button onClick={handleRedo} disabled={!canRedo} className="border rounded p-1.5 hover:bg-gray-100 disabled:opacity-40"><Redo2 className="w-4 h-4" /></button>
                             </div>
 
-                            <button onClick={() => setIsSettingsOpen(true)} className="p-2 hover:bg-slate-100 text-slate-500 rounded-lg"><Settings className="w-5 h-5" /></button>
-                            <div className="hidden sm:block font-bold text-slate-900">{tenant?.name}</div>
+                            <button onClick={() => setIsSettingsOpen(true)} className="border rounded p-2 hover:bg-gray-100"><Settings className="w-5 h-5" /></button>
+                            <div className="hidden sm:block font-semibold">{tenant?.name}</div>
                         </div>
 
                         {!isRealMobile && (
-                            <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
-                                <button onClick={() => setPreviewMode('mobile')} className={cn("p-2 rounded-md", previewMode === 'mobile' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500")}><Smartphone className="w-4 h-4" /></button>
-                                <button onClick={() => setPreviewMode('tablet')} className={cn("p-2 rounded-md", previewMode === 'tablet' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500")}><Tablet className="w-4 h-4" /></button>
-                                <button onClick={() => setPreviewMode('desktop')} className={cn("p-2 rounded-md", previewMode === 'desktop' ? "bg-white text-blue-600 shadow-sm" : "text-slate-500")}><Monitor className="w-4 h-4" /></button>
+                            <div className="hidden md:flex items-center bg-white p-1 rounded border border-gray-200">
+                                <button onClick={() => setPreviewMode('mobile')} className={cn("p-2 rounded", previewMode === 'mobile' ? "bg-gray-200" : "hover:bg-gray-100")}><Smartphone className="w-4 h-4" /></button>
+                                <button onClick={() => setPreviewMode('tablet')} className={cn("p-2 rounded", previewMode === 'tablet' ? "bg-gray-200" : "hover:bg-gray-100")}><Tablet className="w-4 h-4" /></button>
+                                <button onClick={() => setPreviewMode('desktop')} className={cn("p-2 rounded", previewMode === 'desktop' ? "bg-gray-200" : "hover:bg-gray-100")}><Monitor className="w-4 h-4" /></button>
                             </div>
                         )}
 
                         <div className="flex items-center gap-3">
-                            <button onClick={() => window.open(`http://${tenant?.slug}.gestularia.com`, '_blank')} className="hidden sm:flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600"><ExternalLink className="w-4 h-4" /> Ver en vivo</button>
-                            <button onClick={saveTenant} disabled={saving} className="px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">{saving ? '...' : <Save className="w-4 h-4" />}<span>Guardar</span></button>
+                            <button onClick={() => window.open(`http://${tenant?.slug}.gestularia.com`, '_blank')} className="hidden sm:flex items-center gap-2 text-sm bg-gray-200 px-4 py-2 rounded"><ExternalLink className="w-4 h-4" /> Ver en vivo</button>
+                            <button onClick={saveTenant} disabled={saving} className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50 flex items-center gap-2">{saving ? '...' : <Save className="w-4 h-4" />}<span>Guardar</span></button>
                         </div>
                     </header>
 
@@ -258,21 +258,21 @@ export default function EditorPage() {
                         />
 
                         {/* 2. CANVAS CENTRAL */}
-                        <div className="flex-1 overflow-y-auto bg-[#F8FAFC] relative transition-all duration-300 p-4 md:p-10" onClick={(e) => { if(e.target === e.currentTarget) setEditingBlockId(null); }}>
-                            <div className={cn("mx-auto transition-all duration-500 ease-in-out relative min-h-[800px] bg-white shadow-sm md:rounded-xl overflow-hidden", canvasWidthClass, isRealMobile ? "pb-32" : "pb-32")}>
+                        <div className="flex-1 overflow-y-auto bg-gray-100 relative p-4 md:p-10" onClick={(e) => { if(e.target === e.currentTarget) setEditingBlockId(null); }}>
+                            <div className={cn("mx-auto relative min-h-[800px] bg-white border-2 border-gray-300 md:rounded overflow-hidden", canvasWidthClass, isRealMobile ? "pb-32" : "pb-32")}>
                                 {/* Frame de dispositivo en modo preview */}
                                 {!isRealMobile && (previewMode !== 'desktop') && (
-                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-xl z-20 pointer-events-none" />
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-300 rounded-b z-20 pointer-events-none" />
                                 )}
                                 
-                                <div className={cn("w-full h-full", !isRealMobile && (previewMode !== 'desktop') ? "pt-8 border-[8px] border-slate-900 rounded-[2.5rem]" : "")}>
+                                <div className={cn("w-full h-full", !isRealMobile && (previewMode !== 'desktop') ? "pt-8 border-[6px] border-gray-400 rounded-[1.75rem]" : "")}>
                                     
                                     {blocks.length === 0 ? (
                                         <div className="text-center py-20 flex flex-col items-center justify-center h-full">
-                                            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-4"><Palette className="w-8 h-8 text-blue-500" /></div>
-                                            <h3 className="text-xl font-bold text-slate-800">Lienzo Vacío</h3>
-                                            <p className="text-slate-500 mb-6 max-w-xs mx-auto">Añade tu primer bloque desde el menú lateral o usa una plantilla.</p>
-                                            <button onClick={() => setIsAddComponentPanelOpen(true)} className="px-6 py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg flex items-center gap-2"><Plus className="w-5 h-5" /> Añadir Bloque</button>
+                                            <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center mb-4"><Palette className="w-8 h-8" /></div>
+                                            <h3 className="text-xl font-semibold">Lienzo Vacío</h3>
+                                            <p className="text-gray-600 mb-6 max-w-xs mx-auto">Añade tu primer bloque desde el menú lateral o usa una plantilla.</p>
+                                            <button onClick={() => setIsAddComponentPanelOpen(true)} className="border rounded p-2 hover:bg-gray-100 flex items-center gap-2"><Plus className="w-5 h-5" /> Añadir Bloque</button>
                                         </div>
                                     ) : (
                                         blocks.map((block, index) => (
@@ -294,8 +294,8 @@ export default function EditorPage() {
                                     )}
                                     {blocks.length > 0 && (
                                         <div className="p-8 flex justify-center">
-                                            <button onClick={() => setIsAddComponentPanelOpen(true)} className="group w-full max-w-md border-2 border-dashed border-slate-200 rounded-xl p-4 flex items-center justify-center gap-2 text-slate-400 font-bold hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-all">
-                                                <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" /> Añadir Bloque al Final
+                                            <button onClick={() => setIsAddComponentPanelOpen(true)} className="w-full max-w-md border border-dashed border-gray-300 rounded p-4 flex items-center justify-center gap-2 text-gray-600 hover:bg-gray-100">
+                                                <Plus className="w-5 h-5" /> Añadir Bloque al Final
                                             </button>
                                         </div>
                                     )}
@@ -311,7 +311,7 @@ export default function EditorPage() {
                     <MobileToolbar isEditing={isMobileEdit} onToggleEditing={setIsMobileEdit} />
                     {isRealMobile && !editingBlockId && (
                         <div className="fixed bottom-6 right-6 z-50">
-                            <button onClick={() => setIsAddComponentPanelOpen(true)} className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-xl flex items-center justify-center hover:bg-blue-700 active:scale-90 transition-transform"><Plus className="w-7 h-7" /></button>
+                            <button onClick={() => setIsAddComponentPanelOpen(true)} className="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center"><Plus className="w-7 h-7" /></button>
                         </div>
                     )}
 

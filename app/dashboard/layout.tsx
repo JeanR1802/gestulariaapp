@@ -4,9 +4,8 @@ import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
-import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import { DashboardWrapper } from './DashboardWrapper';
-import { colorPalettes } from '../lib/colors';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -20,17 +19,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, user, router]);
 
   if (loading) {
-    const c = colorPalettes.teal.dark;
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0D1222]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: c.accent.primary }}></div>
+      <div className="flex items-center justify-center min-h-screen border-2 border-blue-200 bg-white p-2 text-black">
+        <div>Cargando...</div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0D1222] text-white">
+      <div className="flex items-center justify-center min-h-screen border-2 border-blue-200 bg-white p-2 text-black">
         <p>Redirigiendo...</p>
       </div>
     );
