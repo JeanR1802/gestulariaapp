@@ -159,7 +159,7 @@ function CreateSiteModal({ isOpen, onClose, onSiteCreated }: { isOpen: boolean, 
             <div>
                <label className="block text-sm font-bold mb-2 opacity-70">URL (Enlace)</label>
                <div className="flex bg-gray-50 dark:bg-white/5 rounded-2xl px-4 border-2 border-transparent focus-within:border-blue-500 transition-all items-center opacity-80">
-                   <span className="text-base font-bold opacity-40 select-none">gestularia.com/</span>
+                   <span className="text-base font-bold opacity-40 select-none">locablo.com/</span>
                    <input type="text" value={slug} onChange={e => setSlug(generateSlug(e.target.value))} className="bg-transparent border-none p-4 w-full outline-none text-base font-bold" placeholder="mi-negocio" />
                </div>
             </div>
@@ -289,7 +289,7 @@ export default function SitesPage() {
                 <div className="flex justify-between items-center mb-6 px-2">
                     <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_12px_#22c55e]"></div><span className="text-sm font-bold opacity-60 uppercase tracking-widest">En Línea</span></div>
                     <div className="flex gap-2">
-                        <a href={`http://${tenant.slug}.gestularia.com`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-white/5 rounded-full text-sm font-bold border border-gray-200 dark:border-white/10 hover:border-blue-500 transition-all"><ExternalLink className="w-4 h-4" /><span className="hidden sm:inline">Ver Sitio</span></a>
+                        <a href={`http://${tenant.slug}.locablo.com`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-white/5 rounded-full text-sm font-bold border border-gray-200 dark:border-white/10 hover:border-blue-500 transition-all"><ExternalLink className="w-4 h-4" /><span className="hidden sm:inline">Ver Sitio</span></a>
                         <button onClick={() => setDeleteId(tenant.id)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-full transition-colors opacity-60 hover:opacity-100"><Trash2 className="w-5 h-5" /></button>
                     </div>
                 </div>
