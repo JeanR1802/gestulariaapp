@@ -97,7 +97,7 @@ export function SettingsPanel({ isOpen, onClose, siteData, onSave }: SettingsPan
                                                     <div>
                                                         <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Subdominio</label>
                                                         <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 transition-all">
-                                                            <span className="pl-4 pr-1 text-sm text-slate-400 font-medium">gestularia.com/</span>
+                                                            <span className="pl-4 pr-1 text-sm text-slate-400 font-medium">locablo.com/</span>
                                                             <input type="text" name="slug" value={formData.slug} onChange={handleChange} className="flex-1 p-3 bg-transparent border-none text-sm font-bold text-slate-900 focus:outline-none" />
                                                         </div>
                                                     </div>
@@ -118,8 +118,8 @@ export function SettingsPanel({ isOpen, onClose, siteData, onSave }: SettingsPan
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <div className="w-6 h-6 rounded-full bg-slate-200"></div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-xs text-slate-800 font-medium">gestularia.com</span>
-                                                            <span className="text-[10px] text-slate-400">https://gestularia.com/{formData.slug}</span>
+                                                            <span className="text-xs text-slate-800 font-medium">locablo.com</span>
+                                                            <span className="text-[10px] text-slate-400">https://locablo.com/{formData.slug}</span>
                                                         </div>
                                                     </div>
                                                     <h4 className="text-lg text-blue-600 hover:underline cursor-pointer truncate font-medium">{formData.title || 'Título de tu Página'}</h4>

@@ -238,7 +238,7 @@ export default function EditorPage() {
                         )}
 
                         <div className="flex items-center gap-3">
-                            <button onClick={() => window.open(`http://${tenant?.slug}.gestularia.com`, '_blank')} className="hidden sm:flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600"><ExternalLink className="w-4 h-4" /> Ver en vivo</button>
+                            <button onClick={() => window.open(`http://${tenant?.slug}.locablo.com`, '_blank')} className="hidden sm:flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600"><ExternalLink className="w-4 h-4" /> Ver en vivo</button>
                             <button onClick={saveTenant} disabled={saving} className="px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-full hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">{saving ? '...' : <Save className="w-4 h-4" />}<span>Guardar</span></button>
                         </div>
                     </header>
