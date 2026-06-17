@@ -1,7 +1,6 @@
-import { BlockData } from '@/app/components/editor/blocks';
-
+// Stub: editor types (blocks architecture removed during cleanup)
 export interface EditorBlock {
-    id: number;
-    type: keyof typeof import('@/app/components/editor/blocks').BLOCKS;
-    data: BlockData;
+  id: number;
+  type: string;
+  data: any;
 }

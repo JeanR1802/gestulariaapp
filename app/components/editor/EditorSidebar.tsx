@@ -1,13 +1,21 @@
-'use client';
+// Stub: EditorSidebar neutralized (blocks architecture removed during cleanup)
+import React from 'react';
 
-import React, { useState, useMemo } from 'react';
-import { cn } from '@/lib/utils';
-import {
-    LayoutTemplate, Grid, Plus, ArrowLeft, X,
-    Box, ShoppingBag, ShieldCheck, Zap, HelpCircle, Image as ImageIcon
-} from 'lucide-react';
-import { BLOCKS, BlockType, Block } from '@/app/components/editor/blocks';
-import { BLOCK_VARIANTS } from '@/app/lib/block-variants';
+interface EditorSidebarProps {
+  isOpen?: boolean;
+  onAddBlock?: (type: any, initialData?: any) => void;
+  onApplyTemplate?: (templateKey: string) => void;
+  onUpdateTheme?: (type: string, value: string) => void;
+  activePageId?: string;
+  onSelectPage?: (pageId: string) => void;
+  editingBlock?: any;
+  onCloseEditor?: () => void;
+  onUpdateBlock?: (blockId: number, key: string, value: any) => void;
+}
+
+export function EditorSidebar(props: EditorSidebarProps) {
+  return <aside className="w-[320px] border-r border-gray-300"></aside>;
+}
 
 // --- CONFIGURACIÓN DE CARPETAS ---
 const BLOCK_FOLDERS = [
