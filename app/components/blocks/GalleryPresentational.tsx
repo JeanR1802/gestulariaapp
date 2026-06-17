@@ -8,7 +8,7 @@ import type { GalleryData } from '../editor/blocks/GalleryBlock';
 const GalleryPresentational: React.FC<BlockComponentProps<GalleryData>> = ({ data }) => {
   const images = data.images || [];
   const spacingMap: Record<string, string> = { sm: 'gap-2', md: 'gap-4', lg: 'gap-8' };
-  const spacing = spacingMap[data.spacing] || 'gap-4';
+  const spacing = spacingMap[data.spacing || 'md'] || 'gap-4';
   const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
 
   if (data.variant === 'carousel') {
