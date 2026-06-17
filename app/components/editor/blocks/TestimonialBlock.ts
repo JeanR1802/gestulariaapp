@@ -8,6 +8,6 @@ export interface Testimonial {
 
 export interface TestimonialData {
   title?: string;
-  variant?: 'grid' | 'carousel' | 'featured';
+  variant?: 'grid' | 'carousel' | 'featured' | 'singleWithImage';
   testimonials?: Testimonial[];
 }

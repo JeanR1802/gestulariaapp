@@ -1,2 +1,3 @@
-// Re-export the internal hook implementation from the app folder
-export * from '../app/components/editor/canvas/hooks/useEditorElements';
+// Stub: useEditorElements neutralized (canvas architecture removed during cleanup)
+// No re-exports - the target module no longer exists.
+export {};
